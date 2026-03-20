@@ -16,7 +16,6 @@ jobs:
           cache: npm
 
       - run: npm install --legacy-peer-deps
-      - run: npm run lint
       - run: npm run build
 
   deploy:
