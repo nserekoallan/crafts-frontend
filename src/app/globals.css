@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  /* Legacy tokens (kept for dashboard/admin backward compat) */
   --color-hunter-green: #355E3B;
   --color-hunter-green-light: #4a7a52;
   --color-hunter-green-dark: #2a4b30;
@@ -14,14 +15,45 @@
   --color-charcoal-light: #4a5d68;
   --color-light-gray: #E8E6E1;
   --color-medium-gray: #9CA3AF;
+
+  /* Dark luxury canvas */
+  --color-bg-primary: #0F0F0F;
+  --color-bg-elevated: #1A1A1A;
+  --color-bg-surface: #242424;
+
+  /* Gold accent system */
+  --color-gold: #D4A853;
+  --color-gold-light: #E8C97A;
+  --color-gold-dark: #B8902F;
+
+  /* Terracotta — warm secondary */
+  --color-terracotta: #C4704B;
+  --color-terracotta-light: #D4896A;
+
+  /* Text on dark */
+  --color-text-primary: #F5F5F5;
+  --color-text-secondary: #A3A3A3;
+  --color-text-tertiary: #6B6B6B;
+
+  /* Semantic */
+  --color-success: #4ADE80;
+  --color-warning: #FBBF24;
+  --color-error: #EF4444;
+  --color-discount-bg: #7F1D1D;
+
+  /* Borders */
+  --color-border-dark: rgba(255, 255, 255, 0.08);
+  --color-border-dark-hover: rgba(255, 255, 255, 0.15);
+
+  /* Fonts */
   --font-heading: "DM Sans", sans-serif;
   --font-body: "Inter", sans-serif;
 }
 
 @layer base {
   body {
-    background-color: var(--color-off-white);
-    color: var(--color-charcoal);
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -30,6 +62,21 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
     font-weight: 700;
-    color: var(--color-charcoal);
+    color: var(--color-text-primary);
+  }
+}
+
+@layer utilities {
+  .gold-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-bg-elevated) 0%,
+      rgba(212, 168, 83, 0.08) 50%,
+      var(--color-bg-elevated) 100%
+    );
+  }
+
+  .gold-glow {
+    box-shadow: 0 0 20px rgba(212, 168, 83, 0.1);
   }
 }

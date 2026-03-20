@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { QueryProvider } from '@/providers/query-provider';
 import { AuthProvider } from '@/lib/auth';
+import { CurrencyProvider } from '@/lib/currency';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import { BottomNav } from '@/components/layout/bottom-nav';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * Root layout wrapping all pages with providers, header, and footer.
+ * Root layout wrapping all pages with providers, header, footer and mobile bottom nav.
  */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -28,9 +30,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen flex-col">
         <QueryProvider>
           <AuthProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
+            <CurrencyProvider>
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+              <BottomNav />
+            </CurrencyProvider>
           </AuthProvider>
         </QueryProvider>
       </body>
