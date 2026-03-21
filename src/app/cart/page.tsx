@@ -1,15 +1,18 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
-import { cn } from '@/lib/utils';
 
 /**
  * Full cart page — dark themed, currency-aware, with quantity controls.
  */
 export default function CartPage() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const { items, subtotal, removeItem, updateQuantity, clearCart } = useCart();
   const { formatPrice } = useCurrency();
 
@@ -145,7 +148,16 @@ export default function CartPage() {
             </p>
 
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <button className="flex h-12 flex-1 items-center justify-center rounded-xl bg-gold text-sm font-bold text-bg-primary transition-colors hover:bg-gold-light active:scale-[0.98]">
+              <button
+                onClick={() => {
+                  if (isAuthenticated) {
+                    router.push('/checkout');
+                  } else {
+                    router.push('/login?redirect=/checkout');
+                  }
+                }}
+                className="flex h-12 flex-1 items-center justify-center rounded-xl bg-gold text-sm font-bold text-bg-primary transition-colors hover:bg-gold-light active:scale-[0.98]"
+              >
                 Proceed to Checkout
               </button>
               <button
