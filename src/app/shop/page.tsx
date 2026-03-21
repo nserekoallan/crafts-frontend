@@ -1,12 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { SlidersHorizontal } from 'lucide-react';
+import { Suspense, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { AlertCircle, Search, SlidersHorizontal, X } from 'lucide-react';
 import { DenseProductCard } from '@/components/products/dense-product-card';
 import { FilterSidebar, DEFAULT_FILTERS } from '@/components/shop/filter-sidebar';
 import { FilterBottomSheet } from '@/components/shop/filter-bottom-sheet';
 import { ActiveFilters } from '@/components/shop/active-filters';
-import { PRODUCTS } from '@/lib/mock-data';
+import { useProducts } from '@/hooks/use-products';
 import { cn } from '@/lib/utils';
 import type { ShopFilters } from '@/components/shop/filter-sidebar';
 
@@ -20,16 +21,20 @@ const SORT_OPTIONS = [
 
 const PAGE_SIZE = 12;
 
+// ---------------------------------------------------------------------------
+// Price helpers
+// ---------------------------------------------------------------------------
+
 /**
- * Parse price range filter to min/max UGX values.
+ * Parse price range filter to min/max values for the API.
  */
-function parsePriceRange(range: string): { min: number; max: number } {
+function parsePriceRange(range: string): { min: number | undefined; max: number | undefined } {
   switch (range) {
     case 'under-100k': return { min: 0, max: 100_000 };
     case '100k-300k': return { min: 100_000, max: 300_000 };
     case '300k-500k': return { min: 300_000, max: 500_000 };
-    case '500k-plus': return { min: 500_000, max: Infinity };
-    default: return { min: 0, max: Infinity };
+    case '500k-plus': return { min: 500_000, max: undefined };
+    default: return { min: undefined, max: undefined };
   }
 }
 
@@ -46,45 +51,113 @@ function hasActiveFilters(filters: ShopFilters): boolean {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Skeleton
+// ---------------------------------------------------------------------------
+
 /**
- * Dark-themed shop page with desktop sidebar filters, mobile bottom sheet,
- * active filter pills, sorting, and responsive product grid.
+ * Skeleton card matching DenseProductCard layout to prevent CLS.
  */
-export default function ShopPage() {
+function ProductCardSkeleton() {
+  return (
+    <div className="animate-pulse overflow-hidden rounded-xl border border-border-dark bg-bg-surface">
+      <div className="aspect-[3/4] bg-bg-elevated" />
+      <div className="space-y-2 p-3">
+        <div className="h-3 w-3/4 rounded bg-bg-elevated" />
+        <div className="h-3 w-1/2 rounded bg-bg-elevated" />
+        <div className="h-4 w-1/3 rounded bg-bg-elevated" />
+        <div className="mt-2 h-9 w-full rounded-lg bg-bg-elevated" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Grid of skeleton cards shown while loading.
+ */
+function ProductGridSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <ProductCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Inner page component (needs useSearchParams)
+// ---------------------------------------------------------------------------
+
+function ShopPageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const searchTerm = searchParams.get('search') ?? '';
+  const urlPage = Number(searchParams.get('page')) || 1;
+
   const [filters, setFilters] = useState<ShopFilters>(DEFAULT_FILTERS);
   const [sortBy, setSortBy] = useState('featured');
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const filtered = useMemo(() => {
-    const { min, max } = parsePriceRange(filters.priceRange);
+  // Build API params from URL + filter state
+  const { min: minPrice, max: maxPrice } = parsePriceRange(filters.priceRange);
 
-    return PRODUCTS.filter((p) => {
+  const { products, total, totalPages, isLoading, isError, error } = useProducts({
+    search: searchTerm || undefined,
+    region: filters.regions.length === 1 ? filters.regions[0] : undefined,
+    minPrice,
+    maxPrice,
+    page: urlPage,
+    limit: PAGE_SIZE,
+  });
+
+  // Client-side post-filters (category name, rating, availability — not in API)
+  const postFiltered = useMemo(() => {
+    return products.filter((p) => {
       if (filters.categories.length > 0 && !filters.categories.includes(p.category)) return false;
-      if (p.price < min || p.price > max) return false;
-      if (filters.regions.length > 0 && !filters.regions.includes(p.region)) return false;
       if (filters.minRating > 0 && p.rating < filters.minRating) return false;
       if (filters.hideOutOfStock && p.stockStatus === 'out_of_stock') return false;
       return true;
     });
-  }, [filters]);
+  }, [products, filters]);
 
+  // Client-side sort (API doesn't support all sort fields yet)
   const sorted = useMemo(() => {
-    return [...filtered].sort((a, b) => {
+    return [...postFiltered].sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
       if (sortBy === 'price-high') return b.price - a.price;
       if (sortBy === 'newest') return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
       if (sortBy === 'rating') return b.rating - a.rating;
       return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
     });
-  }, [filtered, sortBy]);
+  }, [postFiltered, sortBy]);
 
-  const visible = sorted.slice(0, visibleCount);
-  const hasMore = visibleCount < sorted.length;
+  /**
+   * Clears the search param from the URL.
+   */
+  const clearSearch = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('search');
+    params.delete('page');
+    router.push(`/shop${params.toString() ? `?${params.toString()}` : ''}`);
+  };
+
+  /**
+   * Navigates to a specific page.
+   */
+  const goToPage = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (page > 1) {
+      params.set('page', String(page));
+    } else {
+      params.delete('page');
+    }
+    router.push(`/shop?${params.toString()}`);
+  };
 
   const handleFilterChange = (newFilters: ShopFilters) => {
     setFilters(newFilters);
-    setVisibleCount(PAGE_SIZE);
   };
 
   const activeFilterCount =
@@ -102,9 +175,11 @@ export default function ShopPage() {
           <h1 className="font-heading text-2xl font-bold text-text-primary md:text-3xl">
             Shop
           </h1>
-          <p className="mt-0.5 text-sm text-text-secondary">
-            {sorted.length} handcrafted {sorted.length === 1 ? 'piece' : 'pieces'}
-          </p>
+          {!isLoading && (
+            <p className="mt-0.5 text-sm text-text-secondary">
+              {total} handcrafted {total === 1 ? 'piece' : 'pieces'}
+            </p>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -142,6 +217,23 @@ export default function ShopPage() {
         </div>
       </div>
 
+      {/* Search pill */}
+      {searchTerm && (
+        <div className="mt-4 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold-muted px-3 py-1 text-xs font-semibold text-gold">
+            <Search className="h-3 w-3" />
+            Results for &ldquo;{searchTerm}&rdquo;
+            <button
+              onClick={clearSearch}
+              className="ml-0.5 text-gold/70 transition-colors hover:text-gold"
+              aria-label="Clear search"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        </div>
+      )}
+
       {/* Active filter pills */}
       {hasActiveFilters(filters) && (
         <div className="mt-4">
@@ -156,7 +248,39 @@ export default function ShopPage() {
 
         {/* Product grid */}
         <div className="flex-1">
-          {visible.length === 0 ? (
+          {isLoading ? (
+            <ProductGridSkeleton />
+          ) : isError ? (
+            <div className="flex flex-col items-center py-16 text-center">
+              <AlertCircle className="mb-3 h-10 w-10 text-text-tertiary" />
+              <p className="text-lg text-text-secondary">Something went wrong</p>
+              <p className="mt-1 text-sm text-text-tertiary">
+                {error?.message ?? 'Failed to load products. Please try again.'}
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 rounded-lg border border-gold px-6 py-2 text-sm font-medium text-gold transition-colors hover:bg-gold hover:text-bg-primary"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : sorted.length === 0 && searchTerm ? (
+            <div className="flex flex-col items-center py-16 text-center">
+              <Search className="mb-3 h-10 w-10 text-text-tertiary" />
+              <p className="text-lg text-text-secondary">
+                No results for &ldquo;{searchTerm}&rdquo;
+              </p>
+              <p className="mt-1 text-sm text-text-tertiary">
+                Try different keywords or browse all products
+              </p>
+              <button
+                onClick={clearSearch}
+                className="mt-4 rounded-lg border border-gold px-6 py-2 text-sm font-medium text-gold transition-colors hover:bg-gold hover:text-bg-primary"
+              >
+                Browse All
+              </button>
+            </div>
+          ) : sorted.length === 0 ? (
             <div className="flex flex-col items-center py-16 text-center">
               <p className="text-lg text-text-secondary">No pieces match your filters.</p>
               <button
@@ -169,7 +293,7 @@ export default function ShopPage() {
           ) : (
             <>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-                {visible.map((product, i) => (
+                {sorted.map((product, i) => (
                   <DenseProductCard
                     key={product.id}
                     product={product}
@@ -178,13 +302,25 @@ export default function ShopPage() {
                 ))}
               </div>
 
-              {hasMore && (
-                <div className="mt-8 text-center md:mt-10">
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center gap-2 md:mt-10">
                   <button
-                    onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-                    className="inline-flex h-11 items-center rounded-lg border border-gold px-8 text-sm font-semibold text-gold transition-colors hover:bg-gold hover:text-bg-primary active:scale-[0.98]"
+                    disabled={urlPage <= 1}
+                    onClick={() => goToPage(urlPage - 1)}
+                    className="h-9 rounded-lg border border-border-dark px-4 text-sm font-medium text-text-secondary transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Load More
+                    Previous
+                  </button>
+                  <span className="px-3 text-sm text-text-secondary">
+                    Page {urlPage} of {totalPages}
+                  </span>
+                  <button
+                    disabled={urlPage >= totalPages}
+                    onClick={() => goToPage(urlPage + 1)}
+                    className="h-9 rounded-lg border border-border-dark px-4 text-sm font-medium text-text-secondary transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Next
                   </button>
                 </div>
               )}
@@ -202,5 +338,16 @@ export default function ShopPage() {
         resultCount={sorted.length}
       />
     </div>
+  );
+}
+
+/**
+ * Shop page wrapped in Suspense for useSearchParams.
+ */
+export default function ShopPage() {
+  return (
+    <Suspense>
+      <ShopPageInner />
+    </Suspense>
   );
 }
