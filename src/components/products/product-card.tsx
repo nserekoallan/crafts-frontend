@@ -1,68 +1,107 @@
 'use client';
 
-import { Heart, Plus } from 'lucide-react';
-import { formatPrice } from '@/lib/utils';
+import { useState } from 'react';
+import { Check, Heart, Plus } from 'lucide-react';
+import { useCart } from '@/lib/cart';
+import { useWishlist } from '@/lib/wishlist';
+import { useCurrency } from '@/lib/currency';
+import { cn } from '@/lib/utils';
+import type { Product } from '@/lib/mock-data';
 
 interface ProductCardProps {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  currency?: string;
-  imageUrl: string;
-  artisanName: string;
-  region: string;
+  product: Product;
+  className?: string;
 }
 
 /**
- * Product card displaying image, artisan info, price and quick-add action.
+ * Product card with dark theme, cart + wishlist integration.
  */
-export function ProductCard({
-  name,
-  slug,
-  price,
-  currency = 'USD',
-  imageUrl,
-  artisanName,
-  region,
-}: ProductCardProps) {
+export function ProductCard({ product, className }: ProductCardProps) {
+  const { formatPrice } = useCurrency();
+  const { addItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const [isAdded, setIsAdded] = useState(false);
+
+  const isUnavailable = product.stockStatus === 'out_of_stock';
+  const wishlisted = isWishlisted(product.id);
+
+  const handleAddToCart = () => {
+    if (isUnavailable || isAdded) return;
+    addItem(product, 1);
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 1500);
+  };
+
   return (
-    <div className="group overflow-hidden rounded-xl border border-light-gray bg-white transition-shadow hover:shadow-md">
+    <div
+      className={cn(
+        'group overflow-hidden rounded-xl border border-border-dark bg-bg-elevated transition-shadow hover:gold-glow',
+        className,
+      )}
+    >
       {/* Image */}
-      <a href={`/shop/${slug}`} className="relative block aspect-square overflow-hidden bg-light-gray">
+      <a href={`/shop/${product.slug}`} className="relative block aspect-square overflow-hidden bg-bg-surface">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={imageUrl}
-          alt={name}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          src={product.imageUrl}
+          alt={product.name}
+          className={cn(
+            'h-full w-full object-cover transition-transform duration-300 group-hover:scale-105',
+            isUnavailable && 'opacity-50',
+          )}
+          loading="lazy"
         />
         <button
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-charcoal backdrop-blur-sm transition-colors hover:bg-white hover:text-red-500"
-          aria-label="Add to wishlist"
+          onClick={(e) => {
+            e.preventDefault();
+            toggleWishlist(product.id);
+          }}
+          className={cn(
+            'absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-sm transition-colors',
+            wishlisted
+              ? 'bg-gold/20 text-gold'
+              : 'bg-bg-primary/60 text-text-secondary hover:text-gold',
+          )}
+          aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
         >
-          <Heart className="h-4 w-4" />
+          <Heart className={cn('h-4 w-4', wishlisted && 'fill-gold')} />
         </button>
-        <span className="absolute left-3 top-3 rounded-full bg-hunter-green/90 px-2.5 py-0.5 text-[11px] font-semibold text-white">
-          {region}
+        <span className="absolute left-3 top-3 rounded-full bg-bg-primary/80 px-2.5 py-0.5 text-[11px] font-semibold text-gold backdrop-blur-sm">
+          {product.region}
         </span>
       </a>
 
       {/* Info */}
-      <div className="p-4">
-        <a href={`/shop/${slug}`}>
-          <h3 className="text-sm font-semibold text-charcoal line-clamp-1">{name}</h3>
+      <div className="p-3 md:p-4">
+        <a href={`/shop/${product.slug}`}>
+          <h3 className="text-sm font-semibold text-text-primary line-clamp-1">{product.name}</h3>
         </a>
-        <p className="mt-0.5 text-xs text-medium-gray">by {artisanName}</p>
+        <p className="mt-0.5 text-[11px] uppercase tracking-wider text-gold">
+          {product.category}
+        </p>
 
         <div className="mt-3 flex items-center justify-between">
-          <span className="font-heading text-base font-bold text-hunter-green">
-            {formatPrice(price, currency)}
+          <span className="font-heading text-base font-bold text-gold">
+            {formatPrice(product.price)}
           </span>
           <button
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-satin-gold text-white transition-colors hover:bg-satin-gold-dark"
-            aria-label="Add to cart"
+            onClick={handleAddToCart}
+            disabled={isUnavailable}
+            className={cn(
+              'flex h-9 w-9 items-center justify-center rounded-full transition-colors',
+              isAdded
+                ? 'bg-success/20 text-success'
+                : isUnavailable
+                  ? 'cursor-not-allowed bg-bg-surface text-text-tertiary opacity-40'
+                  : 'bg-gold text-bg-primary hover:bg-gold-light active:scale-95',
+            )}
+            aria-label={isAdded ? 'Added to cart' : 'Add to cart'}
           >
-            <Plus className="h-4 w-4" />
+            {isAdded ? (
+              <Check className="h-4 w-4 animate-check-pop" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>

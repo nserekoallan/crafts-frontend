@@ -2,9 +2,14 @@ import type { Metadata } from 'next';
 import { QueryProvider } from '@/providers/query-provider';
 import { AuthProvider } from '@/lib/auth';
 import { CurrencyProvider } from '@/lib/currency';
+import { CartProvider } from '@/lib/cart';
+import { WishlistProvider } from '@/lib/wishlist';
+import { RecentlyViewedProvider } from '@/lib/recently-viewed';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { BottomNav } from '@/components/layout/bottom-nav';
+import { CartDrawer } from '@/components/cart/cart-drawer';
+import { CartToast } from '@/components/ui/cart-toast';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -31,10 +36,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <QueryProvider>
           <AuthProvider>
             <CurrencyProvider>
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-              <BottomNav />
+              <CartProvider>
+                <WishlistProvider>
+                  <RecentlyViewedProvider>
+                    <Header />
+                    <main className="flex-1 pb-16 md:pb-0">{children}</main>
+                    <Footer />
+                    <BottomNav />
+                    <CartDrawer />
+                    <CartToast />
+                  </RecentlyViewedProvider>
+                </WishlistProvider>
+              </CartProvider>
             </CurrencyProvider>
           </AuthProvider>
         </QueryProvider>

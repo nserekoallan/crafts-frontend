@@ -56,7 +56,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   imageUrl: string;
-  artisanName: string;
+  category: string;
 }
 
 export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
@@ -964,32 +964,75 @@ export const ANNOUNCEMENT_MESSAGES = [
 // Cart
 // ---------------------------------------------------------------------------
 
-export const INITIAL_CART_ITEMS: CartItem[] = [
+export const INITIAL_CART_ITEMS: CartItem[] = [];
+
+// ---------------------------------------------------------------------------
+// Collections
+// ---------------------------------------------------------------------------
+
+export interface Collection {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  imageUrl: string;
+  itemCount: number;
+}
+
+export const COLLECTIONS: Collection[] = [
   {
-    id: '21',
-    name: 'Cowrie Shell Drop Earrings',
-    price: 65000,
-    quantity: 1,
-    imageUrl: img(21),
-    artisanName: 'Naserian Meeli',
+    id: 'c1',
+    title: 'For Your Living Room',
+    slug: 'living-room',
+    description: 'Statement wall art and baskets that transform any space.',
+    imageUrl: img(17),
+    itemCount: 12,
   },
   {
-    id: '1',
-    name: 'Earth Tones Coiled Wall Plate',
-    price: 135000,
-    quantity: 2,
-    imageUrl: img(1),
-    artisanName: 'Akera Komakech',
+    id: 'c2',
+    title: 'Wedding Gifts',
+    slug: 'wedding-gifts',
+    description: 'Thoughtful, handcrafted presents for the couple.',
+    imageUrl: img(35),
+    itemCount: 8,
   },
   {
-    id: '27',
-    name: 'Ankara Print Head Wrap',
-    price: 50000,
-    quantity: 1,
-    imageUrl: img(27),
-    artisanName: 'Amina Kyomuhendo',
+    id: 'c3',
+    title: 'Under 100K',
+    slug: 'under-100k',
+    description: 'Beautiful pieces that fit every budget.',
+    imageUrl: img(29),
+    itemCount: 14,
+  },
+  {
+    id: 'c4',
+    title: 'Statement Pieces',
+    slug: 'statement-pieces',
+    description: 'Bold, eye-catching crafts that start conversations.',
+    imageUrl: img(25),
+    itemCount: 6,
+  },
+  {
+    id: 'c5',
+    title: 'New Arrivals',
+    slug: 'new-arrivals',
+    description: 'The latest additions to our curated collection.',
+    imageUrl: img(22),
+    itemCount: 8,
   },
 ];
+
+// ---------------------------------------------------------------------------
+// Mock social proof counts (random-ish for wishlist)
+// ---------------------------------------------------------------------------
+
+export const SOCIAL_PROOF_COUNTS: Record<string, number> = {
+  '1': 47, '2': 31, '3': 19, '4': 38, '5': 22, '6': 33, '7': 15,
+  '8': 42, '9': 56, '10': 41, '11': 68, '12': 29, '13': 26, '14': 18,
+  '15': 17, '16': 24, '17': 12, '18': 35, '19': 52, '20': 27, '21': 44,
+  '22': 36, '23': 21, '24': 68, '25': 14, '26': 33, '27': 45, '28': 31,
+  '29': 57, '30': 23, '31': 39, '32': 16, '33': 11, '34': 42, '35': 8,
+};
 
 // ---------------------------------------------------------------------------
 // Orders
