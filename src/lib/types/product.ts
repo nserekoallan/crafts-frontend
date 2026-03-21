@@ -29,12 +29,12 @@ export interface ApiProduct {
   name: string;
   slug: string;
   description: string;
-  price: number;
+  price: string | number;
   currency: string;
   stock: number;
   status: string;
   tags: string[];
-  materials: string[];
+  materials: string | string[];
   dimensions: string | null;
   weight: number | null;
   images: ApiProductImage[];
@@ -70,33 +70,37 @@ function deriveStockStatus(stock: number): StockStatus {
   return 'in_stock';
 }
 
+/** Placeholder used when a product has no uploaded images. */
+const PLACEHOLDER_IMAGE = '/products/product-01.jpg';
+
 /**
  * Maps an API product to the frontend Product type used by all UI components.
  */
-export function mapApiProductToProduct(api: ApiProduct): Product {
-  const defaultImage = api.images
+export function mapApiProductToProduct(apiProduct: ApiProduct): Product {
+  const sortedImages = apiProduct.images
     .slice()
-    .sort((a, b) => a.position - b.position)[0];
+    .sort((a, b) => a.position - b.position);
+
+  const imageUrl = sortedImages[0]?.url ?? PLACEHOLDER_IMAGE;
 
   return {
-    id: api.id,
-    name: api.name,
-    slug: api.slug,
-    price: api.price,
-    currency: api.currency,
-    imageUrl: defaultImage?.url ?? '/placeholder.jpg',
-    images: api.images
-      .slice()
-      .sort((a, b) => a.position - b.position)
-      .map((img) => img.url),
-    artisanName: api.artisan.businessName,
-    artisanId: api.artisan.id,
-    region: api.artisan.region,
-    category: api.category.name,
-    description: api.description,
+    id: apiProduct.id,
+    name: apiProduct.name,
+    slug: apiProduct.slug,
+    price: Number(apiProduct.price),
+    currency: apiProduct.currency,
+    imageUrl,
+    images: sortedImages.length > 0
+      ? sortedImages.map((img) => img.url)
+      : [PLACEHOLDER_IMAGE],
+    artisanName: apiProduct.artisan.businessName,
+    artisanId: apiProduct.artisan.id,
+    region: apiProduct.artisan.region,
+    category: apiProduct.category.name,
+    description: apiProduct.description,
     rating: 0,
-    reviewCount: api._count.reviews,
-    stockStatus: deriveStockStatus(api.stock),
-    stockCount: api.stock,
+    reviewCount: apiProduct._count.reviews,
+    stockStatus: deriveStockStatus(apiProduct.stock),
+    stockCount: apiProduct.stock,
   };
 }
