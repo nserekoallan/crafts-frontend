@@ -8,6 +8,7 @@ import { FilterSidebar, DEFAULT_FILTERS } from '@/components/shop/filter-sidebar
 import { FilterBottomSheet } from '@/components/shop/filter-bottom-sheet';
 import { ActiveFilters } from '@/components/shop/active-filters';
 import { useProducts } from '@/hooks/use-products';
+import { PRODUCTS } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import type { ShopFilters } from '@/components/shop/filter-sidebar';
 
@@ -26,15 +27,15 @@ const PAGE_SIZE = 12;
 // ---------------------------------------------------------------------------
 
 /**
- * Parse price range filter to min/max values for the API.
+ * Parse price range filter to min/max UGX values.
  */
-function parsePriceRange(range: string): { min: number | undefined; max: number | undefined } {
+function parsePriceRange(range: string): { min: number; max: number } {
   switch (range) {
     case 'under-100k': return { min: 0, max: 100_000 };
     case '100k-300k': return { min: 100_000, max: 300_000 };
     case '300k-500k': return { min: 300_000, max: 500_000 };
-    case '500k-plus': return { min: 500_000, max: undefined };
-    default: return { min: undefined, max: undefined };
+    case '500k-plus': return { min: 500_000, max: Infinity };
+    default: return { min: 0, max: Infinity };
   }
 }
 
@@ -94,44 +95,56 @@ function ShopPageInner() {
   const searchParams = useSearchParams();
 
   const searchTerm = searchParams.get('search') ?? '';
+  const isSearching = searchTerm.length > 0;
   const urlPage = Number(searchParams.get('page')) || 1;
 
   const [filters, setFilters] = useState<ShopFilters>(DEFAULT_FILTERS);
   const [sortBy, setSortBy] = useState('featured');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Build API params from URL + filter state
-  const { min: minPrice, max: maxPrice } = parsePriceRange(filters.priceRange);
-
-  const { products, total, totalPages, isLoading, isError, error } = useProducts({
+  // API search — only fires when there's a search term
+  const { products: apiProducts, total: apiTotal, totalPages, isLoading, isError, error } = useProducts({
     search: searchTerm || undefined,
-    region: filters.regions.length === 1 ? filters.regions[0] : undefined,
-    minPrice,
-    maxPrice,
     page: urlPage,
     limit: PAGE_SIZE,
+    enabled: isSearching,
   });
 
-  // Client-side post-filters (category name, rating, availability — not in API)
-  const postFiltered = useMemo(() => {
-    return products.filter((p) => {
+  // ---------- Data source: mock (default) vs API (search) ----------
+
+  const sourceProducts = isSearching ? apiProducts : PRODUCTS;
+
+  // Client-side filters (apply to both mock and API data)
+  const filtered = useMemo(() => {
+    const { min, max } = parsePriceRange(filters.priceRange);
+
+    return sourceProducts.filter((p) => {
       if (filters.categories.length > 0 && !filters.categories.includes(p.category)) return false;
+      if (p.price < min || p.price > max) return false;
+      if (filters.regions.length > 0 && !filters.regions.includes(p.region)) return false;
       if (filters.minRating > 0 && p.rating < filters.minRating) return false;
       if (filters.hideOutOfStock && p.stockStatus === 'out_of_stock') return false;
       return true;
     });
-  }, [products, filters]);
+  }, [sourceProducts, filters]);
 
-  // Client-side sort (API doesn't support all sort fields yet)
+  // Client-side sort
   const sorted = useMemo(() => {
-    return [...postFiltered].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
       if (sortBy === 'price-high') return b.price - a.price;
       if (sortBy === 'newest') return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
       if (sortBy === 'rating') return b.rating - a.rating;
       return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
     });
-  }, [postFiltered, sortBy]);
+  }, [filtered, sortBy]);
+
+  // For mock data: paginate with "Load More"; for API: server-side pagination
+  const visible = isSearching ? sorted : sorted.slice(0, visibleCount);
+  const hasMore = !isSearching && visibleCount < sorted.length;
+
+  const displayTotal = isSearching ? apiTotal : sorted.length;
 
   /**
    * Clears the search param from the URL.
@@ -144,7 +157,7 @@ function ShopPageInner() {
   };
 
   /**
-   * Navigates to a specific page.
+   * Navigates to a specific page (API search pagination).
    */
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -158,6 +171,7 @@ function ShopPageInner() {
 
   const handleFilterChange = (newFilters: ShopFilters) => {
     setFilters(newFilters);
+    setVisibleCount(PAGE_SIZE);
   };
 
   const activeFilterCount =
@@ -167,6 +181,10 @@ function ShopPageInner() {
     (filters.minRating > 0 ? 1 : 0) +
     (filters.hideOutOfStock ? 1 : 0);
 
+  // Show loading only when actively searching
+  const showLoading = isSearching && isLoading;
+  const showError = isSearching && isError;
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:py-8 lg:px-8">
       {/* Header */}
@@ -175,9 +193,9 @@ function ShopPageInner() {
           <h1 className="font-heading text-2xl font-bold text-text-primary md:text-3xl">
             Shop
           </h1>
-          {!isLoading && (
+          {!showLoading && (
             <p className="mt-0.5 text-sm text-text-secondary">
-              {total} handcrafted {total === 1 ? 'piece' : 'pieces'}
+              {displayTotal} handcrafted {displayTotal === 1 ? 'piece' : 'pieces'}
             </p>
           )}
         </div>
@@ -248,9 +266,9 @@ function ShopPageInner() {
 
         {/* Product grid */}
         <div className="flex-1">
-          {isLoading ? (
+          {showLoading ? (
             <ProductGridSkeleton />
-          ) : isError ? (
+          ) : showError ? (
             <div className="flex flex-col items-center py-16 text-center">
               <AlertCircle className="mb-3 h-10 w-10 text-text-tertiary" />
               <p className="text-lg text-text-secondary">Something went wrong</p>
@@ -293,7 +311,7 @@ function ShopPageInner() {
           ) : (
             <>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-                {sorted.map((product, i) => (
+                {visible.map((product, i) => (
                   <DenseProductCard
                     key={product.id}
                     product={product}
@@ -302,8 +320,20 @@ function ShopPageInner() {
                 ))}
               </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
+              {/* Load More — mock data */}
+              {hasMore && (
+                <div className="mt-8 text-center md:mt-10">
+                  <button
+                    onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                    className="inline-flex h-11 items-center rounded-lg border border-gold px-8 text-sm font-semibold text-gold transition-colors hover:bg-gold hover:text-bg-primary active:scale-[0.98]"
+                  >
+                    Load More
+                  </button>
+                </div>
+              )}
+
+              {/* Pagination — API search results */}
+              {isSearching && totalPages > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-2 md:mt-10">
                   <button
                     disabled={urlPage <= 1}

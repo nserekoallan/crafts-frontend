@@ -18,6 +18,7 @@ export interface UseProductsParams {
   maxPrice?: number;
   page?: number;
   limit?: number;
+  enabled?: boolean;
 }
 
 export interface UseProductsResult {
@@ -56,11 +57,13 @@ function buildQuery(params: UseProductsParams): string {
  * TanStack Query hook to fetch products from the API.
  */
 export function useProducts(params: UseProductsParams = {}): UseProductsResult {
-  const queryString = buildQuery(params);
+  const { enabled = true, ...queryParams } = params;
+  const queryString = buildQuery(queryParams);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['products', params],
+    queryKey: ['products', queryParams],
     queryFn: () => api.get<ApiProductsResponse>(`/products${queryString}`),
+    enabled,
   });
 
   return {
