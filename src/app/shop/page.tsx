@@ -264,7 +264,7 @@ function ShopPageInner() {
       )}
 
       {/* Layout: sidebar + grid */}
-      <div className="mt-6 flex gap-8">
+      <div className="mt-6 flex items-start gap-8">
         {/* Desktop sidebar */}
         <FilterSidebar filters={filters} onChange={handleFilterChange} />
 
