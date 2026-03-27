@@ -225,6 +225,7 @@ function ShopPageInner() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
+            aria-label="Sort products by"
             className="h-9 rounded-lg border border-border-dark bg-bg-surface px-3 text-sm text-text-primary focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
           >
             {SORT_OPTIONS.map((opt) => (
@@ -236,27 +237,29 @@ function ShopPageInner() {
         </div>
       </div>
 
-      {/* Search pill */}
-      {searchTerm && (
-        <div className="mt-4 flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold-muted px-3 py-1 text-xs font-semibold text-gold">
-            <Search className="h-3 w-3" />
-            Results for &ldquo;{searchTerm}&rdquo;
-            <button
-              onClick={clearSearch}
-              className="ml-0.5 text-gold/70 transition-colors hover:text-gold"
-              aria-label="Clear search"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        </div>
-      )}
-
-      {/* Active filter pills */}
-      {hasActiveFilters(filters) && (
-        <div className="mt-4">
-          <ActiveFilters filters={filters} onChange={handleFilterChange} />
+      {/* Sticky search pill + active filter pills */}
+      {(searchTerm || hasActiveFilters(filters)) && (
+        <div className="sticky top-[188px] z-30 -mx-4 mt-4 bg-bg-primary/95 px-4 py-2 backdrop-blur-sm lg:-mx-8 lg:px-8">
+          {searchTerm && (
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold-muted px-3 py-1 text-xs font-semibold text-gold">
+                <Search className="h-3 w-3" />
+                Results for &ldquo;{searchTerm}&rdquo;
+                <button
+                  onClick={clearSearch}
+                  className="ml-0.5 text-gold/70 transition-colors hover:text-gold"
+                  aria-label="Clear search"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            </div>
+          )}
+          {hasActiveFilters(filters) && (
+            <div className={searchTerm ? 'mt-2' : ''}>
+              <ActiveFilters filters={filters} onChange={handleFilterChange} />
+            </div>
+          )}
         </div>
       )}
 

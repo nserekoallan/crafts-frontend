@@ -1,7 +1,9 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Check, Copy, Heart, MapPin, Minus, Plus, Share2, ShoppingBag, Star, Truck } from 'lucide-react';
+import { DenseProductCard } from '@/components/products/dense-product-card';
 import { useCart } from '@/lib/cart';
 import { useWishlist } from '@/lib/wishlist';
 import { useRecentlyViewed } from '@/lib/recently-viewed';
@@ -71,7 +73,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
     <div className="mx-auto max-w-7xl px-4 py-6 md:py-8 lg:px-8">
       {/* Breadcrumb */}
       <p className="mb-4 text-sm text-text-tertiary md:mb-6">
-        <a href="/shop" className="transition-colors hover:text-gold">Shop</a>
+        <Link href="/shop" className="transition-colors hover:text-gold">Shop</Link>
         {' / '}
         <span className="text-text-secondary">{product.name}</span>
       </p>
@@ -119,7 +121,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         </div>
 
         {/* Info */}
-        <div>
+        <div className="lg:sticky lg:top-[200px] lg:self-start">
           <span className="text-[11px] font-semibold uppercase tracking-widest text-gold">
             {product.category}
           </span>
@@ -289,6 +291,26 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           </div>
         </div>
       </div>
+
+      {/* Related Products */}
+      {(() => {
+        const related = PRODUCTS
+          .filter((p) => p.category === product.category && p.id !== product.id)
+          .slice(0, 4);
+        if (related.length === 0) return null;
+        return (
+          <section className="mt-16">
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
+              You May Also Like
+            </h2>
+            <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
+              {related.map((p, i) => (
+                <DenseProductCard key={p.id} product={p} animationDelay={i * 50} />
+              ))}
+            </div>
+          </section>
+        );
+      })()}
 
       {/* Recently Viewed */}
       <div className="mt-12">

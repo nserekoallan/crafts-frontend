@@ -70,6 +70,7 @@
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 200px;
   }
 
   /* Hide scrollbar on horizontal scroll strips */

@@ -10,6 +10,7 @@ import { Footer } from '@/components/layout/footer';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { CartDrawer } from '@/components/cart/cart-drawer';
 import { CartToast } from '@/components/ui/cart-toast';
+import { BackToTop } from '@/components/ui/back-to-top';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <BottomNav />
                     <CartDrawer />
                     <CartToast />
+                    <BackToTop />
                   </RecentlyViewedProvider>
                 </WishlistProvider>
               </CartProvider>

@@ -42,7 +42,10 @@ function MessageContent({ message }: { message: AnnouncementMessage }) {
  * Gold shimmer gradient on dark background. Supports plain text and linked messages.
  */
 export function AnnouncementBar() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return sessionStorage.getItem('announcement-dismissed') !== 'true';
+  });
   const [index, setIndex] = useState(0);
 
   const rotate = useCallback(() => {
@@ -60,7 +63,10 @@ export function AnnouncementBar() {
     <div className="gold-shimmer relative flex h-8 items-center justify-center border-b border-border-dark">
       <MessageContent message={ANNOUNCEMENT_MESSAGES[index]} />
       <button
-        onClick={() => setVisible(false)}
+        onClick={() => {
+          setVisible(false);
+          sessionStorage.setItem('announcement-dismissed', 'true');
+        }}
         className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary transition-colors hover:text-text-primary"
         aria-label="Close announcement"
       >

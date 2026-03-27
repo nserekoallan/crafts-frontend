@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Check, Heart, Plus, Star } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import { useWishlist } from '@/lib/wishlist';
@@ -56,7 +57,7 @@ export function DenseProductCard({ product, className, animationDelay = 0 }: Den
       style={{ animationDelay: `${animationDelay}ms` }}
     >
       {/* Image */}
-      <a
+      <Link
         href={`/shop/${product.slug}`}
         className="relative block aspect-[3/4] overflow-hidden bg-bg-surface"
       >
@@ -113,7 +114,7 @@ export function DenseProductCard({ product, className, animationDelay = 0 }: Den
             className="absolute bottom-2.5 left-2.5"
           />
         )}
-      </a>
+      </Link>
 
       {/* Info */}
       <div className="p-3 md:p-3.5">
@@ -123,11 +124,11 @@ export function DenseProductCard({ product, className, animationDelay = 0 }: Den
         </p>
 
         {/* Name */}
-        <a href={`/shop/${product.slug}`}>
+        <Link href={`/shop/${product.slug}`}>
           <h3 className="mt-0.5 text-[13px] font-semibold text-text-primary line-clamp-1 md:mt-1 md:text-sm">
             {product.name}
           </h3>
-        </a>
+        </Link>
 
         {/* Social proof */}
         {loveCount > 0 && (
