@@ -1,11 +1,28 @@
 import Link from 'next/link';
-import { Gem, HandHelping, ShieldCheck, Truck } from 'lucide-react';
+import { Gem, HandHelping, Instagram, Send, ShieldCheck, Truck, Twitter } from 'lucide-react';
 
 const FOOTER_LINKS = [
   { href: '/shop', label: 'Shop' },
-  { href: '/artisans', label: 'Artisans' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
+] as const;
+
+const SOCIAL_LINKS = [
+  {
+    href: 'https://www.instagram.com/craft_continent',
+    label: 'Instagram',
+    icon: Instagram,
+  },
+  {
+    href: 'https://x.com/Craftcontinent',
+    label: 'X (Twitter)',
+    icon: Twitter,
+  },
+  {
+    href: 'https://www.tiktok.com/@craft.continent',
+    label: 'TikTok',
+    icon: Send,
+  },
 ] as const;
 
 const TRUST_ITEMS = [
@@ -16,7 +33,7 @@ const TRUST_ITEMS = [
 ] as const;
 
 /**
- * Dark-themed site-wide footer with trust bar and gold accents.
+ * Dark-themed site-wide footer with trust bar, social links, and gold accents.
  */
 export function Footer() {
   return (
@@ -36,6 +53,7 @@ export function Footer() {
       {/* Main footer */}
       <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
         <div className="flex flex-col items-center gap-6 md:flex-row md:justify-between">
+          {/* Brand */}
           <div>
             <p className="font-heading text-lg font-bold uppercase tracking-[0.15em] text-gold">
               Crafts Continent
@@ -45,17 +63,36 @@ export function Footer() {
             </p>
           </div>
 
-          <nav className="flex flex-wrap justify-center gap-6">
-            {FOOTER_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm text-text-secondary transition-colors hover:text-gold"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          {/* Nav + Social */}
+          <div className="flex flex-col items-center gap-4 md:flex-row md:gap-6">
+            <nav className="flex flex-wrap justify-center gap-6">
+              {FOOTER_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm text-text-secondary transition-colors hover:text-gold"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Social icons */}
+            <div className="flex items-center gap-3">
+              {SOCIAL_LINKS.map(({ href, label, icon: Icon }) => (
+                <a
+                  key={href}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="p-2 text-text-secondary transition-colors hover:text-gold"
+                >
+                  <Icon className="h-5 w-5" />
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="mt-8 border-t border-border-dark pt-6 text-center text-xs text-text-tertiary">

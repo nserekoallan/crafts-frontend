@@ -3,9 +3,11 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { Search, ShoppingBag, User, Heart, X } from 'lucide-react';
+import Image from 'next/image';
+import { Menu, Search, ShoppingBag, User, Heart, X } from 'lucide-react';
 import { CurrencyToggle } from '@/components/ui/currency-toggle';
 import { AnnouncementBar } from '@/components/ui/announcement-bar';
+import { MainNavBar, MobileMenu } from '@/components/layout/main-nav-bar';
 import { CategoryNavBar } from '@/components/layout/category-nav-bar';
 import { useCart } from '@/lib/cart';
 import { useWishlist } from '@/lib/wishlist';
@@ -72,6 +74,8 @@ function HeaderInner() {
   const { itemCount, setDrawerOpen } = useCart();
   const { wishlistCount } = useWishlist();
   const [badgeBounce, setBadgeBounce] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [logoVisible, setLogoVisible] = useState(true);
   const prevCount = useRef(itemCount);
 
   const router = useRouter();
@@ -122,7 +126,17 @@ function HeaderInner() {
       <div className="border-b border-border-dark bg-bg-primary/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 md:h-[72px] md:gap-4 lg:px-8">
           {/* Logo */}
-          <Link href="/" className="shrink-0">
+          <Link href="/" className="flex shrink-0 items-center gap-2">
+            {logoVisible && (
+              <Image
+                src="/logo.png"
+                alt="Crafts Continent"
+                width={36}
+                height={36}
+                className="h-8 w-8 object-contain md:h-9 md:w-9"
+                onError={() => setLogoVisible(false)}
+              />
+            )}
             <span className="font-heading text-base font-bold uppercase tracking-[0.12em] text-gold md:text-xl md:tracking-[0.15em]">
               Crafts Continent
             </span>
@@ -155,6 +169,15 @@ function HeaderInner() {
                 </span>
               )}
             </Link>
+
+            {/* Hamburger menu — mobile only */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-2 text-text-secondary transition-colors hover:text-gold md:hidden"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
 
             {/* Cart */}
             <button
@@ -194,10 +217,16 @@ function HeaderInner() {
         </div>
       </div>
 
+      {/* Main nav — desktop */}
+      <MainNavBar />
+
       {/* Category nav strip — desktop */}
       <Suspense>
         <CategoryNavBar />
       </Suspense>
+
+      {/* Mobile nav drawer */}
+      <MobileMenu open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
     </header>
   );
 }
