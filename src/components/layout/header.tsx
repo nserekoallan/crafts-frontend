@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { Menu, Search, ShoppingBag, User, Heart, X } from 'lucide-react';
+import { Instagram, Menu, Music, Search, ShoppingBag, Twitter, User, Heart, X } from 'lucide-react';
 import { CurrencyToggle } from '@/components/ui/currency-toggle';
 import { AnnouncementBar } from '@/components/ui/announcement-bar';
 import { MainNavBar, MobileMenu } from '@/components/layout/main-nav-bar';
@@ -75,7 +75,6 @@ function HeaderInner() {
   const { wishlistCount } = useWishlist();
   const [badgeBounce, setBadgeBounce] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [logoVisible, setLogoVisible] = useState(true);
   const prevCount = useRef(itemCount);
 
   const router = useRouter();
@@ -127,16 +126,13 @@ function HeaderInner() {
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 md:h-[72px] md:gap-4 lg:px-8">
           {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center gap-2">
-            {logoVisible && (
-              <Image
-                src="/logo.png"
-                alt="Crafts Continent"
-                width={36}
-                height={36}
-                className="h-8 w-8 object-contain md:h-9 md:w-9"
-                onError={() => setLogoVisible(false)}
-              />
-            )}
+            <Image
+              src="/logo.jpg"
+              alt="Crafts Continent"
+              width={36}
+              height={36}
+              className="h-8 w-8 rounded-md object-cover md:h-9 md:w-9"
+            />
             <span className="font-heading text-base font-bold uppercase tracking-[0.12em] text-gold md:text-xl md:tracking-[0.15em]">
               Crafts Continent
             </span>
@@ -155,6 +151,37 @@ function HeaderInner() {
           {/* Right actions */}
           <div className="flex items-center gap-1.5 md:gap-3">
             <CurrencyToggle />
+
+            {/* Social icons — desktop only */}
+            <div className="hidden items-center gap-1 border-l border-border-dark pl-3 md:flex">
+              <a
+                href="https://www.instagram.com/craft_continent"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="p-1.5 text-text-tertiary transition-colors hover:text-gold"
+              >
+                <Instagram className="h-4 w-4" />
+              </a>
+              <a
+                href="https://x.com/Craftcontinent"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="X (Twitter)"
+                className="p-1.5 text-text-tertiary transition-colors hover:text-gold"
+              >
+                <Twitter className="h-4 w-4" />
+              </a>
+              <a
+                href="https://www.tiktok.com/@craft.continent"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok"
+                className="p-1.5 text-text-tertiary transition-colors hover:text-gold"
+              >
+                <Music className="h-4 w-4" />
+              </a>
+            </div>
 
             {/* Wishlist — desktop only */}
             <Link

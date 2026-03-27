@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Instagram, Twitter, Send, CheckCircle } from 'lucide-react';
+import { Instagram, Twitter, Music, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const SOCIAL_LINKS = [
@@ -18,7 +18,7 @@ const SOCIAL_LINKS = [
   {
     href: 'https://www.tiktok.com/@craft.continent',
     label: 'TikTok',
-    icon: Send,
+    icon: Music,
   },
 ] as const;
 

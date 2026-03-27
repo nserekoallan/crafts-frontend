@@ -954,11 +954,23 @@ export const DEAL_ZONES: DealZone[] = [
 // Announcement Messages
 // ---------------------------------------------------------------------------
 
-export const ANNOUNCEMENT_MESSAGES = [
-  'Free Shipping on Orders Over UGX 300,000',
-  'New: Cowrie Shell Collection Now Available',
-  'Pay with Mobile Money — MTN & Airtel Accepted',
-] as const;
+export interface AnnouncementMessage {
+  text: string;
+  href?: string;
+  external?: boolean;
+}
+
+export const ANNOUNCEMENT_MESSAGES: AnnouncementMessage[] = [
+  { text: 'Free Shipping on Orders Over UGX 300,000' },
+  { text: 'New: Cowrie Shell Collection Now Available' },
+  { text: 'Pay with Mobile Money — MTN & Airtel Accepted' },
+  {
+    text: 'Follow us on Instagram, TikTok & X — @craft_continent',
+    href: 'https://www.instagram.com/craft_continent',
+    external: true,
+  },
+  { text: 'Learn Our Story — Authentic African Craftsmanship', href: '/about' },
+];
 
 // ---------------------------------------------------------------------------
 // Cart

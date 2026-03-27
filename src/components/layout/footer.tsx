@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Gem, HandHelping, Instagram, Send, ShieldCheck, Truck, Twitter } from 'lucide-react';
+import { Gem, HandHelping, Instagram, Music, ShieldCheck, Truck, Twitter } from 'lucide-react';
 
 const FOOTER_LINKS = [
   { href: '/shop', label: 'Shop' },
@@ -21,7 +21,7 @@ const SOCIAL_LINKS = [
   {
     href: 'https://www.tiktok.com/@craft.continent',
     label: 'TikTok',
-    icon: Send,
+    icon: Music,
   },
 ] as const;
 
