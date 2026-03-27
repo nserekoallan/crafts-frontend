@@ -103,7 +103,7 @@ export function FilterSidebar({ filters, onChange }: FilterSidebarProps) {
   };
 
   return (
-    <aside className="hidden w-60 shrink-0 self-start sticky top-[200px] max-h-[calc(100vh-220px)] overflow-y-auto md:block">
+    <aside className="hidden w-60 shrink-0 sticky top-[200px] max-h-[calc(100vh-220px)] overflow-y-auto md:block">
       <h3 className="text-xs font-bold uppercase tracking-widest text-gold">Filters</h3>
 
       {/* Category */}

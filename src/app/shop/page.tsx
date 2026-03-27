@@ -239,7 +239,7 @@ function ShopPageInner() {
 
       {/* Sticky search pill + active filter pills */}
       {(searchTerm || hasActiveFilters(filters)) && (
-        <div className="sticky top-[188px] z-30 -mx-4 mt-4 bg-bg-primary/95 px-4 py-2 backdrop-blur-sm lg:-mx-8 lg:px-8">
+        <div className="sticky top-[200px] z-30 -mx-4 mt-4 bg-bg-primary/95 px-4 py-2 backdrop-blur-sm lg:-mx-8 lg:px-8">
           {searchTerm && (
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold-muted px-3 py-1 text-xs font-semibold text-gold">

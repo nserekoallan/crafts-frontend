@@ -42,11 +42,15 @@ function MessageContent({ message }: { message: AnnouncementMessage }) {
  * Gold shimmer gradient on dark background. Supports plain text and linked messages.
  */
 export function AnnouncementBar() {
-  const [visible, setVisible] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return sessionStorage.getItem('announcement-dismissed') !== 'true';
-  });
+  const [visible, setVisible] = useState(true);
   const [index, setIndex] = useState(0);
+
+  // Check sessionStorage after mount to avoid hydration mismatch
+  useEffect(() => {
+    if (sessionStorage.getItem('announcement-dismissed') === 'true') {
+      setVisible(false);
+    }
+  }, []);
 
   const rotate = useCallback(() => {
     setIndex((prev) => (prev + 1) % ANNOUNCEMENT_MESSAGES.length);

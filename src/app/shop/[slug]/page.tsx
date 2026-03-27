@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Check, Copy, Heart, MapPin, Minus, Plus, Share2, ShoppingBag, Star, Truck } from 'lucide-react';
 import { DenseProductCard } from '@/components/products/dense-product-card';
@@ -30,7 +30,25 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { recordView } = useRecentlyViewed();
 
-  const product = findProductBySlug(slug) ?? PRODUCTS[0];
+  const product = findProductBySlug(slug);
+
+  if (!product) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16 text-center">
+        <p className="text-lg text-text-secondary">Product not found</p>
+        <Link
+          href="/shop"
+          className="mt-4 rounded-lg border border-gold px-6 py-2 text-sm font-medium text-gold transition-colors hover:bg-gold hover:text-bg-primary"
+        >
+          Browse Shop
+        </Link>
+      </div>
+    );
+  }
+  const relatedProducts = useMemo(() =>
+    PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4),
+    [product.category, product.id],
+  );
   const hasDiscount = !!product.originalPrice && product.originalPrice > product.price;
   const isUnavailable = product.stockStatus === 'out_of_stock';
   const wishlisted = isWishlisted(product.id);
@@ -293,24 +311,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
       </div>
 
       {/* Related Products */}
-      {(() => {
-        const related = PRODUCTS
-          .filter((p) => p.category === product.category && p.id !== product.id)
-          .slice(0, 4);
-        if (related.length === 0) return null;
-        return (
-          <section className="mt-16">
-            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
-              You May Also Like
-            </h2>
-            <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
-              {related.map((p, i) => (
-                <DenseProductCard key={p.id} product={p} animationDelay={i * 50} />
-              ))}
-            </div>
-          </section>
-        );
-      })()}
+      {relatedProducts.length > 0 && (
+        <section className="mt-16">
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
+            You May Also Like
+          </h2>
+          <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
+            {relatedProducts.map((p, i) => (
+              <DenseProductCard key={p.id} product={p} animationDelay={i * 50} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Recently Viewed */}
       <div className="mt-12">
