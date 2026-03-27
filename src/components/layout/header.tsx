@@ -129,9 +129,9 @@ function HeaderInner() {
             <Image
               src="/logo.jpg"
               alt="Crafts Continent"
-              width={36}
-              height={36}
-              className="h-8 w-8 rounded-md object-cover md:h-9 md:w-9"
+              width={48}
+              height={48}
+              className="h-10 w-10 rounded-lg object-cover md:h-12 md:w-12"
             />
             <span className="font-heading text-base font-bold uppercase tracking-[0.12em] text-gold md:text-xl md:tracking-[0.15em]">
               Crafts Continent

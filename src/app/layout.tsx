@@ -16,6 +16,13 @@ export const metadata: Metadata = {
   title: 'Crafts Continent | Authentic African Artisan Marketplace',
   description:
     'Discover and purchase authentic handcrafted African art, textiles, jewelry, and home decor directly from skilled artisans across the continent.',
+  icons: { icon: '/logo.jpg' },
+  openGraph: {
+    title: 'Crafts Continent | Authentic African Artisan Marketplace',
+    description:
+      'Discover and purchase authentic handcrafted African art, textiles, jewelry, and home decor directly from skilled artisans across the continent.',
+    images: ['/logo.jpg'],
+  },
 };
 
 /**

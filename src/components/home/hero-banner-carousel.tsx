@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { HOMEPAGE_BANNERS } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,13 @@ export function HeroBannerCarousel() {
           <div className="absolute inset-0 flex items-center">
             <div className="mx-auto w-full max-w-7xl px-6 lg:px-8">
               <div className="max-w-lg">
+                <Image
+                  src="/logo.jpg"
+                  alt=""
+                  width={80}
+                  height={80}
+                  className="mb-4 h-16 w-16 rounded-xl object-cover opacity-90 md:h-20 md:w-20"
+                />
                 <h1 className="font-heading text-3xl font-bold leading-tight text-text-primary md:text-5xl lg:text-6xl">
                   {banner.title}
                 </h1>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -34,12 +35,19 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md rounded-xl border border-light-gray bg-white p-8 shadow-sm">
-        <h1 className="text-center text-2xl font-bold">Welcome Back</h1>
-        <p className="mt-1 text-center text-sm text-medium-gray">Sign in to your Crafts Continent account</p>
+      <div className="w-full max-w-md rounded-xl border border-border-dark bg-bg-surface p-8 shadow-sm">
+        <Image
+          src="/logo.jpg"
+          alt="Crafts Continent"
+          width={64}
+          height={64}
+          className="mx-auto h-16 w-16 rounded-xl object-cover"
+        />
+        <h1 className="mt-4 text-center text-2xl font-bold text-text-primary">Welcome Back</h1>
+        <p className="mt-1 text-center text-sm text-text-secondary">Sign in to your Crafts Continent account</p>
 
         {error && (
-          <div className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</div>
+          <div className="mt-4 rounded-lg bg-red-900/20 px-4 py-3 text-sm text-red-400" role="alert">{error}</div>
         )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -52,10 +60,10 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 space-y-2 text-center text-sm">
-          <Link href="/forgot-password" className="text-hunter-green hover:underline">Forgot your password?</Link>
-          <p className="text-medium-gray">
+          <Link href="/forgot-password" className="text-gold hover:underline">Forgot your password?</Link>
+          <p className="text-text-secondary">
             Don&apos;t have an account?{' '}
-            <Link href="/register" className="font-medium text-hunter-green hover:underline">Create one</Link>
+            <Link href="/register" className="font-medium text-gold hover:underline">Create one</Link>
           </p>
         </div>
       </div>

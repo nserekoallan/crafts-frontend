@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Gem, HandHelping, ShieldCheck, Truck } from 'lucide-react';
 import { HeroBannerCarousel } from '@/components/home/hero-banner-carousel';
@@ -97,6 +98,13 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-bg-primary/60" />
         <div className="absolute inset-0 flex items-center justify-center px-4 text-center">
           <div>
+            <Image
+              src="/logo.jpg"
+              alt=""
+              width={64}
+              height={64}
+              className="mx-auto mb-4 h-14 w-14 rounded-xl object-cover md:h-16 md:w-16"
+            />
             <p className="font-heading text-xl font-bold text-text-primary md:text-3xl lg:text-4xl">
               Every piece tells a story
             </p>

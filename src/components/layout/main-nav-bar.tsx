@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
@@ -114,9 +115,18 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
       <div className="animate-sheet-down absolute inset-x-0 top-0 border-b border-border-dark bg-bg-elevated">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border-dark px-5 py-4">
-          <span className="font-heading text-sm font-bold uppercase tracking-widest text-gold">
-            Menu
-          </span>
+          <div className="flex items-center gap-2">
+            <Image
+              src="/logo.jpg"
+              alt=""
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-md object-cover"
+            />
+            <span className="font-heading text-sm font-bold uppercase tracking-widest text-gold">
+              Menu
+            </span>
+          </div>
           <button
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full text-text-secondary hover:bg-bg-surface"

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Gem, HandHelping, Instagram, Music, ShieldCheck, Truck, Twitter } from 'lucide-react';
 
@@ -54,8 +55,15 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
         <div className="flex flex-col items-center gap-6 md:flex-row md:justify-between">
           {/* Brand */}
-          <div>
-            <p className="font-heading text-lg font-bold uppercase tracking-[0.15em] text-gold">
+          <div className="flex flex-col items-center md:items-start">
+            <Image
+              src="/logo.jpg"
+              alt="Crafts Continent"
+              width={56}
+              height={56}
+              className="h-14 w-14 rounded-lg object-cover"
+            />
+            <p className="mt-3 font-heading text-lg font-bold uppercase tracking-[0.15em] text-gold">
               Crafts Continent
             </p>
             <p className="mt-1 text-sm text-text-secondary">

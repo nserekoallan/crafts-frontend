@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, Search, SlidersHorizontal, X } from 'lucide-react';
 import { DenseProductCard } from '@/components/products/dense-product-card';
@@ -284,7 +285,7 @@ function ShopPageInner() {
             </div>
           ) : sorted.length === 0 && searchTerm ? (
             <div className="flex flex-col items-center py-16 text-center">
-              <Search className="mb-3 h-10 w-10 text-text-tertiary" />
+              <Image src="/logo.jpg" alt="" width={64} height={64} className="mb-4 h-16 w-16 rounded-xl object-cover" />
               <p className="text-lg text-text-secondary">
                 No results for &ldquo;{searchTerm}&rdquo;
               </p>
@@ -300,6 +301,7 @@ function ShopPageInner() {
             </div>
           ) : sorted.length === 0 ? (
             <div className="flex flex-col items-center py-16 text-center">
+              <Image src="/logo.jpg" alt="" width={64} height={64} className="mb-4 h-16 w-16 rounded-xl object-cover" />
               <p className="text-lg text-text-secondary">No pieces match your filters.</p>
               <button
                 onClick={() => handleFilterChange(DEFAULT_FILTERS)}

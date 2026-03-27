@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, Globe, ShieldCheck, Users } from 'lucide-react';
 
@@ -36,6 +37,13 @@ export default function AboutPage() {
     <div className="mx-auto max-w-3xl px-4 py-12 md:py-20 lg:px-8">
       {/* Hero */}
       <div className="text-center">
+        <Image
+          src="/logo.jpg"
+          alt="Crafts Continent"
+          width={96}
+          height={96}
+          className="mx-auto mb-6 h-20 w-20 rounded-2xl object-cover md:h-24 md:w-24"
+        />
         <h1 className="font-heading text-3xl font-bold text-text-primary md:text-4xl">
           About Crafts Continent
         </h1>

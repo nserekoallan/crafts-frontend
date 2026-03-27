@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Instagram, Twitter, Music, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -40,6 +41,13 @@ export default function ContactPage() {
     <div className="mx-auto max-w-3xl px-4 py-12 md:py-20 lg:px-8">
       {/* Hero */}
       <div className="text-center">
+        <Image
+          src="/logo.jpg"
+          alt="Crafts Continent"
+          width={64}
+          height={64}
+          className="mx-auto mb-5 h-16 w-16 rounded-xl object-cover"
+        />
         <h1 className="font-heading text-3xl font-bold text-text-primary md:text-4xl">
           Get in Touch
         </h1>
