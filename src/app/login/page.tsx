@@ -8,8 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/auth';
 
+function redirectPathForRole(role: string): string {
+  if (role === 'artisan') return '/dashboard';
+  if (role === 'admin' || role === 'super_admin') return '/admin';
+  return '/';
+}
+
 /**
- * Login page with email/password form.
+ * Login page — redirects to role-appropriate destination after success.
  */
 export default function LoginPage() {
   const router = useRouter();
@@ -24,8 +30,8 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login({ email, password });
-      router.push('/');
+      const loggedInUser = await login({ email, password });
+      router.push(redirectPathForRole(loggedInUser.role));
     } catch {
       setError('Invalid email or password. Please try again.');
     } finally {

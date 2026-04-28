@@ -1,8 +1,9 @@
 'use client';
 
-import { use, useEffect, useMemo, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Check, Copy, Heart, MapPin, Minus, Plus, Share2, ShoppingBag, Star, Truck } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { DenseProductCard } from '@/components/products/dense-product-card';
 import { useCart } from '@/lib/cart';
 import { useWishlist } from '@/lib/wishlist';
@@ -13,7 +14,8 @@ import { DiscountBadge } from '@/components/ui/discount-badge';
 import { StockBadge } from '@/components/ui/stock-badge';
 import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { RecentlyViewedStrip } from '@/components/products/recently-viewed-strip';
-import { findProductBySlug, PRODUCTS } from '@/lib/mock-data';
+import { api } from '@/lib/api';
+import { mapApiProductToProduct, type ApiProduct, type ApiProductsResponse } from '@/lib/types/product';
 
 /**
  * Product detail page — dark theme with cart, wishlist, share, and provenance.
@@ -30,9 +32,33 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { recordView } = useRecentlyViewed();
 
-  const product = findProductBySlug(slug);
+  const { data: productData, isLoading, isError } = useQuery({
+    queryKey: ['product', slug],
+    queryFn: () => api.get<{ data: ApiProduct }>(`/products/slug/${slug}`).then((r) => r.data),
+  });
 
-  if (!product) {
+  const product = productData ? mapApiProductToProduct(productData) : null;
+
+  const { data: relatedData } = useQuery({
+    queryKey: ['products', 'related', productData?.category?.id],
+    queryFn: () =>
+      api
+        .get<ApiProductsResponse>(`/products?categoryId=${productData!.category.id}&limit=5`)
+        .then((r) => r.data.filter((p) => p.id !== productData!.id).slice(0, 4).map(mapApiProductToProduct)),
+    enabled: !!productData?.category?.id,
+  });
+
+  const relatedProducts = relatedData ?? [];
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (isError || !product) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16 text-center">
         <p className="text-lg text-text-secondary">Product not found</p>
@@ -45,10 +71,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
       </div>
     );
   }
-  const relatedProducts = useMemo(() =>
-    PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4),
-    [product.category, product.id],
-  );
   const hasDiscount = !!product.originalPrice && product.originalPrice > product.price;
   const isUnavailable = product.stockStatus === 'out_of_stock';
   const wishlisted = isWishlisted(product.id);

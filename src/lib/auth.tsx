@@ -3,12 +3,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from '@/lib/api';
 
-interface User {
+export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'customer' | 'artisan' | 'admin';
+  role: 'customer' | 'artisan' | 'admin' | 'super_admin';
+  artisan?: { id: string; businessName: string; status: string } | null;
 }
 
 interface LoginPayload {
@@ -21,16 +22,16 @@ interface RegisterPayload {
   lastName: string;
   email: string;
   password: string;
-  role: 'customer' | 'artisan';
 }
 
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (payload: LoginPayload) => Promise<void>;
+  login: (payload: LoginPayload) => Promise<User>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -52,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     api
-      .get<{ data: User }>('/auth/me')
+      .get<{ data: User }>('/auth/profile')
       .then((res) => setUser(res.data))
       .catch(() => {
         localStorage.removeItem(TOKEN_KEY);
@@ -60,17 +61,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const login = useCallback(async (payload: LoginPayload) => {
-    const res = await api.post<{ data: { user: User; token: string } }>('/auth/login', payload);
-    localStorage.setItem(TOKEN_KEY, res.data.token);
-    setUser(res.data.user);
+  const fetchProfile = useCallback(async (): Promise<User> => {
+    const res = await api.get<{
+      data: {
+        id: string;
+        email: string;
+        role: string;
+        firstName?: string;
+        lastName?: string;
+        profile?: { firstName?: string; lastName?: string; avatar?: string | null } | null;
+        artisan?: { id: string; businessName: string; status: string } | null;
+      };
+    }>('/auth/profile');
+    const d = res.data;
+    return {
+      id: d.id,
+      email: d.email,
+      role: d.role.toLowerCase() as User['role'],
+      firstName: d.firstName ?? d.profile?.firstName ?? '',
+      lastName: d.lastName ?? d.profile?.lastName ?? '',
+      artisan: 'artisan' in d ? (d.artisan ?? null) : undefined,
+    };
   }, []);
 
+  const login = useCallback(async (payload: LoginPayload): Promise<User> => {
+    const res = await api.post<{ data: { user: User; accessToken: string } }>('/auth/login', payload);
+    localStorage.setItem(TOKEN_KEY, res.data.accessToken);
+    const profile = await fetchProfile().catch(() => ({
+      ...res.data.user,
+      role: (res.data.user.role as string).toLowerCase() as User['role'],
+      firstName: res.data.user.firstName ?? '',
+      lastName: res.data.user.lastName ?? '',
+    }));
+    setUser(profile);
+    return profile;
+  }, [fetchProfile]);
+
   const register = useCallback(async (payload: RegisterPayload) => {
-    const res = await api.post<{ data: { user: User; token: string } }>('/auth/register', payload);
-    localStorage.setItem(TOKEN_KEY, res.data.token);
-    setUser(res.data.user);
-  }, []);
+    const res = await api.post<{ data: { user: User; accessToken: string } }>('/auth/register', payload);
+    localStorage.setItem(TOKEN_KEY, res.data.accessToken);
+    const profile = await fetchProfile().catch(() => ({
+      ...res.data.user,
+      role: 'customer' as User['role'],
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+    }));
+    setUser(profile);
+  }, [fetchProfile]);
+
+  const refreshUser = useCallback(async () => {
+    const profile = await fetchProfile();
+    setUser(profile);
+  }, [fetchProfile]);
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
@@ -85,8 +127,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
+      refreshUser,
     }),
-    [user, isLoading, login, register, logout],
+    [user, isLoading, login, register, logout, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -98,8 +141,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  */
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }

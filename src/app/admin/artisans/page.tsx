@@ -1,219 +1,185 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Image from 'next/image';
-import { ARTISANS } from '@/lib/mock-data';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus, UserCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CreateArtisanDialog } from '@/components/admin/create-artisan-dialog';
+import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
-type VerificationFilter = 'all' | 'verified' | 'pending' | 'suspended';
+type StatusFilter = 'all' | 'VERIFIED' | 'PENDING' | 'SUSPENDED';
 
-/**
- * ArtisansPage - Artisan management interface for administrators
- */
+interface ArtisanRow {
+  id: string;
+  businessName: string;
+  region: string | null;
+  status: 'VERIFIED' | 'PENDING' | 'SUSPENDED';
+  _count: { products: number };
+  user: {
+    email: string;
+    profile: { firstName: string; lastName: string } | null;
+  };
+}
+
+interface ArtisansResponse {
+  data: ArtisanRow[];
+  meta: { total: number; page: number; limit: number };
+}
+
+const STATUS_FILTERS: StatusFilter[] = ['all', 'VERIFIED', 'PENDING', 'SUSPENDED'];
+
+const STATUS_LABELS: Record<StatusFilter, string> = {
+  all: 'All',
+  VERIFIED: 'Verified',
+  PENDING: 'Pending',
+  SUSPENDED: 'Suspended',
+};
+
+function getStatusVariant(status: string): 'default' | 'pending' | 'cancelled' {
+  if (status === 'VERIFIED') return 'default';
+  if (status === 'PENDING') return 'pending';
+  return 'cancelled';
+}
+
 export default function ArtisansPage() {
-  const [filter, setFilter] = useState<VerificationFilter>('all');
+  const [filter, setFilter] = useState<StatusFilter>('all');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
-  /**
-   * Filtered artisans based on verification filter
-   * Note: All artisans default to verified for demo purposes
-   */
-  const filteredArtisans = useMemo(() => {
-    if (filter === 'all') return ARTISANS;
-    // For demo, show all as verified, but filter UI is functional
-    if (filter === 'verified') return ARTISANS;
-    return [];
-  }, [filter]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['admin', 'artisans'],
+    queryFn: () => api.get<ArtisansResponse>('/artisans/admin').then((r) => r),
+  });
 
-  /**
-   * Handle view artisan profile
-   * @param {string} artisanId - Artisan ID
-   */
-  const handleViewProfile = (artisanId: string) => {
-    alert(`View profile for artisan ${artisanId}`);
-  };
+  const { mutate: updateStatus } = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      api.patch(`/artisans/${id}/status`, { status }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'artisans'] }),
+  });
 
-  /**
-   * Handle suspend artisan
-   * @param {string} artisanId - Artisan ID
-   * @param {string} artisanName - Artisan name
-   */
-  const handleSuspend = (artisanId: string, artisanName: string) => {
-    alert(`Suspend artisan ${artisanName} (${artisanId})`);
-  };
+  const artisans = data?.data ?? [];
+
+  const filtered = useMemo(() => {
+    if (filter === 'all') return artisans;
+    return artisans.filter((a) => a.status === filter);
+  }, [artisans, filter]);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-charcoal mb-2">Artisans</h1>
-        <p className="text-medium-gray">Manage artisan accounts and verifications</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-charcoal">Artisans</h1>
+          <p className="mt-1 text-medium-gray">Manage artisan accounts and verifications</p>
+        </div>
+        <Button variant="primary" onClick={() => setDialogOpen(true)} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Create Artisan
+        </Button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-light-gray p-6">
-        <div className="flex flex-wrap gap-2">
-          {(['all', 'verified', 'pending', 'suspended'] as const).map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={cn(
-                'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                filter === status
-                  ? 'bg-hunter-green text-white'
-                  : 'bg-light-gray text-charcoal hover:bg-medium-gray/20'
-              )}
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Results Count */}
-      <div className="text-sm text-medium-gray">
-        Showing {filteredArtisans.length} artisan{filteredArtisans.length !== 1 ? 's' : ''}
-      </div>
-
-      {/* Desktop Table */}
-      <div className="hidden md:block bg-white rounded-xl border border-light-gray overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-light-gray/50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">
-                  Artisan
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">
-                  Location
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">
-                  Craft
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">
-                  Products
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-medium-gray uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-light-gray">
-              {filteredArtisans.map((artisan) => (
-                <tr key={artisan.id} className="hover:bg-light-gray/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <Image
-                        src={artisan.avatarUrl}
-                        alt={artisan.name}
-                        width={32}
-                        height={32}
-                        className="rounded-full object-cover"
-                      />
-                      <span className="text-sm font-medium text-charcoal">
-                        {artisan.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-medium-gray">
-                    {artisan.region}, {artisan.country}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-charcoal">
-                    {artisan.craft}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-medium-gray">
-                    {artisan.products}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <Badge variant="delivered">Verified</Badge>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-right space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewProfile(artisan.id)}
-                    >
-                      View Profile
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleSuspend(artisan.id, artisan.name)}
-                    >
-                      Suspend
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Mobile Cards */}
-      <div className="md:hidden space-y-4">
-        {filteredArtisans.map((artisan) => (
-          <div key={artisan.id} className="bg-white rounded-xl border border-light-gray p-4 space-y-3">
-            <div className="flex items-start gap-3">
-              <Image
-                src={artisan.avatarUrl}
-                alt={artisan.name}
-                width={48}
-                height={48}
-                className="rounded-full object-cover"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-charcoal mb-1">{artisan.name}</div>
-                <div className="text-sm text-medium-gray">
-                  {artisan.region}, {artisan.country}
-                </div>
-              </div>
-              <Badge variant="delivered">Verified</Badge>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-medium-gray">Craft:</span>
-                <div className="font-medium text-charcoal">{artisan.craft}</div>
-              </div>
-              <div>
-                <span className="text-medium-gray">Products:</span>
-                <div className="font-medium text-charcoal">{artisan.products}</div>
-              </div>
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="flex-1"
-                onClick={() => handleViewProfile(artisan.id)}
-              >
-                View Profile
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-1"
-                onClick={() => handleSuspend(artisan.id, artisan.name)}
-              >
-                Suspend
-              </Button>
-            </div>
-          </div>
+      <div className="flex flex-wrap gap-2 rounded-xl border border-light-gray bg-white p-4">
+        {STATUS_FILTERS.map((s) => (
+          <button
+            key={s}
+            onClick={() => setFilter(s)}
+            className={cn(
+              'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+              filter === s
+                ? 'bg-hunter-green text-white'
+                : 'bg-light-gray text-charcoal hover:bg-medium-gray/20',
+            )}
+          >
+            {STATUS_LABELS[s]}
+          </button>
         ))}
       </div>
 
-      {/* Empty State */}
-      {filteredArtisans.length === 0 && (
-        <div className="bg-white rounded-xl border border-light-gray p-12 text-center">
-          <p className="text-medium-gray">No artisans found with this status</p>
-        </div>
-      )}
+      <div className="text-sm text-medium-gray">
+        Showing {filtered.length} artisan{filtered.length !== 1 ? 's' : ''}
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto rounded-xl border border-light-gray bg-white">
+        {isLoading ? (
+          <div className="p-8 text-center text-sm text-medium-gray">Loading artisans…</div>
+        ) : error ? (
+          <div className="p-8 text-center text-sm text-red-500">Failed to load artisans.</div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 p-12 text-center">
+            <UserCheck className="h-10 w-10 text-light-gray" />
+            <p className="text-sm text-medium-gray">
+              {artisans.length === 0 ? 'No artisans yet.' : 'No artisans match this filter.'}
+            </p>
+          </div>
+        ) : (
+          <table className="w-full text-left text-sm">
+            <thead className="bg-light-gray/50">
+              <tr>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-medium-gray">Artisan</th>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-medium-gray">Region</th>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-medium-gray">Products</th>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-medium-gray">Status</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-medium-gray">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-light-gray">
+              {filtered.map((artisan) => {
+                const name = artisan.user.profile
+                  ? `${artisan.user.profile.firstName} ${artisan.user.profile.lastName}`
+                  : artisan.user.email;
+
+                return (
+                  <tr key={artisan.id} className="transition-colors hover:bg-light-gray/30">
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="font-medium text-charcoal">{name}</p>
+                        <p className="text-xs text-medium-gray">{artisan.businessName}</p>
+                        <p className="text-xs text-medium-gray">{artisan.user.email}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-medium-gray">{artisan.region ?? '—'}</td>
+                    <td className="px-6 py-4 text-medium-gray">{artisan._count.products}</td>
+                    <td className="px-6 py-4">
+                      <Badge variant={getStatusVariant(artisan.status)}>
+                        {STATUS_LABELS[artisan.status as StatusFilter] ?? artisan.status}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-end gap-2">
+                        {artisan.status !== 'VERIFIED' && (
+                          <button
+                            onClick={() => updateStatus({ id: artisan.id, status: 'VERIFIED' })}
+                            className="rounded-md border border-hunter-green px-3 py-1 text-xs font-medium text-hunter-green hover:bg-hunter-green hover:text-white"
+                          >
+                            Verify
+                          </button>
+                        )}
+                        {artisan.status !== 'SUSPENDED' && (
+                          <button
+                            onClick={() => updateStatus({ id: artisan.id, status: 'SUSPENDED' })}
+                            className="rounded-md border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                          >
+                            Suspend
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <CreateArtisanDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['admin', 'artisans'] })}
+      />
     </div>
   );
 }

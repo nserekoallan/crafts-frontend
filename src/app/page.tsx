@@ -11,10 +11,8 @@ import { FlashDeals } from '@/components/home/flash-deals';
 import { CollectionsStrip } from '@/components/home/collections-strip';
 import { SurpriseMe } from '@/components/home/surprise-me';
 import { RecentlyViewedStrip } from '@/components/products/recently-viewed-strip';
-import { PRODUCTS, DEAL_ZONES } from '@/lib/mock-data';
-
-const TRENDING = PRODUCTS.filter((p) => p.featured).slice(0, 8);
-const NEW_ARRIVALS = PRODUCTS.filter((p) => p.isNew).slice(0, 8);
+import { useProducts } from '@/hooks/use-products';
+import { DEAL_ZONES } from '@/lib/mock-data';
 
 const TRUST_POINTS = [
   {
@@ -39,11 +37,10 @@ const TRUST_POINTS = [
   },
 ];
 
-/**
- * Dark, immersive homepage — shop-first design with hero carousel,
- * daily discovery, flash deals, collections, surprise me and trust section.
- */
 export default function HomePage() {
+  const { products: trendingProducts } = useProducts({ limit: 8 });
+  const { products: newArrivals } = useProducts({ limit: 8, page: 2 });
+
   return (
     <div>
       {/* 1. Hero Banner Carousel */}
@@ -78,7 +75,7 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3 md:mt-6 md:grid-cols-4 md:gap-5">
-          {TRENDING.map((product, i) => (
+          {trendingProducts.map((product, i) => (
             <DenseProductCard key={product.id} product={product} animationDelay={i * 50} />
           ))}
         </div>
@@ -132,7 +129,7 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3 md:mt-6 md:grid-cols-4 md:gap-5">
-          {NEW_ARRIVALS.map((product, i) => (
+          {newArrivals.map((product, i) => (
             <DenseProductCard key={product.id} product={product} animationDelay={i * 50} />
           ))}
         </div>

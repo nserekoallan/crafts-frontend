@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
-import { DollarSign, Wallet, Clock, CheckCircle } from 'lucide-react';
-import { ARTISAN_EARNINGS } from '@/lib/mock-data';
+import { useState } from 'react';
+import { DollarSign, Wallet, Clock } from 'lucide-react';
+import { useArtisanEarnings } from '@/hooks/use-artisan';
 import { formatPrice, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { RequestPayoutDialog } from '@/components/dashboard/request-payout-dialog';
 
 interface StatCardProps {
   icon: React.ElementType;
@@ -13,9 +14,6 @@ interface StatCardProps {
   iconColor: string;
 }
 
-/**
- * Summary stat card with icon, value, and label.
- */
 function StatCard({ icon: Icon, label, value, iconColor }: StatCardProps) {
   return (
     <div className="rounded-lg border border-light-gray bg-white p-6 shadow-sm">
@@ -32,165 +30,125 @@ function StatCard({ icon: Icon, label, value, iconColor }: StatCardProps) {
   );
 }
 
-/**
- * Artisan earnings overview with stats, revenue chart, and transaction history.
- */
+function StatSkeleton() {
+  return <div className="h-24 animate-pulse rounded-lg border border-light-gray bg-light-gray/50" />;
+}
+
+const PAYOUT_STATUS_COLORS: Record<string, string> = {
+  PENDING: 'bg-yellow-100 text-yellow-800',
+  APPROVED: 'bg-blue-100 text-blue-800',
+  COMPLETED: 'bg-green-100 text-green-800',
+  FAILED: 'bg-red-100 text-red-800',
+};
+
 export default function EarningsPage() {
-  // Calculate total earned from all months
-  const totalEarned = useMemo(() => {
-    return ARTISAN_EARNINGS.reduce((sum, earning) => sum + earning.revenue, 0);
-  }, []);
+  const { data, isLoading, error } = useArtisanEarnings();
+  const [showPayoutDialog, setShowPayoutDialog] = useState(false);
 
-  // Calculate max revenue for chart scaling
-  const maxRevenue = useMemo(() => {
-    return Math.max(...ARTISAN_EARNINGS.map((e) => e.revenue));
-  }, []);
-
-  /**
-   * Handles the Request Payout button click.
-   */
-  function handleRequestPayout() {
-    alert('Request Payout functionality coming soon!');
-  }
+  const balance = data ? Number(data.balance) : 0;
+  const payouts = data?.payouts ?? [];
+  const totalPaidOut = payouts
+    .filter((p) => p.status === 'COMPLETED')
+    .reduce((sum, p) => sum + Number(p.amount), 0);
+  const pendingPayouts = payouts.filter((p) => p.status === 'PENDING').length;
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-charcoal md:text-3xl">Earnings</h1>
           <p className="mt-1 text-sm text-medium-gray">Track your revenue and payouts</p>
         </div>
-        <Button variant="primary" onClick={handleRequestPayout} className="w-full md:w-auto">
+        <Button
+          variant="primary"
+          className="w-full md:w-auto"
+          onClick={() => setShowPayoutDialog(true)}
+          disabled={balance <= 0}
+        >
           Request Payout
         </Button>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          icon={DollarSign}
-          label="Total Earned"
-          value={formatPrice(totalEarned)}
-          iconColor="bg-hunter-green"
-        />
-        <StatCard
-          icon={Wallet}
-          label="Available Balance"
-          value={formatPrice(5490000)}
-          iconColor="bg-emerald-600"
-        />
-        <StatCard
-          icon={Clock}
-          label="Pending Payout"
-          value={formatPrice(4680000)}
-          iconColor="bg-amber-600"
-        />
-        <StatCard
-          icon={CheckCircle}
-          label="Last Payout"
-          value={formatPrice(5220000)}
-          iconColor="bg-blue-600"
-        />
+      <div className="grid gap-4 md:grid-cols-3">
+        {isLoading ? (
+          <>
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+          </>
+        ) : (
+          <>
+            <StatCard
+              icon={Wallet}
+              label="Available Balance"
+              value={formatPrice(balance)}
+              iconColor="bg-hunter-green"
+            />
+            <StatCard
+              icon={DollarSign}
+              label="Total Paid Out"
+              value={formatPrice(totalPaidOut)}
+              iconColor="bg-satin-gold"
+            />
+            <StatCard
+              icon={Clock}
+              label="Pending Payouts"
+              value={String(pendingPayouts)}
+              iconColor="bg-charcoal"
+            />
+          </>
+        )}
       </div>
 
-      {/* Revenue Chart */}
-      <div className="rounded-lg border border-light-gray bg-white p-6 shadow-sm">
-        <h2 className="mb-6 text-lg font-semibold text-charcoal">Revenue Trend</h2>
-        <div className="flex items-end justify-around gap-4 h-64">
-          {ARTISAN_EARNINGS.map((earning) => {
-            const heightPercentage = (earning.revenue / maxRevenue) * 100;
-            const heightPx = (heightPercentage / 100) * 200; // 200px max height
-            return (
-              <div key={earning.month} className="flex flex-1 flex-col items-center gap-2">
-                <div className="flex h-52 w-full items-end justify-center">
-                  <div
-                    className="w-full max-w-[60px] rounded-t-lg bg-hunter-green transition-all hover:bg-hunter-green-dark"
-                    style={{ height: `${heightPx}px` }}
-                    title={`${earning.month}: ${formatPrice(earning.revenue)}`}
-                  />
-                </div>
-                <p className="text-xs text-medium-gray whitespace-nowrap">{earning.month}</p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Transaction History */}
-      <div className="rounded-lg border border-light-gray bg-white shadow-sm">
-        <div className="border-b border-light-gray px-6 py-4">
-          <h2 className="text-lg font-semibold text-charcoal">Transaction History</h2>
-        </div>
-
-        {/* Desktop Table */}
-        <div className="hidden lg:block">
-          <table className="w-full">
-            <thead className="bg-light-gray/50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-charcoal">
-                  Period
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-charcoal">
-                  Orders
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-charcoal">
-                  Revenue
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-charcoal">
-                  Payout
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-charcoal">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-light-gray">
-              {ARTISAN_EARNINGS.map((earning) => (
-                <tr key={earning.month} className="transition-colors hover:bg-light-gray/30">
-                  <td className="px-6 py-4 font-medium text-charcoal">{earning.month} 2026</td>
-                  <td className="px-6 py-4 text-charcoal">{earning.orders}</td>
-                  <td className="px-6 py-4 font-medium text-charcoal">{formatPrice(earning.revenue)}</td>
-                  <td className="px-6 py-4 font-medium text-emerald-600">{formatPrice(earning.payout)}</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
-                      Completed
-                    </span>
-                  </td>
+      <div>
+        <h2 className="text-xl font-bold">Payout History</h2>
+        <div className="mt-4 overflow-x-auto rounded-xl border border-light-gray bg-white">
+          {isLoading ? (
+            <div className="p-8 text-center text-sm text-medium-gray">Loading payouts…</div>
+          ) : error ? (
+            <div className="p-8 text-center text-sm text-red-500">Failed to load earnings.</div>
+          ) : payouts.length === 0 ? (
+            <div className="p-8 text-center text-sm text-medium-gray">No payouts yet.</div>
+          ) : (
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-light-gray text-xs font-semibold uppercase tracking-wider text-medium-gray">
+                  <th className="px-5 py-3">Date</th>
+                  <th className="px-5 py-3">Amount</th>
+                  <th className="px-5 py-3">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile Cards */}
-        <div className="divide-y divide-light-gray lg:hidden">
-          {ARTISAN_EARNINGS.map((earning) => (
-            <div key={earning.month} className="p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-charcoal">{earning.month} 2026</p>
-                <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
-                  Completed
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="text-medium-gray">Orders</p>
-                  <p className="font-medium text-charcoal">{earning.orders}</p>
-                </div>
-                <div>
-                  <p className="text-medium-gray">Revenue</p>
-                  <p className="font-medium text-charcoal">{formatPrice(earning.revenue)}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-medium-gray">Payout</p>
-                  <p className="font-medium text-emerald-600">{formatPrice(earning.payout)}</p>
-                </div>
-              </div>
-            </div>
-          ))}
+              </thead>
+              <tbody className="divide-y divide-light-gray">
+                {payouts.map((payout) => (
+                  <tr key={payout.id} className="hover:bg-light-gray/30">
+                    <td className="px-5 py-3 text-medium-gray">
+                      {new Date(payout.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-5 py-3 font-medium">{formatPrice(Number(payout.amount))}</td>
+                    <td className="px-5 py-3">
+                      <span
+                        className={cn(
+                          'rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                          PAYOUT_STATUS_COLORS[payout.status] ?? 'bg-light-gray text-charcoal',
+                        )}
+                      >
+                        {payout.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
+
+      {showPayoutDialog && (
+        <RequestPayoutDialog
+          balance={balance}
+          onClose={() => setShowPayoutDialog(false)}
+        />
+      )}
     </div>
   );
 }

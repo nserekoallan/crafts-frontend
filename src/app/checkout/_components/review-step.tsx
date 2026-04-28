@@ -27,6 +27,20 @@ interface OrderResponse {
   };
 }
 
+interface PaymentInitResponse {
+  data: {
+    payment: { id: string };
+    checkoutUrl: string;
+  };
+}
+
+const PAYMENT_METHOD_MAP: Record<PaymentMethod, string> = {
+  mobile_money: 'MOBILE_MONEY',
+  card: 'CARD',
+  bank_transfer: 'BANK_TRANSFER',
+  ussd: 'USSD',
+};
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -67,13 +81,20 @@ export function ReviewStep({
   const [error, setError] = useState<string | null>(null);
 
   const handlePlaceOrder = useCallback(async () => {
-    if (isSubmitting) return;
+    if (isSubmitting || items.length === 0) return;
 
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const response = await api.post<OrderResponse>('/orders', {
+      // Step 1: Sync localStorage cart to server
+      await api.delete('/cart').catch(() => null); // clear existing server cart
+      for (const item of items) {
+        await api.post('/cart/items', { productId: item.id, quantity: item.quantity });
+      }
+
+      // Step 2: Create order from server cart
+      const orderRes = await api.post<OrderResponse>('/orders', {
         shippingAddress: {
           street: shippingAddress.street.trim(),
           city: shippingAddress.city.trim(),
@@ -85,17 +106,29 @@ export function ReviewStep({
         notes: shippingAddress.notes?.trim() || undefined,
       });
 
+      const orderId = orderRes.data.id;
+
+      // Step 3: Initialize payment
+      const paymentRes = await api.post<PaymentInitResponse>('/payments/initialize', {
+        orderId,
+        provider: 'PAYSTACK',
+        method: PAYMENT_METHOD_MAP[paymentMethod] ?? 'CARD',
+      });
+
       clearCart();
-      router.push(`/orders/${response.data.id}/success`);
+
+      // Step 4: Redirect to payment provider
+      window.location.href = paymentRes.data.checkoutUrl;
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.body.error.message);
+        const msg = (err.body as { message?: string })?.message;
+        setError(msg ?? 'Something went wrong. Please try again.');
       } else {
         setError('Something went wrong. Please try again.');
       }
       setIsSubmitting(false);
     }
-  }, [isSubmitting, shippingAddress, clearCart, router]);
+  }, [isSubmitting, items, shippingAddress, paymentMethod, clearCart]);
 
   return (
     <div className="space-y-5">
@@ -219,10 +252,10 @@ export function ReviewStep({
           {isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Placing Order...
+              Processing…
             </>
           ) : (
-            'Place Order'
+            'Place Order & Pay'
           )}
         </button>
       </div>

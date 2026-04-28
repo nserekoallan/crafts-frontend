@@ -1,220 +1,189 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Image from 'next/image';
-import { Plus, Search } from 'lucide-react';
-import { PRODUCTS, type Product } from '@/lib/mock-data';
+import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useArtisanProducts } from '@/hooks/use-artisan';
+import type { ApiProduct } from '@/lib/types/product';
+import { CreateProductDialog } from '@/components/dashboard/create-product-dialog';
+import { EditProductDialog } from '@/components/dashboard/edit-product-dialog';
 import { formatPrice, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { api } from '@/lib/api';
 
-type ProductStatus = 'active' | 'draft' | 'out_of_stock';
+type StatusFilter = 'all' | 'ACTIVE' | 'DRAFT' | 'PENDING_QC' | 'SUSPENDED';
 
-interface ProductWithStatus extends Product {
-  status: ProductStatus;
-  stock: number;
-}
+const STATUS_FILTERS: StatusFilter[] = ['all', 'ACTIVE', 'DRAFT', 'PENDING_QC', 'SUSPENDED'];
 
-/**
- * Derives product status from product ID using a deterministic formula.
- */
-function getProductStatus(id: string): ProductStatus {
-  const n = parseInt(id, 10);
-  if (n % 5 === 0) return 'out_of_stock';
-  if (n % 3 === 0) return 'draft';
-  return 'active';
-}
+const STATUS_LABELS: Record<string, string> = {
+  all: 'All',
+  ACTIVE: 'Active',
+  DRAFT: 'Draft',
+  PENDING_QC: 'Pending QC',
+  SUSPENDED: 'Suspended',
+};
 
-/**
- * Derives stock count from product ID using a deterministic formula.
- */
-function getStockCount(id: string): number {
-  return ((parseInt(id, 10) * 7) % 50) + 5;
-}
-
-/**
- * Returns badge variant for product status.
- */
-function getStatusBadgeVariant(status: ProductStatus): 'default' | 'pending' | 'cancelled' {
-  if (status === 'active') return 'default';
-  if (status === 'draft') return 'pending';
+function getStatusVariant(status: string): 'default' | 'pending' | 'cancelled' {
+  if (status === 'ACTIVE') return 'default';
+  if (status === 'DRAFT' || status === 'PENDING_QC') return 'pending';
   return 'cancelled';
 }
 
-/**
- * Returns human-readable status label.
- */
-function getStatusLabel(status: ProductStatus): string {
-  if (status === 'active') return 'Active';
-  if (status === 'draft') return 'Draft';
-  return 'Out of Stock';
-}
-
-const STATUS_FILTERS: Array<'all' | ProductStatus> = ['all', 'active', 'draft', 'out_of_stock'];
-
-/**
- * Artisan product management page with search, filtering, and responsive layout.
- */
 export default function ProductsPage() {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | ProductStatus>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editProduct, setEditProduct] = useState<ApiProduct | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  // Enrich products with status and stock
-  const productsWithStatus: ProductWithStatus[] = useMemo(
-    () =>
-      PRODUCTS.map((product) => ({
-        ...product,
-        status: getProductStatus(product.id),
-        stock: getStockCount(product.id),
-      })),
-    [],
-  );
+  const { data, isLoading, error } = useArtisanProducts();
+  const products = (data?.data ?? []) as ApiProduct[];
 
-  // Filter products client-side
-  const filteredProducts = useMemo(() => {
-    return productsWithStatus.filter((product) => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || product.status === statusFilter;
+  const { mutate: deleteProduct, isPending: isDeleting } = useMutation({
+    mutationFn: (id: string) => api.delete(`/products/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['artisan', 'products'] });
+      setDeleteConfirm(null);
+    },
+  });
+
+  const filtered = useMemo(() => {
+    return products.filter((p) => {
+      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [productsWithStatus, searchTerm, statusFilter]);
-
-  /**
-   * Handles the Add Product button click.
-   */
-  function handleAddProduct() {
-    alert('Add Product functionality coming soon!');
-  }
+  }, [products, searchTerm, statusFilter]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-charcoal md:text-3xl">Products</h1>
+          <h1 className="text-2xl font-bold">Products</h1>
           <p className="mt-1 text-sm text-medium-gray">Manage your product listings</p>
         </div>
-        <Button variant="primary" onClick={handleAddProduct} className="w-full md:w-auto">
+        <Button variant="primary" onClick={() => setCreateOpen(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Product
         </Button>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center">
-        <div className="relative flex-1">
+      {/* Filters */}
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-medium-gray" />
           <Input
-            type="text"
-            placeholder="Search products..."
+            placeholder="Search products…"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-9"
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto">
-          {STATUS_FILTERS.map((filter) => (
+        <div className="flex gap-2">
+          {STATUS_FILTERS.map((s) => (
             <button
-              key={filter}
-              onClick={() => setStatusFilter(filter)}
+              key={s}
+              onClick={() => setStatusFilter(s)}
               className={cn(
-                'whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-                statusFilter === filter
+                'rounded-full px-3 py-1 text-xs font-medium transition-colors',
+                statusFilter === s
                   ? 'bg-hunter-green text-white'
-                  : 'bg-light-gray text-charcoal hover:bg-charcoal-light',
+                  : 'border border-light-gray text-medium-gray hover:border-charcoal',
               )}
             >
-              {filter === 'all' ? 'All' : filter === 'out_of_stock' ? 'Out of Stock' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+              {STATUS_LABELS[s]}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Products Table (Desktop) */}
-      <div className="hidden overflow-hidden rounded-lg border border-light-gray lg:block">
-        <table className="w-full">
-          <thead className="bg-light-gray/50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-charcoal">
-                Product
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-charcoal">
-                Price
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-charcoal">
-                Category
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-charcoal">
-                Stock
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-charcoal">
-                Status
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-light-gray bg-white">
-            {filteredProducts.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-sm text-medium-gray">
-                  No products found.
-                </td>
-              </tr>
-            ) : (
-              filteredProducts.map((product) => (
-                <tr key={product.id} className="transition-colors hover:bg-light-gray/30">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="relative h-12 w-12 overflow-hidden rounded-lg bg-light-gray">
-                        <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
-                      </div>
-                      <span className="font-medium text-charcoal">{product.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-charcoal">{formatPrice(product.price)}</td>
-                  <td className="px-4 py-3 text-medium-gray">{product.category}</td>
-                  <td className="px-4 py-3 text-charcoal">{product.stock}</td>
-                  <td className="px-4 py-3">
-                    <Badge variant={getStatusBadgeVariant(product.status)}>{getStatusLabel(product.status)}</Badge>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Products Grid (Mobile) */}
-      <div className="grid gap-4 lg:hidden">
-        {filteredProducts.length === 0 ? (
-          <div className="rounded-lg border border-light-gray bg-white px-4 py-8 text-center text-sm text-medium-gray">
-            No products found.
+      {/* Table */}
+      <div className="mt-6 overflow-x-auto rounded-xl border border-light-gray bg-white">
+        {isLoading ? (
+          <div className="p-8 text-center text-sm text-medium-gray">Loading products…</div>
+        ) : error ? (
+          <div className="p-8 text-center text-sm text-red-500">Failed to load products.</div>
+        ) : filtered.length === 0 ? (
+          <div className="p-8 text-center text-sm text-medium-gray">
+            {products.length === 0 ? 'No products yet. Add your first product.' : 'No products match your filters.'}
           </div>
         ) : (
-          filteredProducts.map((product) => (
-            <div key={product.id} className="rounded-lg border border-light-gray bg-white p-4 shadow-sm">
-              <div className="flex gap-4">
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-light-gray">
-                  <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-charcoal">{product.name}</h3>
-                    <Badge variant={getStatusBadgeVariant(product.status)}>{getStatusLabel(product.status)}</Badge>
-                  </div>
-                  <div className="space-y-1 text-sm">
-                    <p className="text-charcoal">
-                      <span className="font-medium">{formatPrice(product.price)}</span>
-                    </p>
-                    <p className="text-medium-gray">{product.category}</p>
-                    <p className="text-medium-gray">Stock: {product.stock}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-light-gray text-xs font-semibold uppercase tracking-wider text-medium-gray">
+                <th className="px-5 py-3">Product</th>
+                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3">Stock</th>
+                <th className="px-5 py-3 text-right">Price</th>
+                <th className="px-5 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-light-gray">
+              {filtered.map((product) => (
+                <tr key={product.id} className="hover:bg-light-gray/30">
+                  <td className="px-5 py-3 font-medium">{product.name}</td>
+                  <td className="px-5 py-3">
+                    <Badge variant={getStatusVariant(product.status)}>
+                      {STATUS_LABELS[product.status] ?? product.status}
+                    </Badge>
+                  </td>
+                  <td className="px-5 py-3 text-medium-gray">{product.stock}</td>
+                  <td className="px-5 py-3 text-right font-medium">{formatPrice(Number(product.price))}</td>
+                  <td className="px-5 py-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setEditProduct(product)}
+                        className="rounded p-1.5 hover:bg-light-gray transition-colors text-medium-gray hover:text-charcoal"
+                        title="Edit"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      {deleteConfirm === product.id ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => deleteProduct(product.id)}
+                            disabled={isDeleting}
+                            className="rounded px-2 py-1 text-xs font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirm(null)}
+                            className="rounded px-2 py-1 text-xs font-medium text-medium-gray hover:text-charcoal"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setDeleteConfirm(product.id)}
+                          className="rounded p-1.5 hover:bg-red-50 transition-colors text-medium-gray hover:text-red-600"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
+
+      <CreateProductDialog open={createOpen} onClose={() => setCreateOpen(false)} />
+
+      {editProduct && (
+        <EditProductDialog
+          product={editProduct}
+          open={true}
+          onClose={() => setEditProduct(null)}
+        />
+      )}
     </div>
   );
 }

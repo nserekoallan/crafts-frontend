@@ -9,7 +9,6 @@ import { FilterSidebar, DEFAULT_FILTERS } from '@/components/shop/filter-sidebar
 import { FilterBottomSheet } from '@/components/shop/filter-bottom-sheet';
 import { ActiveFilters } from '@/components/shop/active-filters';
 import { useProducts } from '@/hooks/use-products';
-import { PRODUCTS } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import type { ShopFilters } from '@/components/shop/filter-sidebar';
 
@@ -104,17 +103,18 @@ function ShopPageInner() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // API search — only fires when there's a search term
+  const { min: minPrice, max: maxPrice } = parsePriceRange(filters.priceRange);
+
+  // Always fetch from API — pass search + price filters server-side
   const { products: apiProducts, total: apiTotal, totalPages, isLoading, isError, error } = useProducts({
     search: searchTerm || undefined,
+    minPrice: minPrice > 0 ? minPrice : undefined,
+    maxPrice: maxPrice < Infinity ? maxPrice : undefined,
     page: urlPage,
     limit: PAGE_SIZE,
-    enabled: isSearching,
   });
 
-  // ---------- Data source: mock (default) vs API (search) ----------
-
-  const sourceProducts = isSearching ? apiProducts : PRODUCTS;
+  const sourceProducts = apiProducts;
 
   // Client-side filters (apply to both mock and API data)
   const filtered = useMemo(() => {
@@ -141,11 +141,11 @@ function ShopPageInner() {
     });
   }, [filtered, sortBy]);
 
-  // For mock data: paginate with "Load More"; for API: server-side pagination
-  const visible = isSearching ? sorted : sorted.slice(0, visibleCount);
-  const hasMore = !isSearching && visibleCount < sorted.length;
+  // Server-side pagination for all results
+  const visible = sorted;
+  const hasMore = false;
 
-  const displayTotal = isSearching ? apiTotal : sorted.length;
+  const displayTotal = apiTotal;
 
   /**
    * Clears the search param from the URL.
@@ -182,9 +182,8 @@ function ShopPageInner() {
     (filters.minRating > 0 ? 1 : 0) +
     (filters.hideOutOfStock ? 1 : 0);
 
-  // Show loading only when actively searching
-  const showLoading = isSearching && isLoading;
-  const showError = isSearching && isError;
+  const showLoading = isLoading;
+  const showError = isError;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:py-8 lg:px-8">

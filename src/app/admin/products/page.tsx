@@ -1,202 +1,166 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import Image from 'next/image';
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
-import { PRODUCTS } from '@/lib/mock-data';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { api } from '@/lib/api';
 import { formatPrice, cn } from '@/lib/utils';
+import type { ApiProduct, ApiProductsResponse } from '@/lib/types/product';
 
-/**
- * Get product status based on ID for demo purposes
- * @param {string} id - Product ID
- */
-function getProductStatus(id: string): 'flagged' | 'under_review' | 'approved' {
-  const numId = parseInt(id.replace('prod-', ''));
-  if (numId % 5 === 0) return 'flagged';
-  if (numId % 3 === 0) return 'under_review';
-  return 'approved';
-}
+// ---------------------------------------------------------------------------
+// Types & constants
+// ---------------------------------------------------------------------------
 
-/**
- * ProductsPage - Product management interface for administrators
- */
-export default function ProductsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+type BadgeVariant = 'default' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
-  /**
-   * Get unique categories from products
-   */
-  const categories = useMemo(() => {
-    const uniqueCategories = Array.from(new Set(PRODUCTS.map((p) => p.category)));
-    return ['all', ...uniqueCategories];
-  }, []);
+const STATUS_VARIANT: Record<string, BadgeVariant> = {
+  ACTIVE: 'delivered',
+  PENDING_QC: 'processing',
+  DRAFT: 'default',
+  SUSPENDED: 'cancelled',
+};
 
-  /**
-   * Filtered products based on search and category
-   */
-  const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((product) => {
-      const matchesSearch = product.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+const STATUS_FILTERS = [
+  { value: 'all', label: 'All' },
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'PENDING_QC', label: 'Pending QC' },
+  { value: 'DRAFT', label: 'Draft' },
+  { value: 'SUSPENDED', label: 'Suspended' },
+];
 
-      const matchesCategory =
-        categoryFilter === 'all' || product.category === categoryFilter;
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
-      return matchesSearch && matchesCategory;
-    });
-  }, [searchQuery, categoryFilter]);
+export default function AdminProductsPage() {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-  /**
-   * Handle view product
-   * @param {string} productId - Product ID
-   */
-  const handleViewProduct = (productId: string) => {
-    alert(`View product ${productId}`);
-  };
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['admin', 'products', statusFilter, search],
+    queryFn: () => {
+      const params = new URLSearchParams({ limit: '50' });
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (search.trim()) params.set('search', search.trim());
+      return api.get<ApiProductsResponse>(`/products?${params}`);
+    },
+  });
 
-  /**
-   * Handle flag product
-   * @param {string} productId - Product ID
-   * @param {string} productName - Product name
-   */
-  const handleFlagProduct = (productId: string, productName: string) => {
-    alert(`Flag product "${productName}" (${productId}) for review`);
-  };
+  const { mutate: suspendProduct, variables: pendingId } = useMutation({
+    mutationFn: (productId: string) =>
+      api.patch(`/products/${productId}`, { status: 'SUSPENDED' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+    },
+  });
+
+  const products = data?.data ?? [];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-charcoal mb-2">Products</h1>
         <p className="text-medium-gray">Review and manage all marketplace products</p>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-light-gray p-6 space-y-4">
-        {/* Search */}
+      <div className="bg-white rounded-xl border border-light-gray p-4 space-y-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-medium-gray" />
           <input
             type="text"
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search products…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-3 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-hunter-green focus:border-transparent"
           />
         </div>
-
-        {/* Category Filters */}
         <div className="flex flex-wrap gap-2">
-          {categories.map((category) => (
+          {STATUS_FILTERS.map((f) => (
             <button
-              key={category}
-              onClick={() => setCategoryFilter(category)}
+              key={f.value}
+              onClick={() => setStatusFilter(f.value)}
               className={cn(
                 'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                categoryFilter === category
+                statusFilter === f.value
                   ? 'bg-hunter-green text-white'
                   : 'bg-light-gray text-charcoal hover:bg-medium-gray/20'
               )}
             >
-              {category === 'all' ? 'All Categories' : category}
+              {f.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Results Count */}
-      <div className="text-sm text-medium-gray">
-        Showing {filteredProducts.length} of {PRODUCTS.length} products
-      </div>
+      {/* Count */}
+      {!isLoading && (
+        <p className="text-sm text-medium-gray">
+          Showing {products.length} product{products.length !== 1 ? 's' : ''}
+        </p>
+      )}
+
+      {/* Loading */}
+      {isLoading && (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-16 animate-pulse rounded-xl bg-light-gray/60" />
+          ))}
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">Failed to load products.</div>
+      )}
 
       {/* Desktop Table */}
-      <div className="hidden md:block bg-white rounded-xl border border-light-gray overflow-hidden">
-        <div className="overflow-x-auto">
+      {!isLoading && !error && products.length > 0 && (
+        <div className="hidden md:block bg-white rounded-xl border border-light-gray overflow-hidden">
           <table className="w-full">
             <thead className="bg-light-gray/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">
-                  Product
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">
-                  Artisan
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">
-                  Price
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-medium-gray uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Product</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Artisan</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Category</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Price</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-medium-gray uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-light-gray">
-              {filteredProducts.map((product) => {
-                const status = getProductStatus(product.id);
+              {products.map((product: ApiProduct) => {
+                const isSuspending = pendingId === product.id;
+                const thumb = product.images[0]?.url ?? '/products/product-01.jpg';
                 return (
                   <tr key={product.id} className="hover:bg-light-gray/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <Image
-                          src={product.images[0]}
-                          alt={product.name}
-                          width={48}
-                          height={48}
-                          className="rounded-lg object-cover"
-                        />
-                        <span className="text-sm font-medium text-charcoal">
-                          {product.name}
-                        </span>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={thumb} alt={product.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                        <span className="text-sm font-medium text-charcoal line-clamp-2">{product.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-medium-gray">
-                      {product.artisanName}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-charcoal">
-                      {product.category}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-charcoal">
-                      {formatPrice(product.price)}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <Badge
-                        variant={
-                          status === 'approved'
-                            ? 'delivered'
-                            : status === 'under_review'
-                            ? 'processing'
-                            : 'cancelled'
-                        }
-                      >
-                        {status === 'under_review'
-                          ? 'Under Review'
-                          : status.charAt(0).toUpperCase() + status.slice(1)}
+                    <td className="px-6 py-4 text-sm text-medium-gray">{product.artisan.businessName}</td>
+                    <td className="px-6 py-4 text-sm text-charcoal">{product.category.name}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-charcoal">{formatPrice(Number(product.price))}</td>
+                    <td className="px-6 py-4">
+                      <Badge variant={STATUS_VARIANT[product.status] ?? 'default'}>
+                        {product.status.replace('_', ' ')}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4 text-sm text-right space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewProduct(product.id)}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleFlagProduct(product.id, product.name)}
-                      >
-                        Flag
-                      </Button>
+                    <td className="px-6 py-4 text-right">
+                      {product.status !== 'SUSPENDED' && (
+                        <button
+                          disabled={isSuspending}
+                          onClick={() => suspendProduct(product.id)}
+                          className="rounded px-3 py-1 text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 transition-colors"
+                        >
+                          Suspend
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -204,83 +168,52 @@ export default function ProductsPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      )}
 
       {/* Mobile Cards */}
-      <div className="md:hidden space-y-4">
-        {filteredProducts.map((product) => {
-          const status = getProductStatus(product.id);
-          return (
-            <div key={product.id} className="bg-white rounded-xl border border-light-gray p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <Image
-                  src={product.images[0]}
-                  alt={product.name}
-                  width={64}
-                  height={64}
-                  className="rounded-lg object-cover"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-charcoal mb-1">{product.name}</div>
-                  <div className="text-sm text-medium-gray mb-2">
-                    by {product.artisanName}
+      {!isLoading && !error && products.length > 0 && (
+        <div className="md:hidden space-y-4">
+          {products.map((product: ApiProduct) => {
+            const isSuspending = pendingId === product.id;
+            const thumb = product.images[0]?.url ?? '/products/product-01.jpg';
+            return (
+              <div key={product.id} className="bg-white rounded-xl border border-light-gray p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={thumb} alt={product.name} className="w-16 h-16 rounded-lg object-cover shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-charcoal line-clamp-2">{product.name}</p>
+                    <p className="text-xs text-medium-gray mt-0.5">by {product.artisan.businessName}</p>
+                    <div className="mt-1.5">
+                      <Badge variant={STATUS_VARIANT[product.status] ?? 'default'}>
+                        {product.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
                   </div>
-                  <Badge
-                    variant={
-                      status === 'approved'
-                        ? 'delivered'
-                        : status === 'under_review'
-                        ? 'processing'
-                        : 'cancelled'
-                    }
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-medium-gray">{product.category.name}</span>
+                  <span className="font-semibold text-charcoal">{formatPrice(Number(product.price))}</span>
+                </div>
+                {product.status !== 'SUSPENDED' && (
+                  <button
+                    disabled={isSuspending}
+                    onClick={() => suspendProduct(product.id)}
+                    className="w-full rounded px-3 py-2 text-xs font-medium bg-red-100 text-red-700 disabled:opacity-50"
                   >
-                    {status === 'under_review'
-                      ? 'Under Review'
-                      : status.charAt(0).toUpperCase() + status.slice(1)}
-                  </Badge>
-                </div>
+                    Suspend
+                  </button>
+                )}
               </div>
-
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <span className="text-medium-gray">Category:</span>
-                  <div className="font-medium text-charcoal">{product.category}</div>
-                </div>
-                <div>
-                  <span className="text-medium-gray">Price:</span>
-                  <div className="font-semibold text-charcoal">
-                    {formatPrice(product.price)}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => handleViewProduct(product.id)}
-                >
-                  View
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => handleFlagProduct(product.id, product.name)}
-                >
-                  Flag
-                </Button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Empty State */}
-      {filteredProducts.length === 0 && (
+      {!isLoading && !error && products.length === 0 && (
         <div className="bg-white rounded-xl border border-light-gray p-12 text-center">
-          <p className="text-medium-gray">No products found matching your criteria</p>
+          <p className="text-medium-gray">No products found</p>
         </div>
       )}
     </div>

@@ -66,10 +66,13 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
     enabled,
   });
 
+  const total = data?.meta.total ?? 0;
+  const limit = data?.meta.limit ?? 20;
+
   return {
     products: data?.data.map(mapApiProductToProduct) ?? [],
-    total: data?.meta.total ?? 0,
-    totalPages: data?.meta.totalPages ?? 0,
+    total,
+    totalPages: limit > 0 ? Math.ceil(total / limit) : 0,
     page: data?.meta.page ?? 1,
     isLoading,
     isError,

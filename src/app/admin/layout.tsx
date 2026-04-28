@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
 import {
   LayoutDashboard,
   Users,
@@ -35,6 +37,22 @@ const ADMIN_LINKS = [
  */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isLoading, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isAuthenticated) { router.replace('/login'); return; }
+    if (user?.role !== 'admin' && user?.role !== 'super_admin') { router.replace('/'); return; }
+  }, [isLoading, isAuthenticated, user, router]);
+
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-hunter-green border-t-transparent" />
+      </div>
+    );
+  }
 
   /**
    * Check if a link is currently active
