@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
 import { ShippingStep, type ShippingAddress } from './_components/shipping-step';
-import { PaymentStep, type PaymentMethod } from './_components/payment-step';
+import { PaymentStep, type PaymentSelection } from './_components/payment-step';
 import { ReviewStep } from './_components/review-step';
 
 // ---------------------------------------------------------------------------
@@ -93,7 +93,7 @@ export default function CheckoutPage() {
     phone: '',
     notes: '',
   });
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mobile_money');
+  const [paymentSelection, setPaymentSelection] = useState<PaymentSelection>({ method: 'mobile_money' });
 
   // Auth guard
   useEffect(() => {
@@ -160,9 +160,9 @@ export default function CheckoutPage() {
           )}
           {step === 2 && (
             <PaymentStep
-              initial={paymentMethod}
-              onContinue={(method) => {
-                setPaymentMethod(method);
+              initial={paymentSelection}
+              onContinue={(selection) => {
+                setPaymentSelection(selection);
                 setStep(3);
               }}
               onBack={() => setStep(1)}
@@ -171,7 +171,7 @@ export default function CheckoutPage() {
           {step === 3 && (
             <ReviewStep
               shippingAddress={shippingAddress}
-              paymentMethod={paymentMethod}
+              paymentSelection={paymentSelection}
               onEditShipping={() => setStep(1)}
               onEditPayment={() => setStep(2)}
             />

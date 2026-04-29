@@ -2,12 +2,12 @@
 
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Edit2, Loader2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit2, Loader2, Phone, ShieldCheck } from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
 import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
 import type { ShippingAddress } from './shipping-step';
-import type { PaymentMethod } from './payment-step';
+import type { PaymentSelection } from './payment-step';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -15,62 +15,70 @@ import type { PaymentMethod } from './payment-step';
 
 interface ReviewStepProps {
   shippingAddress: ShippingAddress;
-  paymentMethod: PaymentMethod;
+  paymentSelection: PaymentSelection;
   onEditShipping: () => void;
   onEditPayment: () => void;
 }
 
 interface OrderResponse {
-  data: {
-    id: string;
-    orderNumber: string;
-  };
+  data: { id: string; orderNumber: string };
 }
 
 interface PaymentInitResponse {
   data: {
     payment: { id: string };
-    checkoutUrl: string;
+    checkoutUrl?: string;
+    requiresRedirect: boolean;
   };
 }
-
-const PAYMENT_METHOD_MAP: Record<PaymentMethod, string> = {
-  mobile_money: 'MOBILE_MONEY',
-  card: 'CARD',
-  bank_transfer: 'BANK_TRANSFER',
-  ussd: 'USSD',
-};
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const PAYMENT_LABELS: Record<PaymentMethod, string> = {
+const METHOD_LABELS: Record<string, string> = {
   mobile_money: 'Mobile Money',
   card: 'Debit / Credit Card',
   bank_transfer: 'Bank Transfer',
   ussd: 'USSD',
 };
 
-/**
- * Formats a shipping address into a readable string.
- */
+const PROVIDER_LABELS: Record<string, string> = {
+  mtn_ug: 'MTN MoMo Uganda',
+  airtel_ug: 'Airtel Money Uganda',
+  mpesa_ke: 'M-Pesa Kenya',
+  mtn_gh: 'MTN Ghana',
+};
+
+// Maps frontend method to API-expected values
+const METHOD_TO_API: Record<string, string> = {
+  mobile_money: 'MOBILE_MONEY',
+  card: 'CARD',
+  bank_transfer: 'BANK_TRANSFER',
+  ussd: 'USSD',
+};
+
+// Auto-selects provider based on method
+const METHOD_TO_PROVIDER: Record<string, string> = {
+  mobile_money: 'DUSUPAY',
+  card: 'PAYSTACK',
+  bank_transfer: 'FLUTTERWAVE',
+  ussd: 'PAYSTACK',
+};
+
 function formatAddress(addr: ShippingAddress): string {
-  const parts = [addr.street, addr.city, addr.state, addr.country, addr.zip]
-    .filter(Boolean);
-  return parts.join(', ');
+  return [addr.street, addr.city, addr.state, addr.country, addr.zip]
+    .filter(Boolean)
+    .join(', ');
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-/**
- * Order review step — shows summary and places the order.
- */
 export function ReviewStep({
   shippingAddress,
-  paymentMethod,
+  paymentSelection,
   onEditShipping,
   onEditPayment,
 }: ReviewStepProps) {
@@ -79,6 +87,8 @@ export function ReviewStep({
   const { formatPrice } = useCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Set when DusuPay mobile money STK push succeeds — no redirect, waiting for webhook. */
+  const [pushPending, setPushPending] = useState<{ orderId: string; phone: string } | null>(null);
 
   const handlePlaceOrder = useCallback(async () => {
     if (isSubmitting || items.length === 0) return;
@@ -88,12 +98,12 @@ export function ReviewStep({
 
     try {
       // Step 1: Sync localStorage cart to server
-      await api.delete('/cart').catch(() => null); // clear existing server cart
+      await api.delete('/cart').catch(() => null);
       for (const item of items) {
         await api.post('/cart/items', { productId: item.id, quantity: item.quantity });
       }
 
-      // Step 2: Create order from server cart
+      // Step 2: Create order
       const orderRes = await api.post<OrderResponse>('/orders', {
         shippingAddress: {
           street: shippingAddress.street.trim(),
@@ -109,16 +119,30 @@ export function ReviewStep({
       const orderId = orderRes.data.id;
 
       // Step 3: Initialize payment
-      const paymentRes = await api.post<PaymentInitResponse>('/payments/initialize', {
+      const paymentBody: Record<string, unknown> = {
         orderId,
-        provider: 'PAYSTACK',
-        method: PAYMENT_METHOD_MAP[paymentMethod] ?? 'CARD',
-      });
+        provider: METHOD_TO_PROVIDER[paymentSelection.method] ?? 'PAYSTACK',
+        method: METHOD_TO_API[paymentSelection.method] ?? 'CARD',
+      };
+
+      if (paymentSelection.providerCode) {
+        paymentBody.providerCode = paymentSelection.providerCode;
+      }
+      if (paymentSelection.msisdn) {
+        paymentBody.msisdn = paymentSelection.msisdn;
+      }
+
+      const paymentRes = await api.post<PaymentInitResponse>('/payments/initialize', paymentBody);
 
       clearCart();
 
-      // Step 4: Redirect to payment provider
-      window.location.href = paymentRes.data.checkoutUrl;
+      // Step 4: Redirect or show push-pending state
+      if (paymentRes.data.requiresRedirect && paymentRes.data.checkoutUrl) {
+        window.location.href = paymentRes.data.checkoutUrl;
+      } else {
+        // DusuPay mobile money STK push — prompt sent to phone
+        setPushPending({ orderId, phone: paymentSelection.msisdn ?? '' });
+      }
     } catch (err) {
       if (err instanceof ApiError) {
         const msg = (err.body as { message?: string })?.message;
@@ -128,23 +152,69 @@ export function ReviewStep({
       }
       setIsSubmitting(false);
     }
-  }, [isSubmitting, items, shippingAddress, paymentMethod, clearCart]);
+  }, [isSubmitting, items, shippingAddress, paymentSelection, clearCart]);
+
+  // ---------------------------------------------------------------------------
+  // Push-pending screen
+  // ---------------------------------------------------------------------------
+
+  if (pushPending) {
+    return (
+      <div className="space-y-5 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gold/10">
+          <Phone className="h-8 w-8 text-gold" />
+        </div>
+        <div>
+          <h2 className="font-heading text-lg font-bold text-text-primary">
+            Check Your Phone
+          </h2>
+          <p className="mt-2 text-sm text-text-secondary">
+            A payment request has been sent to{' '}
+            <span className="font-semibold text-text-primary">
+              {pushPending.phone || 'your mobile number'}
+            </span>.
+          </p>
+          <p className="mt-1 text-sm text-text-secondary">
+            Enter your PIN to complete the payment. Your order will be confirmed automatically.
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-border-dark bg-bg-elevated p-4">
+          <div className="flex items-center gap-2 text-xs text-text-tertiary">
+            <div className="h-2 w-2 animate-pulse rounded-full bg-gold" />
+            Waiting for payment confirmation…
+          </div>
+        </div>
+
+        <button
+          onClick={() => router.push(`/orders`)}
+          className="inline-flex items-center gap-2 rounded-xl border border-border-dark px-6 py-3 text-sm font-medium text-text-secondary transition-colors hover:border-border-dark-hover hover:text-text-primary"
+        >
+          View My Orders
+        </button>
+
+        <p className="text-xs text-text-tertiary">
+          Once you confirm on your phone, your order status will update automatically.
+        </p>
+      </div>
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Review screen
+  // ---------------------------------------------------------------------------
 
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2 text-gold">
         <ShieldCheck className="h-5 w-5" />
-        <h2 className="font-heading text-lg font-bold text-text-primary">
-          Review Order
-        </h2>
+        <h2 className="font-heading text-lg font-bold text-text-primary">Review Order</h2>
       </div>
 
       {/* Shipping summary */}
       <div className="rounded-xl border border-border-dark bg-bg-elevated p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-text-secondary">
-            Shipping Address
-          </h3>
+          <h3 className="text-sm font-semibold text-text-secondary">Shipping Address</h3>
           <button
             onClick={onEditShipping}
             className="flex items-center gap-1 text-xs font-medium text-gold transition-colors hover:text-gold-light"
@@ -153,13 +223,9 @@ export function ReviewStep({
             Edit
           </button>
         </div>
-        <p className="mt-2 text-sm text-text-primary">
-          {formatAddress(shippingAddress)}
-        </p>
+        <p className="mt-2 text-sm text-text-primary">{formatAddress(shippingAddress)}</p>
         {shippingAddress.phone && (
-          <p className="mt-1 text-xs text-text-tertiary">
-            {shippingAddress.phone}
-          </p>
+          <p className="mt-1 text-xs text-text-tertiary">{shippingAddress.phone}</p>
         )}
         {shippingAddress.notes && (
           <p className="mt-1 text-xs italic text-text-tertiary">
@@ -171,9 +237,7 @@ export function ReviewStep({
       {/* Payment summary */}
       <div className="rounded-xl border border-border-dark bg-bg-elevated p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-text-secondary">
-            Payment Method
-          </h3>
+          <h3 className="text-sm font-semibold text-text-secondary">Payment Method</h3>
           <button
             onClick={onEditPayment}
             className="flex items-center gap-1 text-xs font-medium text-gold transition-colors hover:text-gold-light"
@@ -183,8 +247,16 @@ export function ReviewStep({
           </button>
         </div>
         <p className="mt-2 text-sm text-text-primary">
-          {PAYMENT_LABELS[paymentMethod]}
+          {METHOD_LABELS[paymentSelection.method] ?? paymentSelection.method}
+          {paymentSelection.providerCode && (
+            <span className="ml-1 text-text-tertiary">
+              — {PROVIDER_LABELS[paymentSelection.providerCode] ?? paymentSelection.providerCode}
+            </span>
+          )}
         </p>
+        {paymentSelection.msisdn && (
+          <p className="mt-1 text-xs text-text-tertiary">{paymentSelection.msisdn}</p>
+        )}
       </div>
 
       {/* Items */}
@@ -202,9 +274,7 @@ export function ReviewStep({
                 className="h-12 w-12 shrink-0 rounded-lg object-cover"
               />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-text-primary line-clamp-1">
-                  {item.name}
-                </p>
+                <p className="text-sm font-medium text-text-primary line-clamp-1">{item.name}</p>
                 <p className="text-xs text-text-tertiary">Qty: {item.quantity}</p>
               </div>
               <p className="shrink-0 text-sm font-semibold text-text-primary">
@@ -217,15 +287,25 @@ export function ReviewStep({
         <div className="mt-4 border-t border-border-dark pt-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-text-secondary">Subtotal</span>
-            <span className="font-heading font-bold text-gold">
-              {formatPrice(subtotal)}
-            </span>
+            <span className="font-heading font-bold text-gold">{formatPrice(subtotal)}</span>
           </div>
           <p className="mt-1 text-xs text-text-tertiary">
             Shipping calculated after order confirmation
           </p>
         </div>
       </div>
+
+      {/* Mobile money note */}
+      {paymentSelection.method === 'mobile_money' && (
+        <div className="flex items-start gap-3 rounded-xl border border-gold/20 bg-gold/5 p-3">
+          <Phone className="h-4 w-4 shrink-0 text-gold mt-0.5" />
+          <p className="text-xs text-text-secondary">
+            After placing your order, you will receive a payment prompt on{' '}
+            <span className="font-semibold">{paymentSelection.msisdn}</span>.
+            Enter your PIN to complete the payment.
+          </p>
+        </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -255,7 +335,10 @@ export function ReviewStep({
               Processing…
             </>
           ) : (
-            'Place Order & Pay'
+            <>
+              <CheckCircle className="h-4 w-4" />
+              Place Order & Pay
+            </>
           )}
         </button>
       </div>
