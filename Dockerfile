@@ -7,7 +7,8 @@ FROM node:22-slim AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENV NEXT_PUBLIC_API_URL=https://api.craftcontinent.com/api/v1
+ARG NEXT_PUBLIC_API_URL=https://api.craftcontinent.com/api/v1
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN npm run build
 
 FROM node:22-alpine AS runner

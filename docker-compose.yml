@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.craftcontinent.com/api/v1}
     restart: unless-stopped
     ports:
       - '127.0.0.1:3000:3000'

@@ -7,6 +7,8 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_API_URL: /api/v1
     steps:
       - uses: actions/checkout@v4
 
@@ -22,13 +24,17 @@ jobs:
     needs: ci
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to server
+      - name: Write build env, pull and deploy
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # Write .env for docker-compose build args — NEXT_PUBLIC_* baked into bundle
+            printf 'NEXT_PUBLIC_API_URL=%s\n' '${{ secrets.NEXT_PUBLIC_API_URL }}' \
+              > /opt/crafts-frontend/.env
+
             cd /opt/crafts-frontend
             git pull origin main
             docker compose up -d --build
@@ -40,6 +46,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            sleep 10
-            curl -f http://localhost:3000 || exit 1
+            sleep 15
+            curl -sf http://localhost:3000 || exit 1
             echo "Health check passed"
