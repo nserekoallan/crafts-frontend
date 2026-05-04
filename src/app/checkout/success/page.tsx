@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
-import { use } from 'react';
+import { Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, Package } from 'lucide-react';
@@ -16,11 +15,7 @@ interface Order {
   total: number;
 }
 
-/**
- * Payment return page — shown after provider redirects back.
- * Reads orderId or reference from URL, polls order status.
- */
-export default function CheckoutSuccessPage() {
+function CheckoutSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -34,19 +29,15 @@ export default function CheckoutSuccessPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Fetch order by id if we have it, otherwise show generic success
-  const { data: orderData } = useQuery({
+  const { data: order } = useQuery({
     queryKey: ['order', orderId],
     queryFn: () => api.get<{ data: Order }>(`/orders/${orderId}`).then((r) => r.data),
     enabled: !!orderId && isAuthenticated,
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      // Stop polling once order moves past PENDING
       return status === 'PENDING' || !status ? 3000 : false;
     },
   });
-
-  const order = orderData;
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-16 text-center">
@@ -54,9 +45,7 @@ export default function CheckoutSuccessPage() {
         <CheckCircle className="h-10 w-10 text-hunter-green" />
       </div>
 
-      <h1 className="mt-6 text-3xl font-bold text-text-primary">
-        Order Placed!
-      </h1>
+      <h1 className="mt-6 text-3xl font-bold text-text-primary">Order Placed!</h1>
 
       {order ? (
         <>
@@ -99,5 +88,13 @@ export default function CheckoutSuccessPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense>
+      <CheckoutSuccessContent />
+    </Suspense>
   );
 }
