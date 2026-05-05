@@ -18,6 +18,7 @@ export interface UseProductsParams {
   maxPrice?: number;
   page?: number;
   limit?: number;
+  featured?: boolean;
   enabled?: boolean;
 }
 
@@ -48,6 +49,7 @@ function buildQuery(params: UseProductsParams): string {
   if (params.maxPrice !== undefined) entries.push(['maxPrice', String(params.maxPrice)]);
   if (params.page && params.page > 1) entries.push(['page', String(params.page)]);
   if (params.limit) entries.push(['limit', String(params.limit)]);
+  if (params.featured) entries.push(['featured', 'true']);
 
   if (entries.length === 0) return '';
   return '?' + new URLSearchParams(entries).toString();

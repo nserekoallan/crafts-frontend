@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus, Search, Pencil, Sparkles, Trash2 } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useArtisanProducts } from '@/hooks/use-artisan';
 import type { ApiProduct } from '@/lib/types/product';
 import { CreateProductDialog } from '@/components/dashboard/create-product-dialog';
@@ -31,6 +31,11 @@ function getStatusVariant(status: string): 'default' | 'pending' | 'cancelled' {
   return 'cancelled';
 }
 
+interface FeaturedRequestStatus {
+  productId: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
+
 export default function ProductsPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,6 +45,22 @@ export default function ProductsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const { data, isLoading, error } = useArtisanProducts();
+
+  const { data: featuredRequests } = useQuery({
+    queryKey: ['artisan', 'featured-requests'],
+    queryFn: () => api.get<FeaturedRequestStatus[]>('/featured-requests/me'),
+  });
+
+  const { mutate: requestFeatured } = useMutation({
+    mutationFn: (productId: string) => api.post('/featured-requests', { productId }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['artisan', 'featured-requests'] }),
+  });
+
+  const featuredStatusMap = useMemo(() => {
+    const map = new Map<string, FeaturedRequestStatus['status']>();
+    (featuredRequests ?? []).forEach((r) => map.set(r.productId, r.status));
+    return map;
+  }, [featuredRequests]);
   const products = (data?.data ?? []) as ApiProduct[];
 
   const { mutate: deleteProduct, isPending: isDeleting } = useMutation({
@@ -119,6 +140,7 @@ export default function ProductsPage() {
                 <th className="px-5 py-3">Stock</th>
                 <th className="px-5 py-3 text-right">Price</th>
                 <th className="px-5 py-3 text-right">Actions</th>
+                <th className="px-5 py-3 text-right">Featured</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-light-gray">
@@ -167,6 +189,30 @@ export default function ProductsPage() {
                         </button>
                       )}
                     </div>
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    {(() => {
+                      const fs = featuredStatusMap.get(product.id);
+                      if (product.isFeatured) {
+                        return <span className="text-xs font-medium text-satin-gold">Featured</span>;
+                      }
+                      if (fs === 'PENDING') {
+                        return <span className="text-xs text-medium-gray">Pending</span>;
+                      }
+                      if (product.status === 'ACTIVE') {
+                        return (
+                          <button
+                            onClick={() => requestFeatured(product.id)}
+                            className="inline-flex items-center gap-1 rounded-md border border-satin-gold/50 px-2 py-1 text-xs font-medium text-satin-gold hover:bg-satin-gold/10 transition-colors"
+                            title="Request featured spot"
+                          >
+                            <Sparkles className="h-3 w-3" />
+                            Request
+                          </button>
+                        );
+                      }
+                      return <span className="text-xs text-medium-gray">—</span>;
+                    })()}
                   </td>
                 </tr>
               ))}

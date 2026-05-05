@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Gem, HandHelping, ShieldCheck, Truck } from 'lucide-react';
+import { ArrowRight, Gem, HandHelping, ShieldCheck, Sparkles, Truck } from 'lucide-react';
 import { HeroBannerCarousel } from '@/components/home/hero-banner-carousel';
 import { DealTile } from '@/components/home/deal-tile';
 import { DenseProductCard } from '@/components/products/dense-product-card';
@@ -40,6 +40,7 @@ const TRUST_POINTS = [
 export default function HomePage() {
   const { products: trendingProducts } = useProducts({ limit: 8 });
   const { products: newArrivals } = useProducts({ limit: 8, page: 2 });
+  const { products: featuredProducts } = useProducts({ limit: 6, featured: true });
 
   return (
     <div>
@@ -58,7 +59,24 @@ export default function HomePage() {
       {/* 3. Daily Discovery */}
       <DailyDiscovery />
 
-      {/* 4. Flash Deals */}
+      {/* 4. Featured Products (only rendered when there are active featured products) */}
+      {featuredProducts.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-8 md:pb-10 lg:px-8">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
+              <Sparkles className="h-4 w-4" />
+              Featured Picks
+            </h2>
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-3 md:mt-6 md:grid-cols-3 md:gap-5">
+            {featuredProducts.map((product, i) => (
+              <DenseProductCard key={product.id} product={product} animationDelay={i * 50} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 5. Flash Deals */}
       <FlashDeals />
 
       {/* 5. Trending Now */}

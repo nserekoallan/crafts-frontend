@@ -41,6 +41,8 @@ export interface ApiProduct {
   artisan: ApiProductArtisan;
   category: ApiProductCategory;
   _count: { reviews: number };
+  isFeatured: boolean;
+  featuredUntil: string | null;
   createdAt: string;
   updatedAt: string;
 }
