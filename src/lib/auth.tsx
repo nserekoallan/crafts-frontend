@@ -45,22 +45,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
-
-    api
-      .get<{ data: User }>('/auth/profile')
-      .then((res) => setUser(res.data))
-      .catch(() => {
-        localStorage.removeItem(TOKEN_KEY);
-      })
-      .finally(() => setIsLoading(false));
-  }, []);
-
   const fetchProfile = useCallback(async (): Promise<User> => {
     const res = await api.get<{
       data: {
@@ -83,6 +67,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       artisan: 'artisan' in d ? (d.artisan ?? null) : undefined,
     };
   }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
+    fetchProfile()
+      .then(setUser)
+      .catch(() => localStorage.removeItem(TOKEN_KEY))
+      .finally(() => setIsLoading(false));
+  }, [fetchProfile]);
 
   const login = useCallback(async (payload: LoginPayload): Promise<User> => {
     const res = await api.post<{ data: { user: User; accessToken: string } }>('/auth/login', payload);
