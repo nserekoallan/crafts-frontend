@@ -17,10 +17,8 @@ import {
   Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PortalHeader } from '@/components/layout/portal-header';
 
-/**
- * Admin navigation link configuration
- */
 const ADMIN_LINKS = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/users', label: 'Users', icon: Users },
@@ -34,11 +32,6 @@ const ADMIN_LINKS = [
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ] as const;
 
-/**
- * AdminLayout - Layout component for admin console with sidebar navigation
- * @param {Object} props - Component props
- * @param {React.ReactNode} props.children - Child components
- */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -52,94 +45,78 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-hunter-green border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0D0D0D]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-satin-gold border-t-transparent" />
       </div>
     );
   }
 
-  /**
-   * Check if a link is currently active
-   * @param {string} href - Link href to check
-   */
   const isActive = (href: string): boolean => {
-    if (href === '/admin') {
-      return pathname === '/admin';
-    }
+    if (href === '/admin') return pathname === '/admin';
     return pathname.startsWith(href);
   };
 
   return (
-    <div className="min-h-screen bg-off-white">
-      {/* Mobile Navigation */}
-      <div className="lg:hidden sticky top-[72px] z-30 bg-white border-b border-light-gray overflow-x-auto">
-        <nav className="flex gap-1 p-2 min-w-max">
-          {ADMIN_LINKS.map((link) => {
-            const Icon = link.icon;
-            const active = isActive(link.href);
+    <div className="flex min-h-screen flex-col bg-[#111110]">
+      <PortalHeader label="Admin Console" accentClass="text-satin-gold" />
 
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
-                  active
-                    ? 'bg-hunter-green text-white'
-                    : 'text-charcoal hover:bg-light-gray'
-                )}
-              >
-                <Icon className="w-4 h-4" />
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
+      <div className="flex flex-1">
+        {/* Dark sidebar — desktop */}
+        <aside className="hidden w-56 shrink-0 lg:flex lg:flex-col border-r border-white/[0.06] bg-[#0D0D0D]">
+          <nav className="flex flex-col gap-0.5 p-3 pt-4">
+            {ADMIN_LINKS.map((link) => {
+              const Icon = link.icon;
+              const active = isActive(link.href);
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex gap-8">
-          {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-24">
-              {/* Admin Badge */}
-              <div className="mb-6">
-                <div className="inline-block px-3 py-1 bg-satin-gold/10 text-satin-gold text-xs font-semibold rounded-full">
-                  ADMIN
-                </div>
-              </div>
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+                    active
+                      ? 'bg-satin-gold/10 text-satin-gold'
+                      : 'text-white/50 hover:bg-white/[0.05] hover:text-white/80',
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </aside>
 
-              {/* Navigation Links */}
-              <nav className="space-y-1">
-                {ADMIN_LINKS.map((link) => {
-                  const Icon = link.icon;
-                  const active = isActive(link.href);
+        {/* Mobile nav strip */}
+        <div className="lg:hidden sticky top-14 z-30 w-full border-b border-white/[0.06] bg-[#0D0D0D] overflow-x-auto">
+          <nav className="flex gap-1 p-2 min-w-max">
+            {ADMIN_LINKS.map((link) => {
+              const Icon = link.icon;
+              const active = isActive(link.href);
 
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className={cn(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors',
-                        active
-                          ? 'bg-hunter-green text-white'
-                          : 'text-charcoal hover:bg-light-gray'
-                      )}
-                    >
-                      <Icon className="w-5 h-5" />
-                      {link.label}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-          </aside>
-
-          {/* Main Content */}
-          <main className="flex-1 min-w-0">
-            {children}
-          </main>
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    'flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors',
+                    active
+                      ? 'bg-satin-gold/10 text-satin-gold'
+                      : 'text-white/50 hover:bg-white/[0.05] hover:text-white/80',
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
+
+        {/* Main content */}
+        <main className="flex-1 min-w-0 p-6 lg:p-8">
+          {children}
+        </main>
       </div>
     </div>
   );
