@@ -12,12 +12,12 @@ export interface ApiCategory {
 export function useCategories() {
   const { data, isLoading } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => api.get<ApiCategory[]>('/categories'),
+    queryFn: () => api.get<{ data: ApiCategory[] }>('/categories'),
     staleTime: 10 * 60 * 1000,
   });
 
   return {
-    categories: data ?? [],
+    categories: data?.data ?? [],
     isLoading,
   };
 }

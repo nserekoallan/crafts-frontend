@@ -178,10 +178,10 @@ export default function ContactPage() {
               Email
             </h2>
             <a
-              href="mailto:hello@craftscontinent.com"
+              href="mailto:hello@craftcontinent.com"
               className="mt-2 block text-sm text-text-secondary transition-colors hover:text-gold"
             >
-              hello@craftscontinent.com
+              hello@craftcontinent.com
             </a>
           </div>
         </div>
