@@ -5,12 +5,6 @@ import { CurrencyProvider } from '@/lib/currency';
 import { CartProvider } from '@/lib/cart';
 import { WishlistProvider } from '@/lib/wishlist';
 import { RecentlyViewedProvider } from '@/lib/recently-viewed';
-import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
-import { BottomNav } from '@/components/layout/bottom-nav';
-import { CartDrawer } from '@/components/cart/cart-drawer';
-import { CartToast } from '@/components/ui/cart-toast';
-import { BackToTop } from '@/components/ui/back-to-top';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -27,7 +21,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * Root layout wrapping all pages with providers, header, footer and mobile bottom nav.
+ * Root layout — provides all React context providers.
+ * Store chrome (header, footer, nav) lives in (store)/layout.tsx.
  */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -47,13 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <CartProvider>
                 <WishlistProvider>
                   <RecentlyViewedProvider>
-                    <Header />
-                    <main className="flex-1 pb-16 md:pb-0">{children}</main>
-                    <Footer />
-                    <BottomNav />
-                    <CartDrawer />
-                    <CartToast />
-                    <BackToTop />
+                    {children}
                   </RecentlyViewedProvider>
                 </WishlistProvider>
               </CartProvider>
