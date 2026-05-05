@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { ChevronDown, Star, X } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { CATEGORIES } from '@/lib/mock-data';
+import type { ApiCategory } from '@/hooks/use-categories';
 import type { ShopFilters } from '@/components/shop/filter-sidebar';
 
 // ---------------------------------------------------------------------------
@@ -27,6 +27,7 @@ interface FilterBottomSheetProps {
   filters: ShopFilters;
   onChange: (filters: ShopFilters) => void;
   resultCount: number;
+  categories?: ApiCategory[];
 }
 
 // ---------------------------------------------------------------------------
@@ -76,6 +77,7 @@ export function FilterBottomSheet({
   filters,
   onChange,
   resultCount,
+  categories = [],
 }: FilterBottomSheetProps) {
   useEffect(() => {
     if (!open) return;
@@ -138,9 +140,9 @@ export function FilterBottomSheet({
           {/* Category */}
           <Section title="Category">
             <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <button
-                  key={cat.slug}
+                  key={cat.id}
                   onClick={() => toggleCategory(cat.name)}
                   className={cn(
                     'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',

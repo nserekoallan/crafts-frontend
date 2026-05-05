@@ -3,7 +3,7 @@
 import { ChevronDown, Star } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { CATEGORIES } from '@/lib/mock-data';
+import type { ApiCategory } from '@/hooks/use-categories';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -28,6 +28,7 @@ export const DEFAULT_FILTERS: ShopFilters = {
 interface FilterSidebarProps {
   filters: ShopFilters;
   onChange: (filters: ShopFilters) => void;
+  categories?: ApiCategory[];
 }
 
 // ---------------------------------------------------------------------------
@@ -87,7 +88,7 @@ function FilterSection({
 /**
  * Desktop collapsible filter sidebar for the shop page.
  */
-export function FilterSidebar({ filters, onChange }: FilterSidebarProps) {
+export function FilterSidebar({ filters, onChange, categories = [] }: FilterSidebarProps) {
   const toggleCategory = (cat: string) => {
     const next = filters.categories.includes(cat)
       ? filters.categories.filter((c) => c !== cat)
@@ -109,8 +110,8 @@ export function FilterSidebar({ filters, onChange }: FilterSidebarProps) {
 
       {/* Category */}
       <FilterSection title="Category">
-        {CATEGORIES.map((cat) => (
-          <label key={cat.slug} className="flex cursor-pointer items-center gap-2">
+        {categories.map((cat) => (
+          <label key={cat.id} className="flex cursor-pointer items-center gap-2">
             <input
               type="checkbox"
               checked={filters.categories.includes(cat.name)}
@@ -118,7 +119,6 @@ export function FilterSidebar({ filters, onChange }: FilterSidebarProps) {
               className="h-4 w-4 rounded border-border-dark bg-bg-surface text-gold accent-gold focus:ring-gold/20"
             />
             <span className="text-sm text-text-secondary">{cat.name}</span>
-            <span className="ml-auto text-[11px] text-text-tertiary">{cat.itemCount}</span>
           </label>
         ))}
       </FilterSection>

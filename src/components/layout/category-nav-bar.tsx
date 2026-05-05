@@ -2,16 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Gem, Frame, ShoppingBasket, Shirt } from 'lucide-react';
-import { CATEGORIES } from '@/lib/mock-data';
+import { Home, Sparkles, Recycle, Scissors, Tag } from 'lucide-react';
+import { useCategories } from '@/hooks/use-categories';
 import { cn } from '@/lib/utils';
 
-/** Map category slugs to icons. */
+/** Map category slugs (from seed `icon` field) to Lucide icons. */
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
-  'heritage-wall-art': Frame,
-  'artisan-baskets': ShoppingBasket,
-  'shell-bead-jewelry': Gem,
-  'african-fashion': Shirt,
+  home: Home,
+  sparkles: Sparkles,
+  recycle: Recycle,
+  scissors: Scissors,
 };
 
 /**
@@ -21,20 +21,21 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 export function CategoryNavBar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const activeCategory = searchParams.get('category');
+  const activeCategoryId = searchParams.get('categoryId');
+
+  const { categories } = useCategories();
 
   return (
     <nav className="hidden border-b border-border-dark bg-bg-primary md:block">
       <div className="mx-auto flex h-11 max-w-7xl items-center justify-center gap-8 px-4 lg:px-8">
-        {CATEGORIES.map((cat) => {
-          const isActive =
-            pathname === '/shop' && activeCategory === cat.name;
-          const Icon = CATEGORY_ICONS[cat.slug];
+        {categories.map((cat) => {
+          const isActive = pathname === '/shop' && activeCategoryId === cat.id;
+          const Icon = CATEGORY_ICONS[cat.icon] ?? Tag;
 
           return (
             <Link
-              key={cat.slug}
-              href={`/shop?category=${encodeURIComponent(cat.name)}`}
+              key={cat.id}
+              href={`/shop?categoryId=${cat.id}`}
               className={cn(
                 'group relative flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest transition-colors',
                 isActive
@@ -42,7 +43,7 @@ export function CategoryNavBar() {
                   : 'text-text-secondary hover:text-gold',
               )}
             >
-              {Icon && <Icon className="h-3.5 w-3.5" />}
+              <Icon className="h-3.5 w-3.5" />
               {cat.name}
               {/* Gold underline — active or on hover */}
               <span

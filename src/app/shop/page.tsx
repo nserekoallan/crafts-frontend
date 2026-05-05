@@ -9,6 +9,7 @@ import { FilterSidebar, DEFAULT_FILTERS } from '@/components/shop/filter-sidebar
 import { FilterBottomSheet } from '@/components/shop/filter-bottom-sheet';
 import { ActiveFilters } from '@/components/shop/active-filters';
 import { useProducts } from '@/hooks/use-products';
+import { useCategories } from '@/hooks/use-categories';
 import { cn } from '@/lib/utils';
 import type { ShopFilters } from '@/components/shop/filter-sidebar';
 
@@ -97,6 +98,7 @@ function ShopPageInner() {
   const searchTerm = searchParams.get('search') ?? '';
   const isSearching = searchTerm.length > 0;
   const urlPage = Number(searchParams.get('page')) || 1;
+  const urlCategoryId = searchParams.get('categoryId') ?? undefined;
 
   const [filters, setFilters] = useState<ShopFilters>(DEFAULT_FILTERS);
   const [sortBy, setSortBy] = useState('featured');
@@ -104,10 +106,12 @@ function ShopPageInner() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const { min: minPrice, max: maxPrice } = parsePriceRange(filters.priceRange);
+  const { categories } = useCategories();
 
-  // Always fetch from API — pass search + price filters server-side
+  // Always fetch from API — pass search + category + price filters server-side
   const { products: apiProducts, total: apiTotal, totalPages, isLoading, isError, error } = useProducts({
     search: searchTerm || undefined,
+    categoryId: urlCategoryId,
     minPrice: minPrice > 0 ? minPrice : undefined,
     maxPrice: maxPrice < Infinity ? maxPrice : undefined,
     page: urlPage,
@@ -265,7 +269,7 @@ function ShopPageInner() {
       {/* Layout: sidebar + grid */}
       <div className="mt-6 flex items-start gap-8">
         {/* Desktop sidebar */}
-        <FilterSidebar filters={filters} onChange={handleFilterChange} />
+        <FilterSidebar filters={filters} onChange={handleFilterChange} categories={categories} />
 
         {/* Product grid */}
         <div className="flex-1">
@@ -370,6 +374,7 @@ function ShopPageInner() {
         filters={filters}
         onChange={handleFilterChange}
         resultCount={sorted.length}
+        categories={categories}
       />
     </div>
   );

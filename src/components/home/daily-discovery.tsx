@@ -3,32 +3,39 @@
 import { useMemo } from 'react';
 import { MapPin, Sparkles } from 'lucide-react';
 import { DenseProductCard } from '@/components/products/dense-product-card';
-import { PRODUCTS } from '@/lib/mock-data';
+import { useProducts } from '@/hooks/use-products';
 
-/** Craft process stories keyed by category. */
+/** Craft process stories keyed by real category name. */
 const CRAFT_STORIES: Record<string, string> = {
-  'Heritage Wall Art':
-    'Each plate begins as hand-harvested sisal and raffia fibres, sun-dried and naturally dyed with local pigments. The weaver coils them tightly over 3-5 days using a bone needle, embedding ancestral patterns that tell stories of community, harvest, and celebration.',
-  'Artisan Baskets':
-    'Woven from sweetgrass and elephant grass gathered from riverbanks, each basket is coiled by hand using techniques passed down through generations. Natural dyes from bark and clay create the rich earth tones, and no two pieces are ever exactly alike.',
-  'Shell & Bead Jewelry':
-    'Cowrie shells — treasured across Africa for millennia — are hand-selected, polished, and combined with glass seed beads in traditional Maasai colour patterns. Each piece is strung on durable cord with brass findings crafted by local metalworkers.',
-  'African Fashion':
-    'Starting with bold Ankara wax-print fabric sourced from West African mills, each accessory is hand-cut and sewn in a Kampala studio. The vibrant geometric prints carry cultural symbolism, and every piece is finished with careful attention to colour harmony.',
+  'Heritage Home & Decor':
+    'Each piece begins with hand-harvested natural fibres — elephant grass, sweetgrass, and raffia — sun-dried and dyed with local pigments. Weavers coil them tightly over several days using bone needles, embedding ancestral patterns that tell stories of community, harvest, and celebration.',
+  'African Capsule Accessories':
+    'Starting with bold Ankara wax-print fabric and hand-woven kente strips sourced from West African workshops, each accessory is hand-cut and sewn in a small studio. Vibrant geometric prints carry cultural symbolism passed down through generations.',
+  'Waste-to-Wealth':
+    'Reclaimed materials — crushed glass bottles, recycled rubber, salvaged metals — are transformed by skilled artisans into beautiful, purposeful objects. Every piece diverts waste from landfill while celebrating the ingenuity of African craft traditions.',
+  'DIY Craft Kits':
+    'Each kit is assembled by the same artisans who practise the technique professionally. You receive the same raw materials they use — natural fibres, authentic dyes, traditional tools — along with step-by-step guides so you can learn the craft at home.',
 };
+
+const FALLBACK_STORY = CRAFT_STORIES['Heritage Home & Decor'];
 
 /**
  * Daily featured product — rotates based on date seed.
  * Focuses on craft technique and origin region, not artisan identity.
  */
 export function DailyDiscovery() {
+  const { products, isLoading } = useProducts({ limit: 20 });
+
   const product = useMemo(() => {
+    if (products.length === 0) return null;
     const today = new Date();
     const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-    return PRODUCTS[seed % PRODUCTS.length];
-  }, []);
+    return products[seed % products.length];
+  }, [products]);
 
-  const story = CRAFT_STORIES[product.category] ?? CRAFT_STORIES['Heritage Wall Art'];
+  if (isLoading || !product) return null;
+
+  const story = CRAFT_STORIES[product.category] ?? FALLBACK_STORY;
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 lg:px-8">

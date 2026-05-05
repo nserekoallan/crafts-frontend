@@ -4,15 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Zap } from 'lucide-react';
 import { DenseProductCard } from '@/components/products/dense-product-card';
-import { PRODUCTS } from '@/lib/mock-data';
-
-/** Products on sale (have originalPrice). */
-const DEAL_PRODUCTS = PRODUCTS.filter(
-  (p) => p.originalPrice && p.originalPrice > p.price,
-);
+import { useProducts } from '@/hooks/use-products';
 
 /**
- * Returns time remaining until midnight (end of "deal").
+ * Returns time remaining until midnight.
  */
 function getTimeRemaining(): { hours: number; minutes: number; seconds: number } {
   const now = new Date();
@@ -31,6 +26,7 @@ function getTimeRemaining(): { hours: number; minutes: number; seconds: number }
  */
 export function FlashDeals() {
   const [time, setTime] = useState(getTimeRemaining);
+  const { products, isLoading } = useProducts({ limit: 8 });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -39,7 +35,7 @@ export function FlashDeals() {
     return () => clearInterval(interval);
   }, []);
 
-  if (DEAL_PRODUCTS.length === 0) return null;
+  if (isLoading || products.length === 0) return null;
 
   const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -75,19 +71,19 @@ export function FlashDeals() {
 
       {/* Horizontal scroll strip */}
       <div className="scrollbar-hide mt-5 flex gap-3 overflow-x-auto pb-2 md:gap-4">
-        {DEAL_PRODUCTS.map((product) => (
+        {products.map((product) => (
           <div key={product.id} className="w-44 shrink-0 md:w-56">
             <DenseProductCard product={product} />
           </div>
         ))}
 
-        {/* See All Deals link card */}
+        {/* See All link card */}
         <Link
-          href="/shop?sale=true"
+          href="/shop"
           className="flex w-44 shrink-0 flex-col items-center justify-center rounded-xl border border-border-dark bg-bg-elevated transition-colors hover:border-gold/40 md:w-56"
         >
           <ArrowRight className="h-6 w-6 text-gold" />
-          <span className="mt-2 text-sm font-semibold text-gold">See All Deals</span>
+          <span className="mt-2 text-sm font-semibold text-gold">Shop All</span>
         </Link>
       </div>
     </section>

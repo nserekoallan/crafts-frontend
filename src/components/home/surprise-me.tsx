@@ -3,21 +3,26 @@
 import { useCallback, useRef, useState } from 'react';
 import { RefreshCw, Sparkles } from 'lucide-react';
 import { DenseProductCard } from '@/components/products/dense-product-card';
-import { PRODUCTS } from '@/lib/mock-data';
+import { useProducts } from '@/hooks/use-products';
 import { cn } from '@/lib/utils';
+import type { Product } from '@/lib/mock-data';
 
 /**
  * "Surprise Me" section — reveals a random product with a golden shimmer animation.
  * Tracks shown products in session to avoid repeats.
  */
 export function SurpriseMe() {
-  const [product, setProduct] = useState<typeof PRODUCTS[number] | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [isRevealing, setIsRevealing] = useState(false);
   const shownIds = useRef<Set<string>>(new Set());
 
+  const { products } = useProducts({ limit: 20 });
+
   const pickRandom = useCallback(() => {
-    const available = PRODUCTS.filter((p) => !shownIds.current.has(p.id));
-    const pool = available.length > 0 ? available : PRODUCTS;
+    if (products.length === 0) return;
+
+    const available = products.filter((p) => !shownIds.current.has(p.id));
+    const pool = available.length > 0 ? available : products;
 
     if (available.length === 0) {
       shownIds.current.clear();
@@ -31,7 +36,7 @@ export function SurpriseMe() {
       setProduct(picked);
       setIsRevealing(false);
     }, 400);
-  }, []);
+  }, [products]);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
