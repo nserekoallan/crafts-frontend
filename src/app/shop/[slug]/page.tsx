@@ -14,6 +14,7 @@ import { DiscountBadge } from '@/components/ui/discount-badge';
 import { StockBadge } from '@/components/ui/stock-badge';
 import { WhatsAppButton } from '@/components/ui/whatsapp-button';
 import { RecentlyViewedStrip } from '@/components/products/recently-viewed-strip';
+import { ProductReviews } from '@/components/products/product-reviews';
 import { api } from '@/lib/api';
 import { mapApiProductToProduct, type ApiProduct, type ApiProductsResponse } from '@/lib/types/product';
 
@@ -331,6 +332,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           </div>
         </div>
       </div>
+
+      {/* Reviews */}
+      {productData && <ProductReviews productId={productData.id} />}
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (
