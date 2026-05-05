@@ -72,7 +72,7 @@ export function useProducts(params: UseProductsParams = {}): UseProductsResult {
   const limit = data?.meta.limit ?? 20;
 
   return {
-    products: data?.data.map(mapApiProductToProduct) ?? [],
+    products: Array.isArray(data?.data) ? data!.data.map(mapApiProductToProduct) : [],
     total,
     totalPages: limit > 0 ? Math.ceil(total / limit) : 0,
     page: data?.meta.page ?? 1,
