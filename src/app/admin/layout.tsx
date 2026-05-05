@@ -44,8 +44,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (user?.role !== 'admin' && user?.role !== 'super_admin') { router.replace('/'); return; }
   }, [pathname, isLoading, isAuthenticated, user, router]);
 
-  if (pathname === '/admin/login') return <>{children}</>;
-
   if (isLoading || !isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0D0D0D]">

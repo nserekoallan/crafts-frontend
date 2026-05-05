@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, useRef, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ImagePlus, X } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,8 +41,11 @@ export function CreateProductDialog({ open, onClose }: Props) {
   const [categoryId, setCategoryId] = useState('');
   const [materials, setMaterials] = useState('');
   const [tags, setTags] = useState('');
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
@@ -68,11 +72,31 @@ export function CreateProductDialog({ open, onClose }: Props) {
     if (!slugTouched) setSlug(slugify(value));
   }
 
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    const combined = [...imageFiles, ...files].slice(0, 5);
+    setImageFiles(combined);
+    setImagePreviews(combined.map((f) => URL.createObjectURL(f)));
+  }
+
+  function removeImage(index: number) {
+    URL.revokeObjectURL(imagePreviews[index]);
+    const files = imageFiles.filter((_, i) => i !== index);
+    const previews = imagePreviews.filter((_, i) => i !== index);
+    setImageFiles(files);
+    setImagePreviews(previews);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
   function reset() {
     setName(''); setSlug(''); setSlugTouched(false);
     setDescription(''); setPrice(''); setStock('');
     setCategoryId(''); setMaterials(''); setTags('');
+    imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+    setImageFiles([]); setImagePreviews([]);
     setError(''); setSubmitting(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
   function handleClose() {
@@ -85,7 +109,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
     setError('');
     setSubmitting(true);
     try {
-      await api.post('/products', {
+      const created = await api.post<{ data: { id: string } }>('/products', {
         name: name.trim(),
         slug: slug.trim(),
         description: description.trim(),
@@ -95,6 +119,23 @@ export function CreateProductDialog({ open, onClose }: Props) {
         materials: materials.trim() || undefined,
         tags: tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
       });
+
+      if (imageFiles.length > 0) {
+        const productId = created.data.id;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('cc_token') : null;
+        const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.craftcontinent.com/api/v1';
+        for (let i = 0; i < imageFiles.length; i++) {
+          const fd = new FormData();
+          fd.append('file', imageFiles[i]);
+          if (i === 0) fd.append('isDefault', 'true');
+          await fetch(`${base}/products/${productId}/images`, {
+            method: 'POST',
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            body: fd,
+          });
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ['artisan', 'products'] });
       reset();
       onClose();
@@ -237,6 +278,43 @@ export function CreateProductDialog({ open, onClose }: Props) {
             onChange={(e) => setTags(e.target.value)}
             className="mt-1"
             placeholder="e.g. kente, handwoven, ghana"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-charcoal">
+            Images <span className="text-xs text-medium-gray">(up to 5)</span>
+          </label>
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            {imagePreviews.map((url, i) => (
+              <div key={i} className="relative h-16 w-16 overflow-hidden rounded-lg border border-light-gray">
+                <img src={url} alt="" className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(i)}
+                  className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </div>
+            ))}
+            {imageFiles.length < 5 && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-light-gray text-medium-gray hover:border-hunter-green hover:text-hunter-green"
+              >
+                <ImagePlus className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handleImageSelect}
           />
         </div>
 

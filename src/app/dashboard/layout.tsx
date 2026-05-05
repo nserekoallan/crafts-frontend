@@ -31,8 +31,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (user?.role !== 'artisan') { router.replace('/'); }
   }, [pathname, isLoading, isAuthenticated, user, router]);
 
-  if (pathname === '/dashboard/login') return <>{children}</>;
-
   if (isLoading || !isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0D0D0D]">
