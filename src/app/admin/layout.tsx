@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   Wallet,
   FileBarChart,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +29,7 @@ const ADMIN_LINKS = [
   { href: '/admin/qc', label: 'QC Queue', icon: ClipboardCheck },
   { href: '/admin/payouts', label: 'Payouts', icon: Wallet },
   { href: '/admin/reports', label: 'Reports', icon: FileBarChart },
+  { href: '/admin/settings', label: 'Settings', icon: Settings },
 ] as const;
 
 /**

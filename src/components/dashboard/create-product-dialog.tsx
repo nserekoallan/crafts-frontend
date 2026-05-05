@@ -49,6 +49,18 @@ export function CreateProductDialog({ open, onClose }: Props) {
     enabled: open,
   });
 
+  const { data: markupData } = useQuery({
+    queryKey: ['platform', 'markup'],
+    queryFn: () => api.get<{ data: { markupPercent: number } }>('/admin/settings/markup').then((r) => r.data),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const markupPercent = markupData?.markupPercent ?? 25;
+  const priceNum = parseFloat(price);
+  const displayPrice = !isNaN(priceNum) && priceNum > 0
+    ? Math.round(priceNum * (1 + markupPercent / 100) * 100) / 100
+    : null;
+
   const categories = categoriesData ?? [];
 
   function handleNameChange(value: string) {
@@ -145,7 +157,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium text-charcoal" htmlFor="cp-price">
-              Price (USD) <span className="text-red-400">*</span>
+              Your Price (USD) <span className="text-red-400">*</span>
             </label>
             <Input
               id="cp-price"
@@ -158,6 +170,13 @@ export function CreateProductDialog({ open, onClose }: Props) {
               className="mt-1"
               placeholder="0.00"
             />
+            {displayPrice !== null && (
+              <p className="mt-1 text-xs text-medium-gray">
+                Customer sees:{' '}
+                <span className="font-semibold text-hunter-green">${displayPrice.toFixed(2)}</span>
+                {' '}(+{markupPercent}% platform fee)
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-charcoal" htmlFor="cp-stock">
