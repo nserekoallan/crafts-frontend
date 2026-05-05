@@ -25,10 +25,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, isLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
+    if (pathname === '/dashboard/login') return;
     if (isLoading) return;
-    if (!isAuthenticated) { router.replace('/login'); return; }
+    if (!isAuthenticated) { router.replace('/dashboard/login'); return; }
     if (user?.role !== 'artisan') { router.replace('/'); }
-  }, [isLoading, isAuthenticated, user, router]);
+  }, [pathname, isLoading, isAuthenticated, user, router]);
+
+  if (pathname === '/dashboard/login') return <>{children}</>;
 
   if (isLoading || !isAuthenticated) {
     return (
@@ -40,7 +43,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen flex-col bg-[#111110]">
-      <PortalHeader label="Artisan Studio" accentClass="text-hunter-green-light" />
+      <PortalHeader label="Artisan Studio" accentClass="text-hunter-green-light" loginPath="/dashboard/login" />
 
       <div className="flex flex-1">
         {/* Dark sidebar — desktop */}

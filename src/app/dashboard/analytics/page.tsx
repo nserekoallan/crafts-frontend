@@ -75,7 +75,7 @@ function Stars({ rating }: { rating: number | null }) {
 export default function AnalyticsPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['artisan', 'analytics'],
-    queryFn: () => api.get<AnalyticsResponse>('/artisans/me/analytics'),
+    queryFn: () => api.get<{ data: AnalyticsResponse }>('/artisans/me/analytics').then((r) => r.data),
   });
 
   const totals = data?.totals;

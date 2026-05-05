@@ -108,7 +108,8 @@ export function ProductReviews({ productId }: { productId: string }) {
 
   const { data: ratingData } = useQuery({
     queryKey: ['reviews', 'rating', productId],
-    queryFn: () => api.get<RatingResponse>(`/reviews/product/${productId}/rating`),
+    queryFn: () =>
+      api.get<{ data: RatingResponse }>(`/reviews/product/${productId}/rating`).then((r) => r.data),
   });
 
   const { data: reviewsData, isLoading } = useQuery({

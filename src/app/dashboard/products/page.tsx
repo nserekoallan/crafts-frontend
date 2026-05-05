@@ -48,7 +48,7 @@ export default function ProductsPage() {
 
   const { data: featuredRequests } = useQuery({
     queryKey: ['artisan', 'featured-requests'],
-    queryFn: () => api.get<FeaturedRequestStatus[]>('/featured-requests/me'),
+    queryFn: () => api.get<{ data: FeaturedRequestStatus[] }>('/featured-requests/me').then((r) => r.data),
   });
 
   const { mutate: requestFeatured } = useMutation({

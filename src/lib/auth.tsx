@@ -37,6 +37,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const TOKEN_KEY = 'cc_token';
+const REFRESH_KEY = 'cc_refresh_token';
 
 /**
  * Provides authentication state and actions to the component tree.
@@ -82,8 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchProfile]);
 
   const login = useCallback(async (payload: LoginPayload): Promise<User> => {
-    const res = await api.post<{ data: { user: User; accessToken: string } }>('/auth/login', payload);
+    const res = await api.post<{ data: { user: User; accessToken: string; refreshToken?: string } }>('/auth/login', payload);
     localStorage.setItem(TOKEN_KEY, res.data.accessToken);
+    if (res.data.refreshToken) localStorage.setItem(REFRESH_KEY, res.data.refreshToken);
     const profile = await fetchProfile().catch(() => ({
       ...res.data.user,
       role: (res.data.user.role as string).toLowerCase() as User['role'],
@@ -95,8 +97,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchProfile]);
 
   const register = useCallback(async (payload: RegisterPayload) => {
-    const res = await api.post<{ data: { user: User; accessToken: string } }>('/auth/register', payload);
+    const res = await api.post<{ data: { user: User; accessToken: string; refreshToken?: string } }>('/auth/register', payload);
     localStorage.setItem(TOKEN_KEY, res.data.accessToken);
+    if (res.data.refreshToken) localStorage.setItem(REFRESH_KEY, res.data.refreshToken);
     const profile = await fetchProfile().catch(() => ({
       ...res.data.user,
       role: 'customer' as User['role'],
@@ -113,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
     setUser(null);
   }, []);
 

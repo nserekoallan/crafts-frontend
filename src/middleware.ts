@@ -5,14 +5,14 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') ?? '';
   const { pathname } = request.nextUrl;
 
-  // artisan.craftcontinent.com → land on /dashboard
-  if (hostname.startsWith('artisan.') && pathname === '/') {
-    return NextResponse.rewrite(new URL('/dashboard', request.url));
+  if (hostname.startsWith('artisan.')) {
+    if (pathname === '/') return NextResponse.rewrite(new URL('/dashboard', request.url));
+    if (pathname === '/login') return NextResponse.rewrite(new URL('/dashboard/login', request.url));
   }
 
-  // admin.craftcontinent.com → land on /admin
-  if (hostname.startsWith('admin.') && pathname === '/') {
-    return NextResponse.rewrite(new URL('/admin', request.url));
+  if (hostname.startsWith('admin.')) {
+    if (pathname === '/') return NextResponse.rewrite(new URL('/admin', request.url));
+    if (pathname === '/login') return NextResponse.rewrite(new URL('/admin/login', request.url));
   }
 
   return NextResponse.next();

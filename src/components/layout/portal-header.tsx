@@ -11,19 +11,21 @@ interface PortalHeaderProps {
   label: string;
   /** Accent colour class applied to the badge text, defaults to satin-gold */
   accentClass?: string;
+  /** Path to redirect to after logout */
+  loginPath?: string;
 }
 
 /**
  * Slim top bar shared by the admin console and artisan dashboard portals.
  * Sits above the dark sidebar — intentionally separate from the store header.
  */
-export function PortalHeader({ label, accentClass = 'text-satin-gold' }: PortalHeaderProps) {
+export function PortalHeader({ label, accentClass = 'text-satin-gold', loginPath = '/login' }: PortalHeaderProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
 
   function handleLogout() {
     logout();
-    router.replace('/login');
+    router.replace(loginPath);
   }
 
   return (

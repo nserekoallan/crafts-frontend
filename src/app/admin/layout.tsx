@@ -38,10 +38,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
+    if (pathname === '/admin/login') return;
     if (isLoading) return;
-    if (!isAuthenticated) { router.replace('/login'); return; }
+    if (!isAuthenticated) { router.replace('/admin/login'); return; }
     if (user?.role !== 'admin' && user?.role !== 'super_admin') { router.replace('/'); return; }
-  }, [isLoading, isAuthenticated, user, router]);
+  }, [pathname, isLoading, isAuthenticated, user, router]);
+
+  if (pathname === '/admin/login') return <>{children}</>;
 
   if (isLoading || !isAuthenticated) {
     return (
@@ -58,7 +61,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-screen flex-col bg-[#111110]">
-      <PortalHeader label="Admin Console" accentClass="text-satin-gold" />
+      <PortalHeader label="Admin Console" accentClass="text-satin-gold" loginPath="/admin/login" />
 
       <div className="flex flex-1">
         {/* Dark sidebar — desktop */}
