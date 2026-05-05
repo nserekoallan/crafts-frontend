@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Settings, Percent } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -19,10 +19,13 @@ export default function AdminSettingsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['platform', 'markup'],
     queryFn: () => api.get<{ data: MarkupResponse }>('/admin/settings/markup').then((r) => r.data),
-    onSuccess: (d) => {
-      if (!markupInput) setMarkupInput(String(d.markupPercent));
-    },
   });
+
+  useEffect(() => {
+    if (data && !markupInput) setMarkupInput(String(data.markupPercent));
+  // Pre-fill once on initial load; markupInput omitted to avoid overwriting user edits
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   const currentMarkup = data?.markupPercent ?? 25;
 
