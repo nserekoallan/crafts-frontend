@@ -43,6 +43,7 @@ export interface ApiProduct {
   _count: { reviews: number };
   isFeatured: boolean;
   featuredUntil: string | null;
+  viewCount: number;
   createdAt: string;
   updatedAt: string;
 }

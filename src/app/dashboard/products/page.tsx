@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Plus, Search, Pencil, Sparkles, Trash2 } from 'lucide-react';
+import { Plus, Search, Pencil, Sparkles, Trash2, Eye } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useArtisanProducts } from '@/hooks/use-artisan';
 import type { ApiProduct } from '@/lib/types/product';
@@ -139,6 +139,7 @@ export default function ProductsPage() {
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3">Stock</th>
                 <th className="px-5 py-3 text-right">Price</th>
+                <th className="px-5 py-3 text-right">Views</th>
                 <th className="px-5 py-3 text-right">Actions</th>
                 <th className="px-5 py-3 text-right">Featured</th>
               </tr>
@@ -154,6 +155,12 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-5 py-3 text-medium-gray">{product.stock}</td>
                   <td className="px-5 py-3 text-right font-medium">{formatPrice(Number(product.price))}</td>
+                  <td className="px-5 py-3 text-right">
+                    <span className="inline-flex items-center gap-1 text-sm text-medium-gray">
+                      <Eye className="h-3.5 w-3.5" />
+                      {(product.viewCount ?? 0).toLocaleString()}
+                    </span>
+                  </td>
                   <td className="px-5 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button

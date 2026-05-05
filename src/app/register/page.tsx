@@ -8,15 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/auth';
 
-/**
- * Customer registration page.
- */
 export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -27,7 +23,7 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      await register({ firstName, lastName, email, phone, password });
+      await register({ firstName, lastName, phone, password });
       router.push('/');
     } catch {
       setError('Registration failed. Please check your details and try again.');
@@ -66,18 +62,29 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-primary" htmlFor="email">Email</label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required className="mt-1.5" />
-          </div>
-
-          <div>
             <label className="block text-sm font-medium text-text-primary" htmlFor="phone">Phone Number</label>
-            <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+256700111222" required className="mt-1.5" />
+            <Input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+256700111222"
+              required
+              className="mt-1.5"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-text-primary" htmlFor="password">Password</label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min 8 chars, include A-Z, 0-9, symbol" required className="mt-1.5" />
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Min 8 chars, include A-Z, 0-9, symbol"
+              required
+              className="mt-1.5"
+            />
           </div>
 
           <Button type="submit" disabled={loading} className="mt-2 w-full bg-hunter-green text-white hover:bg-hunter-green/90 disabled:opacity-50">

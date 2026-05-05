@@ -13,14 +13,13 @@ export interface User {
 }
 
 interface LoginPayload {
-  email: string;
+  identifier: string;
   password: string;
 }
 
 interface RegisterPayload {
   firstName: string;
   lastName: string;
-  email: string;
   phone: string;
   password: string;
 }

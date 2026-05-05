@@ -14,13 +14,10 @@ function redirectPathForRole(role: string): string {
   return '/';
 }
 
-/**
- * Login page — redirects to role-appropriate destination after success.
- */
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,10 +27,10 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const loggedInUser = await login({ email, password });
+      const loggedInUser = await login({ identifier, password });
       router.push(redirectPathForRole(loggedInUser.role));
     } catch {
-      setError('Invalid email or password. Please try again.');
+      setError('Invalid phone/email or password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -57,8 +54,24 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <Input label="Email" type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
-          <Input label="Password" type="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required />
+          <Input
+            label="Phone or Email"
+            type="text"
+            name="identifier"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder="+256700111222 or you@example.com"
+            required
+          />
+          <Input
+            label="Password"
+            type="password"
+            name="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            required
+          />
 
           <Button type="submit" variant="primary" size="lg" className="w-full" isLoading={loading}>
             Sign In
