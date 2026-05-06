@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Heart, Plus } from 'lucide-react';
+import { Check, Heart, Plus, Star } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import { useWishlist } from '@/lib/wishlist';
 import { useCurrency } from '@/lib/currency';
@@ -89,7 +89,25 @@ export function ProductCard({ product, className }: ProductCardProps) {
           {product.category}
         </p>
 
-        <div className="mt-3 flex items-center justify-between">
+        {/* Rating */}
+        <div className="mt-1.5 flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star
+                key={i}
+                className={cn(
+                  'h-2.5 w-2.5',
+                  i < Math.round(product.rating)
+                    ? 'fill-gold text-gold'
+                    : 'fill-none text-text-tertiary',
+                )}
+              />
+            ))}
+          </div>
+          <span className="text-[10px] text-text-tertiary">({product.reviewCount})</span>
+        </div>
+
+        <div className="mt-2 flex items-center justify-between">
           <span className="font-heading text-base font-bold text-gold">
             {formatPrice(product.price)}
           </span>
