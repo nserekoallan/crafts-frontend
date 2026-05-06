@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Plus, Search, Pencil, Sparkles, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Pencil, Sparkles, Trash2, Eye, Send, AlertCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useArtisanProducts, useArtisanFeaturedRequests, useRequestFeatured } from '@/hooks/use-artisan';
+import { useAuth } from '@/lib/auth';
+import { useArtisanProducts, useArtisanFeaturedRequests, useRequestFeatured, useSubmitProduct } from '@/hooks/use-artisan';
 import type { ApiProduct } from '@/lib/types/product';
 import { CreateProductDialog } from '@/components/dashboard/create-product-dialog';
 import { EditProductDialog } from '@/components/dashboard/edit-product-dialog';
@@ -15,15 +16,16 @@ import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
 import { track } from '@/lib/analytics';
 
-type StatusFilter = 'all' | 'ACTIVE' | 'DRAFT' | 'PENDING_QC' | 'SUSPENDED';
+type StatusFilter = 'all' | 'ACTIVE' | 'DRAFT' | 'PENDING_QC' | 'REJECTED' | 'SUSPENDED';
 
-const STATUS_FILTERS: StatusFilter[] = ['all', 'ACTIVE', 'DRAFT', 'PENDING_QC', 'SUSPENDED'];
+const STATUS_FILTERS: StatusFilter[] = ['all', 'ACTIVE', 'DRAFT', 'PENDING_QC', 'REJECTED', 'SUSPENDED'];
 
 const STATUS_LABELS: Record<string, string> = {
   all: 'All',
   ACTIVE: 'Active',
   DRAFT: 'Draft',
   PENDING_QC: 'Pending QC',
+  REJECTED: 'Rejected',
   SUSPENDED: 'Suspended',
 };
 
@@ -33,18 +35,29 @@ function getStatusVariant(status: string): 'default' | 'pending' | 'cancelled' {
   return 'cancelled';
 }
 
+function isSubmittable(p: ApiProduct): boolean {
+  if (p.status !== 'DRAFT' && p.status !== 'REJECTED') return false;
+  if ((p.images?.length ?? 0) < 1) return false;
+  if (Number(p.price) <= 0) return false;
+  return true;
+}
+
 export default function ProductsPage() {
   const queryClient = useQueryClient();
   const { formatPrice } = useCurrency();
+  const { user } = useAuth();
+  const artisanVerified = user?.artisan?.status === 'VERIFIED';
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [createOpen, setCreateOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<ApiProduct | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { data, isLoading, error } = useArtisanProducts();
   const { data: featuredRequests } = useArtisanFeaturedRequests();
   const { mutate: requestFeatured } = useRequestFeatured();
+  const { mutate: submitProduct, isPending: isSubmitting, variables: submittingId } = useSubmitProduct();
 
   const featuredStatusMap = useMemo(() => {
     const map = new Map<string, 'PENDING' | 'APPROVED' | 'REJECTED'>();
@@ -81,6 +94,16 @@ export default function ProductsPage() {
           Add Product
         </Button>
       </div>
+
+      {submitError && (
+        <div
+          className="mt-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
+          role="alert"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{submitError}</span>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -137,7 +160,21 @@ export default function ProductsPage() {
             <tbody className="divide-y divide-border-dark">
               {filtered.map((product) => (
                 <tr key={product.id} className="hover:bg-white/[0.03]">
-                  <td className="px-5 py-3 font-medium">{product.name}</td>
+                  <td className="px-5 py-3 font-medium">
+                    {product.name}
+                    {product.status === 'REJECTED' && product.rejectionReason && (
+                      <p className="mt-1 inline-flex items-start gap-1 text-[11px] text-red-400">
+                        <AlertCircle className="mt-px h-3 w-3 shrink-0" />
+                        <span>Rejected: {product.rejectionReason}</span>
+                      </p>
+                    )}
+                    {product.status === 'SUSPENDED' && product.suspensionReason && (
+                      <p className="mt-1 inline-flex items-start gap-1 text-[11px] text-red-400">
+                        <AlertCircle className="mt-px h-3 w-3 shrink-0" />
+                        <span>Suspended: {product.suspensionReason}</span>
+                      </p>
+                    )}
+                  </td>
                   <td className="px-5 py-3">
                     <Badge variant={getStatusVariant(product.status)}>
                       {STATUS_LABELS[product.status] ?? product.status}
@@ -160,6 +197,39 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-5 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      {(product.status === 'DRAFT' || product.status === 'REJECTED') &&
+                        (() => {
+                          const submittable = isSubmittable(product) && artisanVerified;
+                          const reason = !artisanVerified
+                            ? 'Verify your artisan account first'
+                            : (product.images?.length ?? 0) < 1
+                              ? 'Add at least one image'
+                              : Number(product.price) <= 0
+                                ? 'Price must be greater than 0'
+                                : '';
+                          return (
+                            <button
+                              onClick={() => {
+                                setSubmitError(null);
+                                submitProduct(product.id, {
+                                  onError: (err) => {
+                                    const msg =
+                                      err && typeof err === 'object' && 'message' in err
+                                        ? String((err as { message: unknown }).message)
+                                        : 'Failed to submit product';
+                                    setSubmitError(msg);
+                                  },
+                                });
+                              }}
+                              disabled={!submittable || (isSubmitting && submittingId === product.id)}
+                              className="inline-flex items-center gap-1 rounded-md border border-hunter-green/50 px-2 py-1 text-xs font-medium text-hunter-green hover:bg-hunter-green/10 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                              title={submittable ? 'Submit for admin review' : reason}
+                            >
+                              <Send className="h-3 w-3" />
+                              {isSubmitting && submittingId === product.id ? 'Submitting…' : 'Submit'}
+                            </button>
+                          );
+                        })()}
                       <button
                         onClick={() => setEditProduct(product)}
                         className="rounded p-1.5 hover:bg-white/[0.06] transition-colors text-text-secondary hover:text-text-primary"

@@ -104,6 +104,18 @@ export function useRequestFeatured() {
   });
 }
 
+/**
+ * Submits a DRAFT or REJECTED product for admin review.
+ */
+export function useSubmitProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (productId: string) => api.post(`/products/${productId}/submit`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['artisan', 'products'] }),
+  });
+}
+
 export interface ProductAnalytic {
   id: string;
   name: string;

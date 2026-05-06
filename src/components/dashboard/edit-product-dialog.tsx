@@ -89,6 +89,12 @@ export function EditProductDialog({ product, open, onClose }: Props) {
   return (
     <Dialog open={open} onClose={onClose} title="Edit Product" className="max-w-xl">
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+        {product.status === 'ACTIVE' && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-300">
+            Editing the name, description, or category will pull this product from the shop until an admin re-approves it. Price, stock and tags can be changed without re-review.
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-text-secondary" htmlFor="ep-name">
             Product Name <span className="text-red-400">*</span>

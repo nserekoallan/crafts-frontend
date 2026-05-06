@@ -3,7 +3,9 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/api';
 import {
   LayoutDashboard,
   Users,
@@ -36,6 +38,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const { user, isLoading, isAuthenticated } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+
+  const { data: queueData } = useQuery({
+    queryKey: ['admin', 'queue', 'pendingQC'],
+    queryFn: () => api.get<{ data: { pendingQC: number } }>('/products/queue/count'),
+    enabled: isAdmin,
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+  });
+  const pendingQC = queueData?.data.pendingQC ?? 0;
 
   useEffect(() => {
     if (pathname === '/admin/login') return;
@@ -68,6 +80,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {ADMIN_LINKS.map((link) => {
               const Icon = link.icon;
               const active = isActive(link.href);
+              const showBadge = link.href === '/admin/qc' && pendingQC > 0;
 
               return (
                 <Link
@@ -81,7 +94,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {link.label}
+                  <span className="flex-1">{link.label}</span>
+                  {showBadge && (
+                    <span className="rounded-full bg-satin-gold px-1.5 py-0.5 text-[10px] font-bold text-bg-primary">
+                      {pendingQC}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -94,6 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {ADMIN_LINKS.map((link) => {
               const Icon = link.icon;
               const active = isActive(link.href);
+              const showBadge = link.href === '/admin/qc' && pendingQC > 0;
 
               return (
                 <Link
@@ -108,6 +127,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 >
                   <Icon className="h-3.5 w-3.5" />
                   {link.label}
+                  {showBadge && (
+                    <span className="ml-0.5 rounded-full bg-satin-gold px-1.5 py-0 text-[9px] font-bold text-bg-primary">
+                      {pendingQC}
+                    </span>
+                  )}
                 </Link>
               );
             })}

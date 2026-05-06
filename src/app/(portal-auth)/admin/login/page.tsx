@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Eye, EyeOff } from 'lucide-react';
@@ -266,6 +267,19 @@ export default function AdminLoginPage() {
                 {error}
               </p>
             )}
+
+            {/* Forgot password */}
+            <div className="flex justify-end">
+              <Link
+                href="/forgot-password"
+                className="text-xs transition-colors"
+                style={{ color: 'rgba(255,255,255,0.3)', fontFamily: "'Hanken Grotesk', sans-serif" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(212,168,83,0.8)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.3)')}
+              >
+                Forgot password?
+              </Link>
+            </div>
 
             {/* Submit */}
             <button

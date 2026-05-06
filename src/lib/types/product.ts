@@ -49,6 +49,13 @@ export interface ApiProduct {
   averageRating?: number;
   createdAt: string;
   updatedAt: string;
+  // Workflow lifecycle metadata
+  submittedAt?: string | null;
+  rejectedAt?: string | null;
+  rejectionReason?: string | null;
+  suspensionReason?: string | null;
+  firstActiveAt?: string | null;
+  revertedFromActive?: boolean;
 }
 
 export interface ApiProductsMeta {

@@ -63,15 +63,22 @@ export default function LoginPage() {
             placeholder="+256700111222 or you@example.com"
             required
           />
-          <Input
-            label="Password"
-            type="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            required
-          />
+          <div>
+            <Input
+              label="Password"
+              type="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+            />
+            <div className="mt-1.5 flex justify-end">
+              <Link href="/forgot-password" className="text-xs text-text-tertiary hover:text-gold transition-colors">
+                Forgot password?
+              </Link>
+            </div>
+          </div>
 
           <Button type="submit" variant="primary" size="lg" className="w-full" isLoading={loading}>
             Sign In

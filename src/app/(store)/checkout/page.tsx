@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Check, Lock, ShoppingBag } from 'lucide-react';
@@ -79,7 +79,7 @@ function ProgressBar({ current }: { current: Step }) {
  */
 export default function CheckoutPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { items, subtotal, itemCount } = useCart();
   const { formatPrice } = useCurrency();
 
@@ -94,6 +94,16 @@ export default function CheckoutPage() {
     notes: '',
   });
   const [paymentSelection, setPaymentSelection] = useState<PaymentSelection>({ method: 'mobile_money' });
+  const phonePrefilled = useRef(false);
+
+  // Prefill phone fields from user profile (runs once user loads)
+  useEffect(() => {
+    if (phonePrefilled.current || !user?.phone) return;
+    phonePrefilled.current = true;
+    const digits = user.phone.replace(/^\+/, '');
+    setPaymentSelection((prev) => ({ ...prev, msisdn: prev.msisdn || digits }));
+    setShippingAddress((prev) => ({ ...prev, phone: prev.phone || user.phone! }));
+  }, [user?.phone]);
 
   // Auth guard
   useEffect(() => {

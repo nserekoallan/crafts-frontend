@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 export interface User {
   id: string;
   email: string;
+  phone?: string;
   firstName: string;
   lastName: string;
   role: 'customer' | 'artisan' | 'admin' | 'super_admin';
@@ -51,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: {
         id: string;
         email: string;
+        phone?: string;
         role: string;
         firstName?: string;
         lastName?: string;
@@ -62,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {
       id: d.id,
       email: d.email,
+      phone: d.phone,
       role: d.role.toLowerCase() as User['role'],
       firstName: d.firstName ?? d.profile?.firstName ?? '',
       lastName: d.lastName ?? d.profile?.lastName ?? '',

@@ -20,6 +20,7 @@ const STATUS_VARIANT: Record<string, BadgeVariant> = {
   ACTIVE: 'delivered',
   PENDING_QC: 'processing',
   DRAFT: 'default',
+  REJECTED: 'cancelled',
   SUSPENDED: 'cancelled',
 };
 
@@ -28,6 +29,7 @@ const STATUS_FILTERS = [
   { value: 'ACTIVE', label: 'Active' },
   { value: 'PENDING_QC', label: 'Pending QC' },
   { value: 'DRAFT', label: 'Draft' },
+  { value: 'REJECTED', label: 'Rejected' },
   { value: 'SUSPENDED', label: 'Suspended' },
 ];
 
@@ -35,13 +37,21 @@ const STATUS_FILTERS = [
 // Reject dialog
 // ---------------------------------------------------------------------------
 
-function RejectDialog({
+function ReasonDialog({
+  title,
   productName,
+  ctaLabel,
+  pendingLabel,
+  placeholder,
   onConfirm,
   onCancel,
   isPending,
 }: {
+  title: string;
   productName: string;
+  ctaLabel: string;
+  pendingLabel: string;
+  placeholder: string;
   onConfirm: (reason: string) => void;
   onCancel: () => void;
   isPending: boolean;
@@ -52,18 +62,18 @@ function RejectDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-md rounded-2xl bg-bg-surface p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-text-primary">Reject Product</h2>
+          <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
           <button onClick={onCancel} className="text-text-secondary hover:text-text-primary">
             <X className="w-5 h-5" />
           </button>
         </div>
         <p className="text-sm text-text-secondary mb-4">
-          Rejecting <span className="font-medium text-text-primary">{productName}</span>. The artisan will be notified with your reason.
+          <span className="font-medium text-text-primary">{productName}</span> — the artisan will be notified with your reason.
         </p>
         <Textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Reason for rejection (required)…"
+          placeholder={placeholder}
           rows={3}
           className="w-full"
         />
@@ -77,7 +87,7 @@ function RejectDialog({
             disabled={isPending || !reason.trim()}
             className="bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
           >
-            {isPending ? 'Rejecting…' : 'Reject'}
+            {isPending ? pendingLabel : ctaLabel}
           </Button>
         </div>
       </div>
@@ -94,6 +104,7 @@ export default function AdminProductsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [rejectTarget, setRejectTarget] = useState<ApiProduct | null>(null);
+  const [suspendTarget, setSuspendTarget] = useState<ApiProduct | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin', 'products', statusFilter, search],
@@ -105,19 +116,28 @@ export default function AdminProductsPage() {
     },
   });
 
-  const { mutate: suspendProduct, variables: suspendingId } = useMutation({
-    mutationFn: (productId: string) =>
-      api.patch(`/products/${productId}`, { status: 'SUSPENDED' }),
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+    queryClient.invalidateQueries({ queryKey: ['admin', 'queue', 'pendingQC'] });
+  };
+
+  const { mutate: suspendProduct, isPending: isSuspending } = useMutation({
+    mutationFn: ({ productId, reason }: { productId: string; reason: string }) =>
+      api.patch(`/products/${productId}/suspend`, { reason }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+      setSuspendTarget(null);
+      invalidate();
     },
+  });
+
+  const { mutate: unsuspendProduct, variables: unsuspendingId } = useMutation({
+    mutationFn: (productId: string) => api.patch(`/products/${productId}/unsuspend`, {}),
+    onSuccess: invalidate,
   });
 
   const { mutate: approveProduct, variables: approvingId, isPending: isApproving } = useMutation({
     mutationFn: (productId: string) => api.patch(`/products/${productId}/approve`, {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
-    },
+    onSuccess: invalidate,
   });
 
   const { mutate: rejectProduct, isPending: isRejecting } = useMutation({
@@ -125,7 +145,7 @@ export default function AdminProductsPage() {
       api.patch(`/products/${productId}/reject`, { reason }),
     onSuccess: () => {
       setRejectTarget(null);
-      queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+      invalidate();
     },
   });
 
@@ -133,6 +153,8 @@ export default function AdminProductsPage() {
 
   const ActionButtons = ({ product }: { product: ApiProduct }) => {
     const isPendingQC = product.status === 'PENDING_QC';
+    const isActive = product.status === 'ACTIVE';
+    const isSuspended = product.status === 'SUSPENDED';
     const isThisApproving = isApproving && approvingId === product.id;
 
     return (
@@ -154,13 +176,21 @@ export default function AdminProductsPage() {
             </button>
           </>
         )}
-        {!isPendingQC && product.status !== 'SUSPENDED' && (
+        {isActive && (
           <button
-            disabled={suspendingId === product.id}
-            onClick={() => suspendProduct(product.id)}
-            className="rounded px-3 py-1 text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 transition-colors"
+            onClick={() => setSuspendTarget(product)}
+            className="rounded px-3 py-1 text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
           >
             Suspend
+          </button>
+        )}
+        {isSuspended && (
+          <button
+            disabled={unsuspendingId === product.id}
+            onClick={() => unsuspendProduct(product.id)}
+            className="rounded px-3 py-1 text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 transition-colors"
+          >
+            Unsuspend
           </button>
         )}
       </div>
@@ -170,11 +200,28 @@ export default function AdminProductsPage() {
   return (
     <>
       {rejectTarget && (
-        <RejectDialog
+        <ReasonDialog
+          title="Reject Product"
           productName={rejectTarget.name}
+          ctaLabel="Reject"
+          pendingLabel="Rejecting…"
+          placeholder="Reason for rejection (required)…"
           isPending={isRejecting}
           onConfirm={(reason) => rejectProduct({ productId: rejectTarget.id, reason })}
           onCancel={() => setRejectTarget(null)}
+        />
+      )}
+
+      {suspendTarget && (
+        <ReasonDialog
+          title="Suspend Product"
+          productName={suspendTarget.name}
+          ctaLabel="Suspend"
+          pendingLabel="Suspending…"
+          placeholder="Reason for suspension (required)…"
+          isPending={isSuspending}
+          onConfirm={(reason) => suspendProduct({ productId: suspendTarget.id, reason })}
+          onCancel={() => setSuspendTarget(null)}
         />
       )}
 
@@ -268,6 +315,11 @@ export default function AdminProductsPage() {
                         <Badge variant={STATUS_VARIANT[product.status] ?? 'default'}>
                           {product.status.replace('_', ' ')}
                         </Badge>
+                        {product.status === 'PENDING_QC' && product.revertedFromActive && (
+                          <p className="mt-1 text-[10px] uppercase tracking-wider text-amber-400">
+                            Was live — re-review
+                          </p>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <ActionButtons product={product} />
@@ -297,6 +349,11 @@ export default function AdminProductsPage() {
                         <Badge variant={STATUS_VARIANT[product.status] ?? 'default'}>
                           {product.status.replace('_', ' ')}
                         </Badge>
+                        {product.status === 'PENDING_QC' && product.revertedFromActive && (
+                          <p className="mt-1 text-[10px] uppercase tracking-wider text-amber-400">
+                            Was live — re-review
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
