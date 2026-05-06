@@ -47,8 +47,8 @@ function StatCard({
           <Icon className="h-5 w-5 text-white" />
         </div>
         <div>
-          <p className="text-sm text-medium-gray">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-charcoal">{value}</p>
+          <p className="text-sm text-text-secondary">{label}</p>
+          <p className="mt-1 text-2xl font-bold text-text-primary">{value}</p>
         </div>
       </div>
     </div>
@@ -60,11 +60,11 @@ function StatSkeleton() {
 }
 
 function Stars({ rating }: { rating: number | null }) {
-  if (rating === null) return <span className="text-xs text-medium-gray">—</span>;
+  if (rating === null) return <span className="text-xs text-text-secondary">—</span>;
   return (
     <span className="flex items-center gap-1 text-sm">
       <Star className="h-3.5 w-3.5 fill-satin-gold text-satin-gold" />
-      <span className="font-medium text-charcoal">{rating.toFixed(1)}</span>
+      <span className="font-medium text-text-primary">{rating.toFixed(1)}</span>
     </span>
   );
 }
@@ -86,8 +86,8 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-charcoal">Analytics</h1>
-        <p className="mt-1 text-sm text-medium-gray">Insights about your shop&apos;s performance</p>
+        <h1 className="text-2xl font-bold text-text-primary">Analytics</h1>
+        <p className="mt-1 text-sm text-text-secondary">Insights about your shop&apos;s performance</p>
       </div>
 
       {/* Summary cards */}
@@ -126,7 +126,7 @@ export default function AnalyticsPage() {
 
       {/* Error */}
       {error && (
-        <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">
+        <div className="rounded-xl bg-red-500/10 p-4 text-sm text-red-400">
           Failed to load analytics. Please try again.
         </div>
       )}
@@ -135,7 +135,7 @@ export default function AnalyticsPage() {
       {!isLoading && !error && products.length > 0 && (
         <div className="rounded-xl border border-border-dark bg-bg-elevated shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-border-dark">
-            <h2 className="text-base font-semibold text-charcoal">Product Breakdown</h2>
+            <h2 className="text-base font-semibold text-text-primary">Product Breakdown</h2>
           </div>
 
           {/* Desktop */}
@@ -146,7 +146,7 @@ export default function AnalyticsPage() {
                   {['Product', 'Views', 'Sold', 'Revenue', 'Avg Rating', 'Reviews'].map((h) => (
                     <th
                       key={h}
-                      className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider"
                     >
                       {h}
                     </th>
@@ -156,18 +156,18 @@ export default function AnalyticsPage() {
               <tbody className="divide-y divide-border-dark">
                 {products.map((p) => (
                   <tr key={p.id} className="hover:bg-white/[0.03] transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-charcoal max-w-[200px] truncate">
+                    <td className="px-6 py-4 text-sm font-medium text-text-primary max-w-[200px] truncate">
                       {p.name}
                     </td>
-                    <td className="px-6 py-4 text-sm text-medium-gray">{p.viewCount.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-sm text-medium-gray">{p.purchaseCount}</td>
-                    <td className="px-6 py-4 text-sm font-semibold text-charcoal">
+                    <td className="px-6 py-4 text-sm text-text-secondary">{p.viewCount.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-sm text-text-secondary">{p.purchaseCount}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-text-primary">
                       {formatPrice(p.revenue)}
                     </td>
                     <td className="px-6 py-4">
                       <Stars rating={p.avgRating} />
                     </td>
-                    <td className="px-6 py-4 text-sm text-medium-gray">{p.reviewCount}</td>
+                    <td className="px-6 py-4 text-sm text-text-secondary">{p.reviewCount}</td>
                   </tr>
                 ))}
               </tbody>
@@ -178,11 +178,11 @@ export default function AnalyticsPage() {
           <div className="md:hidden divide-y divide-border-dark">
             {products.map((p) => (
               <div key={p.id} className="px-4 py-4 space-y-2">
-                <p className="font-medium text-charcoal text-sm">{p.name}</p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-medium-gray">
-                  <span>Views: <span className="font-medium text-charcoal">{p.viewCount.toLocaleString()}</span></span>
-                  <span>Sold: <span className="font-medium text-charcoal">{p.purchaseCount}</span></span>
-                  <span>Revenue: <span className="font-semibold text-hunter-green">{formatPrice(p.revenue)}</span></span>
+                <p className="font-medium text-text-primary text-sm">{p.name}</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-text-secondary">
+                  <span>Views: <span className="font-medium text-text-primary">{p.viewCount.toLocaleString()}</span></span>
+                  <span>Sold: <span className="font-medium text-text-primary">{p.purchaseCount}</span></span>
+                  <span>Revenue: <span className="font-semibold text-gold">{formatPrice(p.revenue)}</span></span>
                   <span className="flex items-center gap-1">Rating: <Stars rating={p.avgRating} /></span>
                 </div>
               </div>
@@ -194,10 +194,10 @@ export default function AnalyticsPage() {
       {/* Empty state */}
       {!isLoading && !error && products.length === 0 && (
         <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-hunter-green/10">
-            <BarChart3 className="h-8 w-8 text-hunter-green" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gold/10">
+            <BarChart3 className="h-8 w-8 text-gold" />
           </div>
-          <p className="text-sm text-medium-gray max-w-xs">
+          <p className="text-sm text-text-secondary max-w-xs">
             Add your first product to start tracking views, sales, and revenue here.
           </p>
         </div>

@@ -5,7 +5,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
-import { formatPrice, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useCurrency } from '@/lib/currency';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -72,6 +73,7 @@ const NEXT_STATUSES: Record<string, string[]> = {
 
 export default function AdminOrdersPage() {
   const queryClient = useQueryClient();
+  const { formatPrice } = useCurrency();
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
 
@@ -148,7 +150,7 @@ export default function AdminOrdersPage() {
 
       {/* Error */}
       {error && (
-        <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">
+        <div className="rounded-xl bg-red-500/10 p-4 text-sm text-red-400">
           Failed to load orders.
         </div>
       )}
@@ -168,7 +170,7 @@ export default function AdminOrdersPage() {
                 <th className="px-6 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-light-gray">
+            <tbody className="divide-y divide-border-dark">
               {orders.map((order) => {
                 const isExpanded = expandedOrders.has(order.id);
                 const nextStatuses = NEXT_STATUSES[order.status] ?? [];

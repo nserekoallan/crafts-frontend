@@ -137,7 +137,7 @@ export default function UsersPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-light-gray">
+                <tbody className="divide-y divide-border-dark">
                   {filteredUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-white/[0.03] transition-colors">
                       <td className="px-6 py-4 text-sm font-medium text-text-primary">

@@ -3,7 +3,6 @@
 import { BarChart3, Users, PieChart, MapPin, Loader2, Package, ShoppingCart } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { formatPrice } from '@/lib/utils';
 
 interface CountMeta { total: number }
 
@@ -36,14 +35,14 @@ const REPORTS = [
     icon: BarChart3,
     title: 'Sales Report',
     description: 'Comprehensive sales data across all channels',
-    color: 'text-hunter-green bg-hunter-green/10',
+    color: 'text-gold bg-gold/10',
   },
   {
     id: 'artisan-performance',
     icon: Users,
     title: 'Artisan Performance',
     description: 'Individual artisan metrics and rankings',
-    color: 'text-blue-600 bg-blue-50',
+    color: 'text-blue-400 bg-blue-500/15',
   },
   {
     id: 'category-analytics',
@@ -123,7 +122,7 @@ export default function ReportsPage() {
                 label="Platform Users"
                 value={userData?.meta?.total ?? '—'}
                 icon={Users}
-                color="bg-charcoal"
+                color="bg-white/10"
               />
             </>
           )}

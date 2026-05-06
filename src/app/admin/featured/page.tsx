@@ -35,9 +35,9 @@ interface FeaturedResponse {
 const STATUS_FILTERS: StatusFilter[] = ['all', 'PENDING', 'APPROVED', 'REJECTED'];
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-yellow-50 text-yellow-700',
-  APPROVED: 'bg-green-50 text-green-700',
-  REJECTED: 'bg-red-50 text-red-600',
+  PENDING: 'bg-amber-500/15 text-amber-400',
+  APPROVED: 'bg-emerald-500/15 text-emerald-400',
+  REJECTED: 'bg-red-500/15 text-red-400',
 };
 
 function RejectDialog({ id, onClose }: { id: string; onClose: () => void }) {
@@ -131,7 +131,7 @@ export default function FeaturedRequestsPage() {
             Loading…
           </div>
         ) : error ? (
-          <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">Failed to load requests.</div>
+          <div className="rounded-xl bg-red-500/10 p-4 text-sm text-red-400">Failed to load requests.</div>
         ) : requests.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-border-dark bg-bg-elevated py-16 text-center">
             <Sparkles className="h-10 w-10 text-light-gray" />
@@ -188,7 +188,7 @@ export default function FeaturedRequestsPage() {
                     </button>
                     <button
                       onClick={() => setRejectId(req.id)}
-                      className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
+                      className="rounded-md border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
                     >
                       Reject
                     </button>

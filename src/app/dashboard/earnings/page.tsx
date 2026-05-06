@@ -23,8 +23,8 @@ function StatCard({ icon: Icon, label, value, iconColor }: StatCardProps) {
           <Icon className="h-6 w-6 text-white" />
         </div>
         <div className="flex-1">
-          <p className="text-sm text-medium-gray">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-charcoal">{value}</p>
+          <p className="text-sm text-text-secondary">{label}</p>
+          <p className="mt-1 text-2xl font-bold text-text-primary">{value}</p>
         </div>
       </div>
     </div>
@@ -36,10 +36,10 @@ function StatSkeleton() {
 }
 
 const PAYOUT_STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  APPROVED: 'bg-blue-100 text-blue-800',
-  COMPLETED: 'bg-green-100 text-green-800',
-  FAILED: 'bg-red-100 text-red-800',
+  PENDING: 'bg-amber-500/15 text-amber-400 border border-amber-500/20',
+  APPROVED: 'bg-blue-500/15 text-blue-400 border border-blue-500/20',
+  COMPLETED: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20',
+  FAILED: 'bg-red-500/15 text-red-400 border border-red-500/20',
 };
 
 export default function EarningsPage() {
@@ -58,8 +58,8 @@ export default function EarningsPage() {
     <div className="space-y-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-charcoal md:text-3xl">Earnings</h1>
-          <p className="mt-1 text-sm text-medium-gray">Track your revenue and payouts</p>
+          <h1 className="text-2xl font-bold text-text-primary md:text-3xl">Earnings</h1>
+          <p className="mt-1 text-sm text-text-secondary">Track your revenue and payouts</p>
         </div>
         <Button
           variant="primary"
@@ -96,7 +96,7 @@ export default function EarningsPage() {
               icon={Clock}
               label="Pending Payouts"
               value={String(pendingPayouts)}
-              iconColor="bg-charcoal"
+              iconColor="bg-bg-surface"
             />
           </>
         )}
@@ -106,11 +106,11 @@ export default function EarningsPage() {
         <h2 className="text-xl font-bold">Payout History</h2>
         <div className="mt-4 overflow-x-auto rounded-xl border border-border-dark bg-bg-elevated">
           {isLoading ? (
-            <div className="p-8 text-center text-sm text-medium-gray">Loading payouts…</div>
+            <div className="p-8 text-center text-sm text-text-secondary">Loading payouts…</div>
           ) : error ? (
             <div className="p-8 text-center text-sm text-red-500">Failed to load earnings.</div>
           ) : payouts.length === 0 ? (
-            <div className="p-8 text-center text-sm text-medium-gray">No payouts yet.</div>
+            <div className="p-8 text-center text-sm text-text-secondary">No payouts yet.</div>
           ) : (
             <table className="w-full text-left text-sm">
               <thead>
@@ -123,7 +123,7 @@ export default function EarningsPage() {
               <tbody className="divide-y divide-border-dark">
                 {payouts.map((payout) => (
                   <tr key={payout.id} className="hover:bg-white/[0.03]">
-                    <td className="px-5 py-3 text-medium-gray">
+                    <td className="px-5 py-3 text-text-secondary">
                       {new Date(payout.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-5 py-3 font-medium">{formatPrice(Number(payout.amount))}</td>

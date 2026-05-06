@@ -49,7 +49,7 @@ export default function OrdersPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">Orders</h1>
-      <p className="mt-1 text-sm text-medium-gray">Orders containing your products</p>
+      <p className="mt-1 text-sm text-text-secondary">Orders containing your products</p>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {STATUS_TABS.map((s) => (
@@ -70,11 +70,11 @@ export default function OrdersPage() {
 
       <div className="mt-6 overflow-x-auto rounded-xl border border-border-dark bg-bg-elevated">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-medium-gray">Loading orders…</div>
+          <div className="p-8 text-center text-sm text-text-secondary">Loading orders…</div>
         ) : error ? (
           <div className="p-8 text-center text-sm text-red-500">Failed to load orders.</div>
         ) : filtered.length === 0 ? (
-          <div className="p-8 text-center text-sm text-medium-gray">
+          <div className="p-8 text-center text-sm text-text-secondary">
             {orders.length === 0 ? 'No orders yet.' : 'No orders match this filter.'}
           </div>
         ) : (
@@ -92,13 +92,13 @@ export default function OrdersPage() {
               {filtered.map((order) => (
                 <tr key={order.id} className="hover:bg-white/[0.03]">
                   <td className="px-5 py-3 font-medium">{order.orderNumber}</td>
-                  <td className="px-5 py-3 text-medium-gray">{order.items?.length ?? 0}</td>
+                  <td className="px-5 py-3 text-text-secondary">{order.items?.length ?? 0}</td>
                   <td className="px-5 py-3">
                     <Badge variant={getStatusVariant(order.status)}>
                       {STATUS_LABELS[order.status] ?? order.status}
                     </Badge>
                   </td>
-                  <td className="px-5 py-3 text-medium-gray">
+                  <td className="px-5 py-3 text-text-secondary">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-5 py-3 text-right font-medium">{formatPrice(order.total)}</td>

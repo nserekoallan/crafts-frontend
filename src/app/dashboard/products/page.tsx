@@ -87,7 +87,7 @@ export default function ProductsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Products</h1>
-          <p className="mt-1 text-sm text-medium-gray">Manage your product listings</p>
+          <p className="mt-1 text-sm text-text-secondary">Manage your product listings</p>
         </div>
         <Button variant="primary" onClick={() => setCreateOpen(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
@@ -108,7 +108,7 @@ export default function ProductsPage() {
       {/* Filters */}
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-medium-gray" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
           <Input
             placeholder="Search products…"
             value={searchTerm}
@@ -137,11 +137,11 @@ export default function ProductsPage() {
       {/* Table */}
       <div className="mt-6 overflow-x-auto rounded-xl border border-border-dark bg-bg-elevated">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-medium-gray">Loading products…</div>
+          <div className="p-8 text-center text-sm text-text-secondary">Loading products…</div>
         ) : error ? (
           <div className="p-8 text-center text-sm text-red-500">Failed to load products.</div>
         ) : filtered.length === 0 ? (
-          <div className="p-8 text-center text-sm text-medium-gray">
+          <div className="p-8 text-center text-sm text-text-secondary">
             {products.length === 0 ? 'No products yet. Add your first product.' : 'No products match your filters.'}
           </div>
         ) : (
@@ -180,17 +180,17 @@ export default function ProductsPage() {
                       {STATUS_LABELS[product.status] ?? product.status}
                     </Badge>
                   </td>
-                  <td className="px-5 py-3 text-medium-gray">{product.stock}</td>
+                  <td className="px-5 py-3 text-text-secondary">{product.stock}</td>
                   <td className="px-5 py-3 text-right">
                     <span className="font-medium">{formatPrice(Number(product.price))}</span>
                     {product.displayPrice != null && product.displayPrice !== Number(product.price) && (
-                      <p className="mt-0.5 text-[11px] text-medium-gray">
+                      <p className="mt-0.5 text-[11px] text-text-secondary">
                         Customer sees: {formatPrice(product.displayPrice)}
                       </p>
                     )}
                   </td>
                   <td className="px-5 py-3 text-right">
-                    <span className="inline-flex items-center gap-1 text-sm text-medium-gray">
+                    <span className="inline-flex items-center gap-1 text-sm text-text-secondary">
                       <Eye className="h-3.5 w-3.5" />
                       {(product.viewCount ?? 0).toLocaleString()}
                     </span>
@@ -222,7 +222,7 @@ export default function ProductsPage() {
                                 });
                               }}
                               disabled={!submittable || (isSubmitting && submittingId === product.id)}
-                              className="inline-flex items-center gap-1 rounded-md border border-hunter-green/50 px-2 py-1 text-xs font-medium text-hunter-green hover:bg-hunter-green/10 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                              className="inline-flex items-center gap-1 rounded-md border border-gold/50 px-2 py-1 text-xs font-medium text-gold hover:bg-gold/10 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                               title={submittable ? 'Submit for admin review' : reason}
                             >
                               <Send className="h-3 w-3" />
@@ -248,7 +248,7 @@ export default function ProductsPage() {
                           </button>
                           <button
                             onClick={() => setDeleteConfirm(null)}
-                            className="rounded px-2 py-1 text-xs font-medium text-medium-gray hover:text-charcoal"
+                            className="rounded px-2 py-1 text-xs font-medium text-text-secondary hover:text-text-primary"
                           >
                             Cancel
                           </button>
@@ -256,7 +256,7 @@ export default function ProductsPage() {
                       ) : (
                         <button
                           onClick={() => setDeleteConfirm(product.id)}
-                          className="rounded p-1.5 hover:bg-red-50 transition-colors text-medium-gray hover:text-red-600"
+                          className="rounded p-1.5 hover:bg-red-500/10 transition-colors text-text-secondary hover:text-red-400"
                           title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -271,7 +271,7 @@ export default function ProductsPage() {
                         return <span className="text-xs font-medium text-satin-gold">Featured</span>;
                       }
                       if (fs === 'PENDING') {
-                        return <span className="text-xs text-medium-gray">Pending</span>;
+                        return <span className="text-xs text-text-secondary">Pending</span>;
                       }
                       if (product.status === 'ACTIVE') {
                         return (
@@ -288,7 +288,7 @@ export default function ProductsPage() {
                           </button>
                         );
                       }
-                      return <span className="text-xs text-medium-gray">—</span>;
+                      return <span className="text-xs text-text-secondary">—</span>;
                     })()}
                   </td>
                 </tr>

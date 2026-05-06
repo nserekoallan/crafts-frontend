@@ -329,7 +329,7 @@ export default function ArtisansPage() {
                         {artisan.status !== 'SUSPENDED' && (
                           <button
                             onClick={() => updateStatus({ id: artisan.id, status: 'SUSPENDED' })}
-                            className="rounded-md border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                            className="rounded-md border border-red-500/30 px-3 py-1 text-xs font-medium text-red-400 hover:bg-red-500/10"
                           >
                             Suspend
                           </button>

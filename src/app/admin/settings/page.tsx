@@ -87,7 +87,7 @@ export default function AdminSettingsPage() {
                 placeholder={String(currentMarkup)}
                 className="pr-8"
               />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-medium-gray">%</span>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-tertiary">%</span>
             </div>
           </div>
 
@@ -96,7 +96,7 @@ export default function AdminSettingsPage() {
               <span className="text-text-secondary">Example: artisan sets </span>
               <span className="font-semibold text-text-primary">$100</span>
               <span className="text-text-secondary"> → customer pays </span>
-              <span className="font-semibold text-hunter-green">${previewPrice.toFixed(2)}</span>
+              <span className="font-semibold text-gold">${previewPrice.toFixed(2)}</span>
             </div>
           )}
 
@@ -110,13 +110,13 @@ export default function AdminSettingsPage() {
               {mutation.isPending ? 'Saving…' : 'Save & Recalculate All Prices'}
             </Button>
             {saved && (
-              <span className="text-sm text-hunter-green">Saved! All product prices updated.</span>
+              <span className="text-sm text-gold">Saved! All product prices updated.</span>
             )}
             {mutation.isError && (
               <span className="text-sm text-red-500">Failed to save. Try again.</span>
             )}
           </div>
-          <p className="text-xs text-medium-gray">
+          <p className="text-xs text-text-tertiary">
             Saving will immediately recalculate display prices for all products on the marketplace.
           </p>
         </div>

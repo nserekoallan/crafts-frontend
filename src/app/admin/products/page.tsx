@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/api';
-import { formatPrice, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useCurrency } from '@/lib/currency';
 import type { ApiProduct, ApiProductsResponse } from '@/lib/types/product';
 
 // ---------------------------------------------------------------------------
@@ -101,6 +102,7 @@ function ReasonDialog({
 
 export default function AdminProductsPage() {
   const queryClient = useQueryClient();
+  const { formatPrice } = useCurrency();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [rejectTarget, setRejectTarget] = useState<ApiProduct | null>(null);
@@ -164,13 +166,13 @@ export default function AdminProductsPage() {
             <button
               disabled={isThisApproving}
               onClick={() => approveProduct(product.id)}
-              className="rounded px-3 py-1 text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 transition-colors"
+              className="rounded px-3 py-1 text-xs font-medium bg-green-500/15 text-green-400 hover:bg-green-500/20 disabled:opacity-50 transition-colors"
             >
               {isThisApproving ? 'Approving…' : 'Approve'}
             </button>
             <button
               onClick={() => setRejectTarget(product)}
-              className="rounded px-3 py-1 text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+              className="rounded px-3 py-1 text-xs font-medium bg-red-500/15 text-red-400 hover:bg-red-500/20 transition-colors"
             >
               Reject
             </button>
@@ -179,7 +181,7 @@ export default function AdminProductsPage() {
         {isActive && (
           <button
             onClick={() => setSuspendTarget(product)}
-            className="rounded px-3 py-1 text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+            className="rounded px-3 py-1 text-xs font-medium bg-red-500/15 text-red-400 hover:bg-red-500/20 transition-colors"
           >
             Suspend
           </button>
@@ -188,7 +190,7 @@ export default function AdminProductsPage() {
           <button
             disabled={unsuspendingId === product.id}
             onClick={() => unsuspendProduct(product.id)}
-            className="rounded px-3 py-1 text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 transition-colors"
+            className="rounded px-3 py-1 text-xs font-medium bg-green-500/15 text-green-400 hover:bg-green-500/20 disabled:opacity-50 transition-colors"
           >
             Unsuspend
           </button>
@@ -279,7 +281,7 @@ export default function AdminProductsPage() {
 
         {/* Error */}
         {error && (
-          <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">Failed to load products.</div>
+          <div className="rounded-xl bg-red-500/10 p-4 text-sm text-red-400">Failed to load products.</div>
         )}
 
         {/* Desktop Table */}

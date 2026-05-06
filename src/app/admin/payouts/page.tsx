@@ -5,7 +5,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Clock, DollarSign, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
-import { formatPrice, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useCurrency } from '@/lib/currency';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -54,6 +55,7 @@ const STATUS_FILTERS = [
 
 export default function AdminPayoutsPage() {
   const queryClient = useQueryClient();
+  const { formatPrice } = useCurrency();
   const [statusFilter, setStatusFilter] = useState('all');
 
   const { data, isLoading, error } = useQuery({
@@ -89,8 +91,8 @@ export default function AdminPayoutsPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-bg-elevated rounded-xl border border-border-dark p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-            <Clock className="w-6 h-6 text-amber-600" />
+          <div className="w-12 h-12 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+            <Clock className="w-6 h-6 text-amber-400" />
           </div>
           <div>
             <p className="text-sm text-text-secondary mb-1">Total Pending</p>
@@ -98,8 +100,8 @@ export default function AdminPayoutsPage() {
           </div>
         </div>
         <div className="bg-bg-elevated rounded-xl border border-border-dark p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-            <DollarSign className="w-6 h-6 text-blue-600" />
+          <div className="w-12 h-12 rounded-full bg-blue-500/15 flex items-center justify-center shrink-0">
+            <DollarSign className="w-6 h-6 text-blue-400" />
           </div>
           <div>
             <p className="text-sm text-text-secondary mb-1">Processing</p>
@@ -107,8 +109,8 @@ export default function AdminPayoutsPage() {
           </div>
         </div>
         <div className="bg-bg-elevated rounded-xl border border-border-dark p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-            <CheckCircle className="w-6 h-6 text-green-600" />
+          <div className="w-12 h-12 rounded-full bg-green-500/15 flex items-center justify-center shrink-0">
+            <CheckCircle className="w-6 h-6 text-green-400" />
           </div>
           <div>
             <p className="text-sm text-text-secondary mb-1">Completed</p>
@@ -148,7 +150,7 @@ export default function AdminPayoutsPage() {
 
       {/* Error */}
       {error && (
-        <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">Failed to load payouts.</div>
+        <div className="rounded-xl bg-red-500/10 p-4 text-sm text-red-400">Failed to load payouts.</div>
       )}
 
       {/* Desktop Table */}
@@ -164,7 +166,7 @@ export default function AdminPayoutsPage() {
                 <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-light-gray">
+            <tbody className="divide-y divide-border-dark">
               {payouts.map((payout) => {
                 const isUpdating = pendingVars?.payoutId === payout.id;
                 const artisanName = payout.artisan.businessName;
@@ -267,7 +269,7 @@ export default function AdminPayoutsPage() {
                       <button
                         disabled={isUpdating}
                         onClick={() => updateStatus({ payoutId: payout.id, status: 'FAILED' })}
-                        className="flex-1 rounded px-3 py-2 text-xs font-medium bg-red-100 text-red-700 disabled:opacity-50"
+                        className="flex-1 rounded px-3 py-2 text-xs font-medium bg-red-500/15 text-red-400 disabled:opacity-50"
                       >
                         Fail
                       </button>
