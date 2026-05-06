@@ -54,8 +54,9 @@ export function useArtisanOrders(page = 1) {
   return useQuery({
     queryKey: ['artisan', 'orders', page],
     queryFn: () =>
-      api.get<OrdersResponse>(`/artisans/me/orders?page=${page}&limit=20`).then((r) => r),
+      api.get<OrdersResponse>(`/orders?page=${page}&limit=20`).then((r) => r),
     enabled: isAuthenticated && user?.role === 'artisan',
+    retry: 1,
   });
 }
 
