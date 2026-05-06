@@ -130,6 +130,17 @@ export function DenseProductCard({ product, className, animationDelay = 0 }: Den
           </h3>
         </Link>
 
+        {/* Artisan attribution */}
+        {product.artisanId && (
+          <Link
+            href={`/artisans/${product.artisanId}`}
+            className="mt-0.5 block text-[10px] text-text-tertiary hover:text-gold transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
+            by {product.artisanName}
+          </Link>
+        )}
+
         {/* Social proof */}
         {loveCount > 0 && (
           <p className="mt-0.5 text-[10px] text-text-tertiary">

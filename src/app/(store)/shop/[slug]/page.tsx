@@ -314,21 +314,41 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             <Truck className="h-4 w-4 text-gold" /> Free shipping on orders over UGX 300,000
           </div>
 
-          {/* Provenance card — replaces artisan card */}
+          {/* Artisan card */}
           <div className="mt-6 rounded-xl border border-border-dark bg-bg-surface p-4 md:mt-8 md:p-5">
             <h3 className="text-[11px] font-semibold uppercase tracking-widest text-gold">
-              Provenance
+              Artisan
             </h3>
-            <div className="mt-3 flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-terracotta" />
-              <p className="text-sm font-medium text-text-primary">
-                Handcrafted in {product.region}
-              </p>
+            <div className="mt-3">
+              <Link
+                href={`/artisans/${product.artisanId}`}
+                className="text-sm font-semibold text-text-primary transition-colors hover:text-gold"
+              >
+                {product.artisanName}
+              </Link>
+              {product.region && (
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-terracotta" />
+                  <span className="text-sm text-text-secondary">{product.region}</span>
+                </div>
+              )}
+              {product.rating > 0 && (
+                <div className="mt-2 flex items-center gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={cn(
+                        'h-3 w-3',
+                        i < Math.round(product.rating) ? 'fill-gold text-gold' : 'fill-none text-text-tertiary',
+                      )}
+                    />
+                  ))}
+                  <span className="ml-1 text-xs text-text-tertiary">
+                    ({product.reviewCount} reviews)
+                  </span>
+                </div>
+              )}
             </div>
-            <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-              This piece is handmade using traditional techniques and locally sourced materials.
-              Each item is unique — slight variations in colour and texture are a hallmark of authentic craftsmanship.
-            </p>
           </div>
         </div>
       </div>

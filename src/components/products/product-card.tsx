@@ -76,6 +76,15 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <a href={`/shop/${product.slug}`}>
           <h3 className="text-sm font-semibold text-text-primary line-clamp-1">{product.name}</h3>
         </a>
+        {product.artisanId && (
+          <a
+            href={`/artisans/${product.artisanId}`}
+            className="mt-0.5 block text-[11px] text-text-tertiary hover:text-gold transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
+            by {product.artisanName}
+          </a>
+        )}
         <p className="mt-0.5 text-[11px] uppercase tracking-wider text-gold">
           {product.category}
         </p>
