@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { api, ApiError } from '@/lib/api';
+import { track } from '@/lib/analytics';
 
 interface Category {
   id: string;
@@ -181,6 +182,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
         }
       }
 
+      track('product_created', { product_name: name.trim(), price: parseFloat(price) });
       queryClient.invalidateQueries({ queryKey: ['artisan', 'products'] });
       reset();
       onClose();

@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
+import { track } from '@/lib/analytics';
 
 type StatusFilter = 'all' | 'ACTIVE' | 'DRAFT' | 'PENDING_QC' | 'SUSPENDED';
 
@@ -205,7 +206,10 @@ export default function ProductsPage() {
                       if (product.status === 'ACTIVE') {
                         return (
                           <button
-                            onClick={() => requestFeatured({ productId: product.id })}
+                            onClick={() => {
+                              track('featured_requested', { product_id: product.id, product_name: product.name });
+                              requestFeatured({ productId: product.id });
+                            }}
                             className="inline-flex items-center gap-1 rounded-md border border-satin-gold/50 px-2 py-1 text-xs font-medium text-satin-gold hover:bg-satin-gold/10 transition-colors"
                             title="Request featured spot"
                           >

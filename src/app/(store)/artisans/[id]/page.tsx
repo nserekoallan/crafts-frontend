@@ -1,12 +1,13 @@
 'use client';
 
-import { use } from 'react';
+import { use, useEffect } from 'react';
 import Link from 'next/link';
 import { MapPin } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { mapApiProductToProduct, type ApiProduct, type ApiProductsResponse } from '@/lib/types/product';
 import { DenseProductCard } from '@/components/products/dense-product-card';
+import { track } from '@/lib/analytics';
 
 interface ArtisanDetail {
   id: string;
@@ -36,6 +37,14 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
         .then((r) => r.data.map((p: ApiProduct) => mapApiProductToProduct(p))),
     enabled: !!artisan,
   });
+
+  useEffect(() => {
+    if (!artisan) return;
+    track('artisan_profile_viewed', {
+      artisan_id: artisan.id,
+      artisan_name: artisan.businessName,
+    });
+  }, [artisan]);
 
   if (artisanLoading) {
     return (

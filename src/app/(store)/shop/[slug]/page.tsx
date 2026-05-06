@@ -17,6 +17,7 @@ import { RecentlyViewedStrip } from '@/components/products/recently-viewed-strip
 import { ProductReviews } from '@/components/products/product-reviews';
 import { api } from '@/lib/api';
 import { mapApiProductToProduct, type ApiProduct, type ApiProductsResponse } from '@/lib/types/product';
+import { track } from '@/lib/analytics';
 
 /**
  * Product detail page — dark theme with cart, wishlist, share, and provenance.
@@ -84,6 +85,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
       slug: product.slug,
       price: product.price,
       imageUrl: product.imageUrl,
+      category: product.category,
+    });
+    track('product_viewed', {
+      product_id: product.id,
+      product_name: product.name,
+      artisan_id: product.artisanId,
+      price: product.price,
       category: product.category,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

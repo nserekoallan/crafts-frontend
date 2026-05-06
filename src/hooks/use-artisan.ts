@@ -103,3 +103,30 @@ export function useRequestFeatured() {
       queryClient.invalidateQueries({ queryKey: ['artisan', 'featured-requests'] }),
   });
 }
+
+export interface ProductAnalytic {
+  id: string;
+  name: string;
+  viewCount: number;
+  purchaseCount: number;
+  revenue: number;
+  avgRating: number | null;
+  reviewCount: number;
+}
+
+export interface ArtisanAnalyticsData {
+  products: ProductAnalytic[];
+  totals: { revenue: number; orders: number; views: number };
+}
+
+export function useArtisanAnalytics() {
+  const { isAuthenticated, user } = useAuth();
+
+  return useQuery({
+    queryKey: ['artisan', 'analytics'],
+    queryFn: () =>
+      api.get<{ data: ArtisanAnalyticsData }>('/artisans/me/analytics').then((r) => r.data),
+    enabled: isAuthenticated && user?.role === 'artisan',
+    staleTime: 60_000,
+  });
+}
