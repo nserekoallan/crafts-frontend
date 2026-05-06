@@ -117,13 +117,13 @@ export function EditProductDialog({ product, open, onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium text-charcoal" htmlFor="ep-price">
-              Your Price (USD) <span className="text-red-400">*</span>
+              Your Price (UGX) <span className="text-red-400">*</span>
             </label>
             <Input
               id="ep-price"
               type="number"
-              min="0.01"
-              step="0.01"
+              min="100"
+              step="100"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               required
@@ -132,7 +132,9 @@ export function EditProductDialog({ product, open, onClose }: Props) {
             {displayPrice !== null && (
               <p className="mt-1 text-xs text-medium-gray">
                 Customer sees:{' '}
-                <span className="font-semibold text-hunter-green">${displayPrice.toFixed(2)}</span>
+                <span className="font-semibold text-hunter-green">
+                  UGX {Math.round(displayPrice).toLocaleString()}
+                </span>
                 {' '}(+{markupPercent}% platform fee)
               </p>
             )}
