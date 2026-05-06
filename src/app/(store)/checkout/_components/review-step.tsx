@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle, Edit2, Loader2, Phone, ShieldCheck } from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
@@ -89,6 +89,22 @@ export function ReviewStep({
   const [error, setError] = useState<string | null>(null);
   /** Set when DusuPay mobile money STK push succeeds — no redirect, waiting for webhook. */
   const [pushPending, setPushPending] = useState<{ orderId: string; phone: string } | null>(null);
+
+  // Poll for payment confirmation once the STK push is sent
+  useEffect(() => {
+    if (!pushPending) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await api.get<{ data: { status: string } }>(`/orders/${pushPending.orderId}`);
+        if (res.data.status !== 'PENDING') {
+          router.push(`/orders/${pushPending.orderId}`);
+        }
+      } catch {
+        // keep polling on transient errors
+      }
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [pushPending, router]);
 
   const handlePlaceOrder = useCallback(async () => {
     if (isSubmitting || items.length === 0) return;

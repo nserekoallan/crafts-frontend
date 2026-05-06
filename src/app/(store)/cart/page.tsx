@@ -104,8 +104,9 @@ export default function CartPage() {
                       {item.quantity}
                     </span>
                     <button
-                      className="flex h-8 w-8 items-center justify-center text-text-secondary transition-colors hover:text-text-primary"
+                      className="flex h-8 w-8 items-center justify-center text-text-secondary transition-colors hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed"
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      disabled={item.stock != null && item.quantity >= item.stock}
                       aria-label="Increase quantity"
                     >
                       <Plus className="h-3 w-3" />

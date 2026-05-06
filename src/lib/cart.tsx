@@ -26,6 +26,7 @@ export interface CartItem {
   imageUrl: string;
   category: string;
   region: string;
+  stock?: number;
 }
 
 interface CartContextValue {
@@ -107,6 +108,7 @@ function productToCartItem(product: Product, qty: number): CartItem {
     imageUrl: product.imageUrl,
     category: product.category,
     region: product.region,
+    stock: product.stockCount,
   };
 }
 
@@ -182,7 +184,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return;
     }
     setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, quantity: qty } : i)),
+      prev.map((i) => {
+        if (i.id !== id) return i;
+        const capped = i.stock != null ? Math.min(qty, i.stock) : qty;
+        return { ...i, quantity: capped };
+      }),
     );
   }, []);
 
