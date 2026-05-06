@@ -21,6 +21,7 @@ export interface Product {
   name: string;
   slug: string;
   price: number;
+  artisanPrice?: number;
   originalPrice?: number;
   currency: string;
   imageUrl: string;

@@ -30,6 +30,7 @@ export interface ApiProduct {
   slug: string;
   description: string;
   price: string | number;
+  displayPrice?: number;
   currency: string;
   stock: number;
   status: string;
@@ -44,6 +45,8 @@ export interface ApiProduct {
   isFeatured: boolean;
   featuredUntil: string | null;
   viewCount: number;
+  rating?: number;
+  averageRating?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -85,11 +88,14 @@ export function mapApiProductToProduct(apiProduct: ApiProduct): Product {
 
   const imageUrl = sortedImages[0]?.url ?? PLACEHOLDER_IMAGE;
 
+  const artisanPrice = Number(apiProduct.price);
+
   return {
     id: apiProduct.id,
     name: apiProduct.name,
     slug: apiProduct.slug,
-    price: Number(apiProduct.price),
+    price: apiProduct.displayPrice ?? artisanPrice,
+    artisanPrice,
     currency: apiProduct.currency,
     imageUrl,
     images: sortedImages.length > 0
@@ -100,7 +106,7 @@ export function mapApiProductToProduct(apiProduct: ApiProduct): Product {
     region: apiProduct.artisan.region,
     category: apiProduct.category.name,
     description: apiProduct.description,
-    rating: 0,
+    rating: apiProduct.rating ?? apiProduct.averageRating ?? 0,
     reviewCount: apiProduct._count.reviews,
     stockStatus: deriveStockStatus(apiProduct.stock),
     stockCount: apiProduct.stock,
