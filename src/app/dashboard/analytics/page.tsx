@@ -3,7 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, Eye, ShoppingBag, DollarSign, Star } from 'lucide-react';
 import { api } from '@/lib/api';
-import { formatPrice, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useCurrency } from '@/lib/currency';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -73,6 +74,7 @@ function Stars({ rating }: { rating: number | null }) {
 // ---------------------------------------------------------------------------
 
 export default function AnalyticsPage() {
+  const { formatPrice } = useCurrency();
   const { data, isLoading, error } = useQuery({
     queryKey: ['artisan', 'analytics'],
     queryFn: () => api.get<{ data: AnalyticsResponse }>('/artisans/me/analytics').then((r) => r.data),

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { DollarSign, Wallet, Clock } from 'lucide-react';
 import { useArtisanEarnings } from '@/hooks/use-artisan';
-import { formatPrice, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useCurrency } from '@/lib/currency';
 import { Button } from '@/components/ui/button';
 import { RequestPayoutDialog } from '@/components/dashboard/request-payout-dialog';
 
@@ -43,6 +44,7 @@ const PAYOUT_STATUS_COLORS: Record<string, string> = {
 
 export default function EarningsPage() {
   const { data, isLoading, error } = useArtisanEarnings();
+  const { formatPrice } = useCurrency();
   const [showPayoutDialog, setShowPayoutDialog] = useState(false);
 
   const balance = data ? Number(data.balance) : 0;

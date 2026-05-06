@@ -3,7 +3,7 @@
 import { DollarSign, Package, ShoppingCart, Wallet } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useArtisanEarnings, useArtisanOrders, useArtisanProducts } from '@/hooks/use-artisan';
-import { formatPrice } from '@/lib/utils';
+import { useCurrency } from '@/lib/currency';
 
 function StatSkeleton() {
   return <div className="h-28 animate-pulse rounded-xl border border-light-gray bg-light-gray/50" />;
@@ -11,6 +11,7 @@ function StatSkeleton() {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const { data: earnings, isLoading: earningsLoading } = useArtisanEarnings();
   const { data: ordersData, isLoading: ordersLoading } = useArtisanOrders();
   const { data: productsData, isLoading: productsLoading } = useArtisanProducts();

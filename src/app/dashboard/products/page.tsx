@@ -7,7 +7,8 @@ import { useArtisanProducts, useArtisanFeaturedRequests, useRequestFeatured } fr
 import type { ApiProduct } from '@/lib/types/product';
 import { CreateProductDialog } from '@/components/dashboard/create-product-dialog';
 import { EditProductDialog } from '@/components/dashboard/edit-product-dialog';
-import { formatPrice, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useCurrency } from '@/lib/currency';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +34,7 @@ function getStatusVariant(status: string): 'default' | 'pending' | 'cancelled' {
 
 export default function ProductsPage() {
   const queryClient = useQueryClient();
+  const { formatPrice } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [createOpen, setCreateOpen] = useState(false);
