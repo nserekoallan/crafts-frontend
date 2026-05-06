@@ -91,23 +91,23 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
     <Dialog open={open} onClose={handleClose} title="Create Artisan" className="max-w-xl">
       <form onSubmit={handleSubmit} className="mt-4 space-y-5">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-medium-gray">Account</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Account</p>
           <div className="mt-3 grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-charcoal" htmlFor="ca-firstName">First Name</label>
+              <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-firstName">First Name</label>
               <Input id="ca-firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="mt-1" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-charcoal" htmlFor="ca-lastName">Last Name</label>
+              <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-lastName">Last Name</label>
               <Input id="ca-lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="mt-1" />
             </div>
           </div>
           <div className="mt-3">
-            <label className="block text-sm font-medium text-charcoal" htmlFor="ca-email">Email</label>
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-email">Email</label>
             <Input id="ca-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" />
           </div>
           <div className="mt-3">
-            <label className="block text-sm font-medium text-charcoal" htmlFor="ca-phone">
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-phone">
               Phone <span className="text-red-400">*</span>
             </label>
             <Input
@@ -127,19 +127,19 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
             )}
           </div>
           <div className="mt-3">
-            <label className="block text-sm font-medium text-charcoal" htmlFor="ca-password">Password</label>
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-password">Password</label>
             <Input id="ca-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="mt-1" placeholder="Min 8 chars, upper, lower, number, symbol" />
           </div>
         </div>
 
-        <div className="border-t border-light-gray pt-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-medium-gray">Business</p>
+        <div className="border-t border-border-dark pt-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Business</p>
           <div className="mt-3">
-            <label className="block text-sm font-medium text-charcoal" htmlFor="ca-businessName">Business Name <span className="text-red-400">*</span></label>
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-businessName">Business Name <span className="text-red-400">*</span></label>
             <Input id="ca-businessName" value={businessName} onChange={(e) => setBusinessName(e.target.value)} required className="mt-1" />
           </div>
           <div className="mt-3">
-            <label className="block text-sm font-medium text-charcoal" htmlFor="ca-bio">Bio</label>
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-bio">Bio</label>
             <textarea
               id="ca-bio"
               value={bio}
@@ -149,13 +149,13 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
             />
           </div>
           <div className="mt-3">
-            <label className="block text-sm font-medium text-charcoal" htmlFor="ca-region">Region</label>
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-region">Region</label>
             <Input id="ca-region" value={region} onChange={(e) => setRegion(e.target.value)} placeholder="e.g. West Africa" className="mt-1" />
           </div>
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-900/10 px-4 py-3 text-sm text-red-600" role="alert">{error}</div>
+          <div className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400" role="alert">{error}</div>
         )}
 
         <div className="flex justify-end gap-3 pt-2">

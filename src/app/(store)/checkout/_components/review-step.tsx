@@ -145,8 +145,8 @@ export function ReviewStep({
       }
     } catch (err) {
       if (err instanceof ApiError) {
-        const msg = (err.body as { message?: string })?.message;
-        setError(msg ?? 'Something went wrong. Please try again.');
+        const details = err.body.error?.details?.[0]?.message;
+        setError(details ?? err.body.error?.message ?? 'Something went wrong. Please try again.');
       } else {
         setError('Something went wrong. Please try again.');
       }

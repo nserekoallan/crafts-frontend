@@ -46,7 +46,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
       {/* Dialog panel — flex-col + max-h so the inner body scrolls */}
       <div
         className={cn(
-          'relative z-10 flex w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl',
+          'relative z-10 flex w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-bg-elevated shadow-xl border border-border-dark',
           'max-h-[92dvh] sm:max-h-[calc(100dvh-2rem)] sm:rounded-2xl',
           className,
         )}
@@ -57,7 +57,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
         {/* Close button — pinned, stays visible while body scrolls */}
         <button
           onClick={onClose}
-          className="absolute right-3 top-3 z-10 rounded-lg p-1.5 text-medium-gray transition-colors hover:bg-light-gray hover:text-charcoal sm:right-4 sm:top-4"
+          className="absolute right-3 top-3 z-10 rounded-lg p-1.5 text-text-tertiary transition-colors hover:bg-white/[0.06] hover:text-text-primary sm:right-4 sm:top-4"
           aria-label="Close dialog"
         >
           <X className="h-5 w-5" />
@@ -66,7 +66,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
         {/* Scrollable body */}
         <div className="overflow-y-auto overscroll-contain p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6">
           {title && (
-            <h2 id="dialog-title" className="pr-10 text-lg font-bold text-charcoal sm:text-xl">
+            <h2 id="dialog-title" className="pr-10 text-lg font-bold text-text-primary sm:text-xl">
               {title}
             </h2>
           )}

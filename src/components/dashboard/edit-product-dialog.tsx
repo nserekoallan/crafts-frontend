@@ -90,7 +90,7 @@ export function EditProductDialog({ product, open, onClose }: Props) {
     <Dialog open={open} onClose={onClose} title="Edit Product" className="max-w-xl">
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-charcoal" htmlFor="ep-name">
+          <label className="block text-sm font-medium text-text-secondary" htmlFor="ep-name">
             Product Name <span className="text-red-400">*</span>
           </label>
           <Input
@@ -103,7 +103,7 @@ export function EditProductDialog({ product, open, onClose }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-charcoal" htmlFor="ep-desc">
+          <label className="block text-sm font-medium text-text-secondary" htmlFor="ep-desc">
             Description <span className="text-red-400">*</span>
           </label>
           <Textarea
@@ -118,7 +118,7 @@ export function EditProductDialog({ product, open, onClose }: Props) {
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-charcoal" htmlFor="ep-price">
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="ep-price">
               Your Price (UGX) <span className="text-red-400">*</span>
             </label>
             <Input
@@ -142,7 +142,7 @@ export function EditProductDialog({ product, open, onClose }: Props) {
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-charcoal" htmlFor="ep-stock">
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="ep-stock">
               Stock <span className="text-red-400">*</span>
             </label>
             <Input
@@ -159,7 +159,7 @@ export function EditProductDialog({ product, open, onClose }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-charcoal" htmlFor="ep-category">
+          <label className="block text-sm font-medium text-text-secondary" htmlFor="ep-category">
             Category <span className="text-red-400">*</span>
           </label>
           <Select
@@ -176,7 +176,7 @@ export function EditProductDialog({ product, open, onClose }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-charcoal" htmlFor="ep-materials">Materials</label>
+          <label className="block text-sm font-medium text-text-secondary" htmlFor="ep-materials">Materials</label>
           <Input
             id="ep-materials"
             value={materials}
@@ -187,7 +187,7 @@ export function EditProductDialog({ product, open, onClose }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-charcoal" htmlFor="ep-tags">
+          <label className="block text-sm font-medium text-text-secondary" htmlFor="ep-tags">
             Tags <span className="text-xs text-medium-gray">(comma-separated)</span>
           </label>
           <Input
@@ -200,7 +200,7 @@ export function EditProductDialog({ product, open, onClose }: Props) {
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-900/10 px-4 py-3 text-sm text-red-600" role="alert">
+          <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400" role="alert">
             {error}
           </div>
         )}

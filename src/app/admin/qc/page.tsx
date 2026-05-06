@@ -131,7 +131,7 @@ export default function QcPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="flex-1 text-red-600 hover:bg-red-50"
+                          className="flex-1 text-red-400 hover:bg-red-500/10"
                           disabled={!rejectReason.trim() || isRejecting}
                           onClick={() => reject({ productId: product.id, reason: rejectReason })}
                         >
@@ -162,7 +162,7 @@ export default function QcPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="flex-1 text-red-600 hover:bg-red-50 hover:text-red-700"
+                        className="flex-1 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                         onClick={() => setRejecting(product.id)}
                       >
                         Reject

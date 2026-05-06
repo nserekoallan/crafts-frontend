@@ -35,7 +35,6 @@ export function CreateProductDialog({ open, onClose }: Props) {
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
-  const [slugTouched, setSlugTouched] = useState(false);
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
@@ -71,7 +70,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
 
   function handleNameChange(value: string) {
     setName(value);
-    if (!slugTouched) setSlug(slugify(value));
+    setSlug(slugify(value));
   }
 
   function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -136,7 +135,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
   }
 
   function reset() {
-    setName(''); setSlug(''); setSlugTouched(false);
+    setName(''); setSlug('');
     setDescription(''); setPrice(''); setStock('');
     setCategoryId(''); setMaterials(''); setTags('');
     imagePreviews.forEach((url) => URL.revokeObjectURL(url));
@@ -210,7 +209,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
     <Dialog open={open} onClose={handleClose} title="Add Product" className="max-w-xl">
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-charcoal" htmlFor="cp-name">
+          <label className="block text-sm font-medium text-text-secondary" htmlFor="cp-name">
             Product Name <span className="text-red-400">*</span>
           </label>
           <Input
@@ -223,21 +222,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-charcoal" htmlFor="cp-slug">
-            Slug <span className="text-red-400">*</span>
-          </label>
-          <Input
-            id="cp-slug"
-            value={slug}
-            onChange={(e) => { setSlug(e.target.value); setSlugTouched(true); }}
-            required
-            className="mt-1 font-mono text-sm"
-            placeholder="auto-generated-from-name"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-charcoal" htmlFor="cp-desc">
+          <label className="block text-sm font-medium text-text-secondary" htmlFor="cp-desc">
             Description <span className="text-red-400">*</span>
           </label>
           <Textarea
@@ -252,7 +237,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-charcoal" htmlFor="cp-price">
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="cp-price">
               Your Price (UGX) <span className="text-red-400">*</span>
             </label>
             <Input
@@ -277,7 +262,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-charcoal" htmlFor="cp-stock">
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="cp-stock">
               Stock <span className="text-red-400">*</span>
             </label>
             <Input
@@ -295,7 +280,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-charcoal" htmlFor="cp-category">
+          <label className="block text-sm font-medium text-text-secondary" htmlFor="cp-category">
             Category <span className="text-red-400">*</span>
           </label>
           <Select
@@ -313,7 +298,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-charcoal" htmlFor="cp-materials">
+          <label className="block text-sm font-medium text-text-secondary" htmlFor="cp-materials">
             Materials
           </label>
           <Input
@@ -326,7 +311,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-charcoal" htmlFor="cp-tags">
+          <label className="block text-sm font-medium text-text-secondary" htmlFor="cp-tags">
             Tags <span className="text-xs text-medium-gray">(comma-separated)</span>
           </label>
           <Input
@@ -339,12 +324,12 @@ export function CreateProductDialog({ open, onClose }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-charcoal">
+          <label className="block text-sm font-medium text-text-secondary">
             Images <span className="text-xs text-medium-gray">(up to 5)</span>
           </label>
           <div className="mt-1.5 flex flex-wrap gap-2">
             {imagePreviews.map((url, i) => (
-              <div key={i} className="relative h-16 w-16 overflow-hidden rounded-lg border border-light-gray">
+              <div key={i} className="relative h-16 w-16 overflow-hidden rounded-lg border border-white/10">
                 <img src={url} alt="" className="h-full w-full object-cover" />
                 <button
                   type="button"
@@ -359,7 +344,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-light-gray text-medium-gray hover:border-hunter-green hover:text-hunter-green"
+                className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-white/20 text-text-tertiary hover:border-hunter-green hover:text-hunter-green"
               >
                 <ImagePlus className="h-5 w-5" />
               </button>
@@ -379,7 +364,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-900/10 px-4 py-3 text-sm text-red-600" role="alert">
+          <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400" role="alert">
             {error}
           </div>
         )}
