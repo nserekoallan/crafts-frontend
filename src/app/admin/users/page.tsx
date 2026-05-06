@@ -70,19 +70,19 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-charcoal mb-2">Users</h1>
-        <p className="text-medium-gray">Manage platform users</p>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">Users</h1>
+        <p className="text-text-secondary">Manage platform users</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-light-gray p-6 space-y-4">
+      <div className="bg-bg-elevated rounded-xl border border-border-dark p-6 space-y-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-medium-gray" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
           <input
             type="text"
             placeholder="Search by name, email, or phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-light-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-hunter-green focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 border border-border-dark bg-bg-primary text-text-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent placeholder:text-text-tertiary"
           />
         </div>
 
@@ -95,7 +95,7 @@ export default function UsersPage() {
                 'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                 roleFilter === role
                   ? 'bg-hunter-green text-white'
-                  : 'bg-light-gray text-charcoal hover:bg-medium-gray/20',
+                  : 'bg-white/[0.05] text-text-secondary hover:bg-white/[0.08]',
               )}
             >
               {role.charAt(0).toUpperCase() + role.slice(1)}
@@ -109,26 +109,26 @@ export default function UsersPage() {
           <Loader2 className="h-6 w-6 animate-spin text-hunter-green" />
         </div>
       ) : error ? (
-        <div className="bg-white rounded-xl border border-light-gray p-8 text-center text-medium-gray">
+        <div className="bg-bg-elevated rounded-xl border border-border-dark p-8 text-center text-text-secondary">
           Failed to load users.
         </div>
       ) : (
         <>
-          <div className="text-sm text-medium-gray">
+          <div className="text-sm text-text-secondary">
             Showing {filteredUsers.length} of {total} users
           </div>
 
           {/* Desktop Table */}
-          <div className="hidden md:block bg-white rounded-xl border border-light-gray overflow-hidden">
+          <div className="hidden md:block bg-bg-elevated rounded-xl border border-border-dark overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-light-gray/50">
+                <thead className="bg-bg-surface/60">
                   <tr>
                     {['Name', 'Contact', 'Role', 'Joined', 'Status', 'Actions'].map((h) => (
                       <th
                         key={h}
                         className={cn(
-                          'px-6 py-3 text-xs font-semibold text-medium-gray uppercase tracking-wider',
+                          'px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider',
                           h === 'Actions' ? 'text-right' : 'text-left',
                         )}
                       >
@@ -139,11 +139,11 @@ export default function UsersPage() {
                 </thead>
                 <tbody className="divide-y divide-light-gray">
                   {filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-light-gray/30 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-charcoal">
+                    <tr key={user.id} className="hover:bg-white/[0.03] transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-text-primary">
                         {displayName(user)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-medium-gray">
+                      <td className="px-6 py-4 text-sm text-text-secondary">
                         <div>{user.email ?? '—'}</div>
                         {user.phone && <div className="text-xs">{user.phone}</div>}
                       </td>
@@ -160,7 +160,7 @@ export default function UsersPage() {
                           {user.role.toLowerCase()}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 text-sm text-medium-gray">
+                      <td className="px-6 py-4 text-sm text-text-secondary">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-sm">
@@ -192,12 +192,12 @@ export default function UsersPage() {
             {filteredUsers.map((user) => (
               <div
                 key={user.id}
-                className="bg-white rounded-xl border border-light-gray p-4 space-y-3"
+                className="bg-bg-elevated rounded-xl border border-border-dark p-4 space-y-3"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-charcoal mb-0.5">{displayName(user)}</div>
-                    <div className="text-sm text-medium-gray truncate">
+                    <div className="font-semibold text-text-primary mb-0.5">{displayName(user)}</div>
+                    <div className="text-sm text-text-secondary truncate">
                       {user.email ?? user.phone ?? '—'}
                     </div>
                   </div>
@@ -218,7 +218,7 @@ export default function UsersPage() {
                   >
                     {user.role.toLowerCase()}
                   </Badge>
-                  <span className="text-medium-gray">
+                  <span className="text-text-secondary">
                     Joined {new Date(user.createdAt).toLocaleDateString()}
                   </span>
                 </div>
@@ -237,8 +237,8 @@ export default function UsersPage() {
           </div>
 
           {filteredUsers.length === 0 && (
-            <div className="bg-white rounded-xl border border-light-gray p-12 text-center">
-              <p className="text-medium-gray">No users found</p>
+            <div className="bg-bg-elevated rounded-xl border border-border-dark p-12 text-center">
+              <p className="text-text-secondary">No users found</p>
             </div>
           )}
         </>

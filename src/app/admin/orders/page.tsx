@@ -106,12 +106,12 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-charcoal mb-2">Orders</h1>
-        <p className="text-medium-gray">Manage all platform orders</p>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">Orders</h1>
+        <p className="text-text-secondary">Manage all platform orders</p>
       </div>
 
       {/* Status Filter Tabs */}
-      <div className="bg-white rounded-xl border border-light-gray p-2">
+      <div className="bg-bg-elevated rounded-xl border border-border-dark p-2">
         <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map((f) => (
             <button
@@ -121,7 +121,7 @@ export default function AdminOrdersPage() {
                 'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                 statusFilter === f.value
                   ? 'bg-hunter-green text-white'
-                  : 'bg-transparent text-charcoal hover:bg-light-gray'
+                  : 'bg-transparent text-text-primary hover:bg-white/[0.05]'
               )}
             >
               {f.label}
@@ -132,7 +132,7 @@ export default function AdminOrdersPage() {
 
       {/* Results Count */}
       {!isLoading && (
-        <div className="text-sm text-medium-gray">
+        <div className="text-sm text-text-secondary">
           Showing {orders.length} order{orders.length !== 1 ? 's' : ''}
         </div>
       )}
@@ -141,7 +141,7 @@ export default function AdminOrdersPage() {
       {isLoading && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-light-gray/60" />
+            <div key={i} className="h-16 animate-pulse rounded-xl bg-bg-surface/60" />
           ))}
         </div>
       )}
@@ -155,17 +155,17 @@ export default function AdminOrdersPage() {
 
       {/* Desktop Table */}
       {!isLoading && !error && orders.length > 0 && (
-        <div className="hidden md:block bg-white rounded-xl border border-light-gray overflow-hidden">
+        <div className="hidden md:block bg-bg-elevated rounded-xl border border-border-dark overflow-hidden">
           <table className="w-full">
-            <thead className="bg-light-gray/50">
+            <thead className="bg-bg-surface/60">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Order #</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Items</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Actions</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-medium-gray uppercase tracking-wider">Total</th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-medium-gray uppercase tracking-wider"></th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Order #</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Items</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Total</th>
+                <th className="px-6 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-light-gray">
@@ -175,12 +175,12 @@ export default function AdminOrdersPage() {
                 const isUpdating = pendingVars?.orderId === order.id;
                 return (
                   <>
-                    <tr key={order.id} className="hover:bg-light-gray/30 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-charcoal">{order.orderNumber}</td>
-                      <td className="px-6 py-4 text-sm text-medium-gray">
+                    <tr key={order.id} className="hover:bg-white/[0.03] transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-text-primary">{order.orderNumber}</td>
+                      <td className="px-6 py-4 text-sm text-text-secondary">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 text-sm text-medium-gray">
+                      <td className="px-6 py-4 text-sm text-text-secondary">
                         {order.items?.length ?? 0} item{(order.items?.length ?? 0) !== 1 ? 's' : ''}
                       </td>
                       <td className="px-6 py-4">
@@ -204,7 +204,7 @@ export default function AdminOrdersPage() {
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-charcoal text-right">
+                      <td className="px-6 py-4 text-sm font-semibold text-text-primary text-right">
                         {formatPrice(order.total)}
                       </td>
                       <td
@@ -212,23 +212,23 @@ export default function AdminOrdersPage() {
                         onClick={() => toggleExpanded(order.id)}
                       >
                         {isExpanded
-                          ? <ChevronUp className="w-5 h-5 text-medium-gray mx-auto" />
-                          : <ChevronDown className="w-5 h-5 text-medium-gray mx-auto" />
+                          ? <ChevronUp className="w-5 h-5 text-text-secondary mx-auto" />
+                          : <ChevronDown className="w-5 h-5 text-text-secondary mx-auto" />
                         }
                       </td>
                     </tr>
                     {isExpanded && (
                       <tr key={`${order.id}-detail`}>
-                        <td colSpan={7} className="px-6 py-4 bg-light-gray/20">
-                          <p className="text-sm font-semibold text-charcoal mb-3">Order Items</p>
+                        <td colSpan={7} className="px-6 py-4 bg-bg-surface/40">
+                          <p className="text-sm font-semibold text-text-primary mb-3">Order Items</p>
                           <div className="space-y-2">
                             {order.items?.map((item) => (
-                              <div key={item.id} className="flex items-center justify-between text-sm py-2 border-b border-light-gray last:border-0">
+                              <div key={item.id} className="flex items-center justify-between text-sm py-2 border-b border-border-dark last:border-0">
                                 <div>
-                                  <p className="font-medium text-charcoal">{item.product?.name ?? item.id}</p>
-                                  <p className="text-xs text-medium-gray">Qty: {item.quantity}</p>
+                                  <p className="font-medium text-text-primary">{item.product?.name ?? item.id}</p>
+                                  <p className="text-xs text-text-secondary">Qty: {item.quantity}</p>
                                 </div>
-                                <p className="font-semibold text-charcoal">{formatPrice(item.price * item.quantity)}</p>
+                                <p className="font-semibold text-text-primary">{formatPrice(item.price * item.quantity)}</p>
                               </div>
                             ))}
                           </div>
@@ -251,12 +251,12 @@ export default function AdminOrdersPage() {
             const nextStatuses = NEXT_STATUSES[order.status] ?? [];
             const isUpdating = pendingVars?.orderId === order.id;
             return (
-              <div key={order.id} className="bg-white rounded-xl border border-light-gray overflow-hidden">
+              <div key={order.id} className="bg-bg-elevated rounded-xl border border-border-dark overflow-hidden">
                 <div className="p-4 space-y-3 cursor-pointer" onClick={() => toggleExpanded(order.id)}>
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="font-semibold text-charcoal">{order.orderNumber}</p>
-                      <p className="text-xs text-medium-gray">
+                      <p className="font-semibold text-text-primary">{order.orderNumber}</p>
+                      <p className="text-xs text-text-secondary">
                         {new Date(order.createdAt).toLocaleDateString()} · {order.items?.length ?? 0} items
                       </p>
                     </div>
@@ -265,12 +265,12 @@ export default function AdminOrdersPage() {
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="font-semibold text-charcoal">{formatPrice(order.total)}</p>
-                    {isExpanded ? <ChevronUp className="w-5 h-5 text-medium-gray" /> : <ChevronDown className="w-5 h-5 text-medium-gray" />}
+                    <p className="font-semibold text-text-primary">{formatPrice(order.total)}</p>
+                    {isExpanded ? <ChevronUp className="w-5 h-5 text-text-secondary" /> : <ChevronDown className="w-5 h-5 text-text-secondary" />}
                   </div>
                 </div>
                 {isExpanded && (
-                  <div className="border-t border-light-gray p-4 bg-light-gray/20 space-y-3">
+                  <div className="border-t border-border-dark p-4 bg-bg-surface/40 space-y-3">
                     {nextStatuses.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {nextStatuses.map((s) => (
@@ -286,10 +286,10 @@ export default function AdminOrdersPage() {
                       </div>
                     )}
                     {order.items?.map((item) => (
-                      <div key={item.id} className="flex justify-between text-sm py-2 border-b border-light-gray last:border-0">
+                      <div key={item.id} className="flex justify-between text-sm py-2 border-b border-border-dark last:border-0">
                         <div>
-                          <p className="font-medium text-charcoal">{item.product?.name ?? item.id}</p>
-                          <p className="text-xs text-medium-gray">Qty: {item.quantity}</p>
+                          <p className="font-medium text-text-primary">{item.product?.name ?? item.id}</p>
+                          <p className="text-xs text-text-secondary">Qty: {item.quantity}</p>
                         </div>
                         <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
                       </div>
@@ -304,8 +304,8 @@ export default function AdminOrdersPage() {
 
       {/* Empty State */}
       {!isLoading && !error && orders.length === 0 && (
-        <div className="bg-white rounded-xl border border-light-gray p-12 text-center">
-          <p className="text-medium-gray">No orders found</p>
+        <div className="bg-bg-elevated rounded-xl border border-border-dark p-12 text-center">
+          <p className="text-text-secondary">No orders found</p>
         </div>
       )}
     </div>

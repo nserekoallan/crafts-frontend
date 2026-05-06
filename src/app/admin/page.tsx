@@ -117,12 +117,12 @@ export default function AdminOverviewPage() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="bg-white rounded-xl border border-light-gray p-5 relative">
+            <div key={stat.label} className="bg-bg-elevated rounded-xl border border-border-dark p-5 relative">
               <div className={cn('absolute top-5 right-5 w-10 h-10 rounded-full flex items-center justify-center', stat.color)}>
                 <Icon className="w-5 h-5" />
               </div>
               {stat.loading ? (
-                <div className="h-9 w-24 animate-pulse rounded bg-light-gray mb-1" />
+                <div className="h-9 w-24 animate-pulse rounded bg-bg-surface/60 mb-1" />
               ) : (
                 <div className="text-3xl font-bold text-charcoal mb-1">{stat.value}</div>
               )}
@@ -133,8 +133,8 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-xl border border-light-gray overflow-hidden">
-        <div className="p-6 border-b border-light-gray flex items-center justify-between">
+      <div className="bg-bg-elevated rounded-xl border border-border-dark overflow-hidden">
+        <div className="p-6 border-b border-border-dark flex items-center justify-between">
           <h2 className="text-xl font-bold text-charcoal">Recent Orders</h2>
           <Link href="/admin/orders" className="text-sm font-medium text-hunter-green hover:underline">
             View all
@@ -143,7 +143,7 @@ export default function AdminOverviewPage() {
 
         {recentOrdersQuery.isLoading ? (
           <div className="p-6 space-y-3">
-            {[1, 2, 3].map((i) => <div key={i} className="h-12 animate-pulse rounded bg-light-gray/60" />)}
+            {[1, 2, 3].map((i) => <div key={i} className="h-12 animate-pulse rounded bg-bg-surface/60/60" />)}
           </div>
         ) : recentOrders.length === 0 ? (
           <div className="p-8 text-center text-sm text-medium-gray">No orders yet.</div>
@@ -152,7 +152,7 @@ export default function AdminOverviewPage() {
             {/* Desktop */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-light-gray/50">
+                <thead className="bg-bg-surface/60">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Order #</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Date</th>
@@ -160,9 +160,9 @@ export default function AdminOverviewPage() {
                     <th className="px-6 py-3 text-right text-xs font-semibold text-medium-gray uppercase tracking-wider">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-light-gray">
+                <tbody className="divide-y divide-border-dark">
                   {recentOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-light-gray/30 transition-colors">
+                    <tr key={order.id} className="hover:bg-white/[0.03] transition-colors">
                       <td className="px-6 py-4 text-sm font-medium text-charcoal">{order.orderNumber}</td>
                       <td className="px-6 py-4 text-sm text-medium-gray">
                         {new Date(order.createdAt).toLocaleDateString()}
@@ -179,7 +179,7 @@ export default function AdminOverviewPage() {
               </table>
             </div>
             {/* Mobile */}
-            <div className="md:hidden divide-y divide-light-gray">
+            <div className="md:hidden divide-y divide-border-dark">
               {recentOrders.map((order) => (
                 <div key={order.id} className="p-4 space-y-1">
                   <div className="flex items-center justify-between">
@@ -199,8 +199,8 @@ export default function AdminOverviewPage() {
       {/* Pending Verifications & Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pending Verifications */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-light-gray overflow-hidden">
-          <div className="p-6 border-b border-light-gray flex items-center justify-between">
+        <div className="lg:col-span-2 bg-bg-elevated rounded-xl border border-border-dark overflow-hidden">
+          <div className="p-6 border-b border-border-dark flex items-center justify-between">
             <h2 className="text-xl font-bold text-charcoal">Pending Verifications</h2>
             <Link href="/admin/artisans" className="text-sm font-medium text-hunter-green hover:underline">
               View all
@@ -208,12 +208,12 @@ export default function AdminOverviewPage() {
           </div>
           {pendingArtisansQuery.isLoading ? (
             <div className="p-6 space-y-3">
-              {[1, 2].map((i) => <div key={i} className="h-14 animate-pulse rounded bg-light-gray/60" />)}
+              {[1, 2].map((i) => <div key={i} className="h-14 animate-pulse rounded bg-bg-surface/60/60" />)}
             </div>
           ) : pendingArtisans.length === 0 ? (
             <div className="p-8 text-center text-sm text-medium-gray">No pending verifications.</div>
           ) : (
-            <div className="divide-y divide-light-gray">
+            <div className="divide-y divide-border-dark">
               {pendingArtisans.map((artisan) => (
                 <div key={artisan.id} className="p-6 flex items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -235,7 +235,7 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl border border-light-gray p-6">
+        <div className="bg-bg-elevated rounded-xl border border-border-dark p-6">
           <h2 className="text-xl font-bold text-charcoal mb-6">Quick Actions</h2>
           <div className="space-y-3">
             <Link href="/admin/payouts" className="block">

@@ -17,7 +17,7 @@ interface StatCardProps {
 
 function StatCard({ icon: Icon, label, value, iconColor }: StatCardProps) {
   return (
-    <div className="rounded-lg border border-light-gray bg-white p-6 shadow-sm">
+    <div className="rounded-lg border border-border-dark bg-bg-elevated p-6 shadow-sm">
       <div className="flex items-start gap-4">
         <div className={cn('rounded-lg p-3', iconColor)}>
           <Icon className="h-6 w-6 text-white" />
@@ -32,7 +32,7 @@ function StatCard({ icon: Icon, label, value, iconColor }: StatCardProps) {
 }
 
 function StatSkeleton() {
-  return <div className="h-24 animate-pulse rounded-lg border border-light-gray bg-light-gray/50" />;
+  return <div className="h-24 animate-pulse rounded-lg border border-border-dark bg-bg-surface/60" />;
 }
 
 const PAYOUT_STATUS_COLORS: Record<string, string> = {
@@ -104,7 +104,7 @@ export default function EarningsPage() {
 
       <div>
         <h2 className="text-xl font-bold">Payout History</h2>
-        <div className="mt-4 overflow-x-auto rounded-xl border border-light-gray bg-white">
+        <div className="mt-4 overflow-x-auto rounded-xl border border-border-dark bg-bg-elevated">
           {isLoading ? (
             <div className="p-8 text-center text-sm text-medium-gray">Loading payouts…</div>
           ) : error ? (
@@ -114,15 +114,15 @@ export default function EarningsPage() {
           ) : (
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-light-gray text-xs font-semibold uppercase tracking-wider text-medium-gray">
+                <tr className="border-b border-border-dark text-xs font-semibold uppercase tracking-wider text-text-secondary">
                   <th className="px-5 py-3">Date</th>
                   <th className="px-5 py-3">Amount</th>
                   <th className="px-5 py-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-light-gray">
+              <tbody className="divide-y divide-border-dark">
                 {payouts.map((payout) => (
-                  <tr key={payout.id} className="hover:bg-light-gray/30">
+                  <tr key={payout.id} className="hover:bg-white/[0.03]">
                     <td className="px-5 py-3 text-medium-gray">
                       {new Date(payout.createdAt).toLocaleDateString()}
                     </td>
@@ -131,7 +131,7 @@ export default function EarningsPage() {
                       <span
                         className={cn(
                           'rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                          PAYOUT_STATUS_COLORS[payout.status] ?? 'bg-light-gray text-charcoal',
+                          PAYOUT_STATUS_COLORS[payout.status] ?? 'bg-bg-surface text-text-primary',
                         )}
                       >
                         {payout.status}

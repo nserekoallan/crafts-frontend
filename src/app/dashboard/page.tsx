@@ -6,7 +6,7 @@ import { useArtisanEarnings, useArtisanOrders, useArtisanProducts } from '@/hook
 import { useCurrency } from '@/lib/currency';
 
 function StatSkeleton() {
-  return <div className="h-28 animate-pulse rounded-xl border border-light-gray bg-light-gray/50" />;
+  return <div className="h-28 animate-pulse rounded-xl border border-border-dark bg-bg-surface/60" />;
 }
 
 export default function DashboardPage() {
@@ -42,7 +42,7 @@ export default function DashboardPage() {
           const Icon = stat.icon;
           if (stat.loading) return <StatSkeleton key={stat.label} />;
           return (
-            <div key={stat.label} className="rounded-xl border border-light-gray bg-white p-5">
+            <div key={stat.label} className="rounded-xl border border-border-dark bg-bg-elevated p-5">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-medium-gray">{stat.label}</span>
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-hunter-green/10 text-hunter-green">
@@ -57,7 +57,7 @@ export default function DashboardPage() {
 
       <div className="mt-10">
         <h2 className="text-xl font-bold">Recent Orders</h2>
-        <div className="mt-4 overflow-x-auto rounded-xl border border-light-gray bg-white">
+        <div className="mt-4 overflow-x-auto rounded-xl border border-border-dark bg-bg-elevated">
           {ordersLoading ? (
             <div className="p-8 text-center text-sm text-medium-gray">Loading orders…</div>
           ) : recentOrders.length === 0 ? (
@@ -65,15 +65,15 @@ export default function DashboardPage() {
           ) : (
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-light-gray text-xs font-semibold uppercase tracking-wider text-medium-gray">
+                <tr className="border-b border-border-dark text-xs font-semibold uppercase tracking-wider text-text-secondary">
                   <th className="px-5 py-3">Order</th>
                   <th className="px-5 py-3">Status</th>
                   <th className="px-5 py-3 text-right">Total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-light-gray">
+              <tbody className="divide-y divide-border-dark">
                 {recentOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-light-gray/30">
+                  <tr key={order.id} className="hover:bg-white/[0.03]">
                     <td className="px-5 py-3 font-medium">{order.orderNumber}</td>
                     <td className="px-5 py-3">
                       <span className="rounded-full bg-hunter-green/10 px-2.5 py-0.5 text-xs font-semibold text-hunter-green">

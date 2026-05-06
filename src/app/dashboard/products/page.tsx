@@ -101,7 +101,7 @@ export default function ProductsPage() {
                 'rounded-full px-3 py-1 text-xs font-medium transition-colors',
                 statusFilter === s
                   ? 'bg-hunter-green text-white'
-                  : 'border border-light-gray text-medium-gray hover:border-charcoal',
+                  : 'border border-border-dark text-text-secondary hover:border-white/30',
               )}
             >
               {STATUS_LABELS[s]}
@@ -111,7 +111,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Table */}
-      <div className="mt-6 overflow-x-auto rounded-xl border border-light-gray bg-white">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-border-dark bg-bg-elevated">
         {isLoading ? (
           <div className="p-8 text-center text-sm text-medium-gray">Loading products…</div>
         ) : error ? (
@@ -123,7 +123,7 @@ export default function ProductsPage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-light-gray text-xs font-semibold uppercase tracking-wider text-medium-gray">
+              <tr className="border-b border-border-dark text-xs font-semibold uppercase tracking-wider text-text-secondary">
                 <th className="px-5 py-3">Product</th>
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3">Stock</th>
@@ -133,9 +133,9 @@ export default function ProductsPage() {
                 <th className="px-5 py-3 text-right">Featured</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-light-gray">
+            <tbody className="divide-y divide-border-dark">
               {filtered.map((product) => (
-                <tr key={product.id} className="hover:bg-light-gray/30">
+                <tr key={product.id} className="hover:bg-white/[0.03]">
                   <td className="px-5 py-3 font-medium">{product.name}</td>
                   <td className="px-5 py-3">
                     <Badge variant={getStatusVariant(product.status)}>
@@ -161,7 +161,7 @@ export default function ProductsPage() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => setEditProduct(product)}
-                        className="rounded p-1.5 hover:bg-light-gray transition-colors text-medium-gray hover:text-charcoal"
+                        className="rounded p-1.5 hover:bg-white/[0.06] transition-colors text-text-secondary hover:text-text-primary"
                         title="Edit"
                       >
                         <Pencil className="h-4 w-4" />

@@ -50,7 +50,7 @@ function InlineStarRating({ artisanId, initialRating }: { artisanId: string; ini
           <Star
             className={cn(
               'h-4 w-4 transition-colors',
-              i <= displayed ? 'fill-satin-gold text-satin-gold' : 'fill-none text-light-gray',
+              i <= displayed ? 'fill-satin-gold text-satin-gold' : 'fill-none text-text-tertiary',
             )}
           />
         </button>
@@ -108,7 +108,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
           key={i}
           className={cn(
             'h-7 w-7 cursor-pointer transition-colors',
-            i <= (hovered || value) ? 'fill-satin-gold text-satin-gold' : 'fill-none text-light-gray',
+            i <= (hovered || value) ? 'fill-satin-gold text-satin-gold' : 'fill-none text-text-tertiary',
           )}
           onClick={() => onChange(i)}
           onMouseEnter={() => setHovered(i)}
@@ -145,23 +145,23 @@ function RateDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <h2 className="text-lg font-bold text-charcoal">Rate Artisan</h2>
-        <p className="mt-1 text-sm text-medium-gray">{name} · {artisan.businessName}</p>
+      <div className="relative w-full max-w-md rounded-2xl bg-bg-surface p-6 shadow-xl">
+        <h2 className="text-lg font-bold text-text-primary">Rate Artisan</h2>
+        <p className="mt-1 text-sm text-text-secondary">{name} · {artisan.businessName}</p>
 
         <div className="mt-6 space-y-4">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-medium-gray">Quality Rating</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">Quality Rating</p>
             <StarPicker value={rating} onChange={setRating} />
             {rating > 0 && (
-              <p className="mt-1 text-xs text-medium-gray">
+              <p className="mt-1 text-xs text-text-secondary">
                 {['', 'Poor', 'Below Average', 'Average', 'Good', 'Excellent'][rating]}
               </p>
             )}
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-medium-gray">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
               Internal Note (optional)
             </label>
             <textarea
@@ -169,7 +169,7 @@ function RateDialog({
               onChange={(e) => setNote(e.target.value)}
               placeholder="Add a note for internal reference…"
               rows={3}
-              className="w-full resize-none rounded-lg border border-light-gray px-3 py-2 text-sm text-charcoal placeholder:text-medium-gray focus:border-hunter-green focus:outline-none"
+              className="w-full resize-none rounded-lg border border-border-dark bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none"
             />
           </div>
         </div>
@@ -177,7 +177,7 @@ function RateDialog({
         <div className="mt-6 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="rounded-lg border border-light-gray px-4 py-2 text-sm text-medium-gray hover:border-medium-gray"
+            className="rounded-lg border border-border-dark px-4 py-2 text-sm text-text-secondary hover:border-white/30"
           >
             Cancel
           </button>
@@ -226,8 +226,8 @@ export default function ArtisansPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-charcoal">Artisans</h1>
-          <p className="mt-1 text-medium-gray">Manage artisan accounts and verifications</p>
+          <h1 className="text-3xl font-bold text-text-primary">Artisans</h1>
+          <p className="mt-1 text-text-secondary">Manage artisan accounts and verifications</p>
         </div>
         <Button variant="primary" onClick={() => setDialogOpen(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
@@ -236,7 +236,7 @@ export default function ArtisansPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 rounded-xl border border-light-gray bg-white p-4">
+      <div className="flex flex-wrap gap-2 rounded-xl border border-border-dark bg-bg-elevated p-4">
         {STATUS_FILTERS.map((s) => (
           <button
             key={s}
@@ -245,7 +245,7 @@ export default function ArtisansPage() {
               'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
               filter === s
                 ? 'bg-hunter-green text-white'
-                : 'bg-light-gray text-charcoal hover:bg-medium-gray/20',
+                : 'bg-white/[0.05] text-text-secondary hover:bg-white/[0.08]',
             )}
           >
             {STATUS_LABELS[s]}
@@ -253,52 +253,52 @@ export default function ArtisansPage() {
         ))}
       </div>
 
-      <div className="text-sm text-medium-gray">
+      <div className="text-sm text-text-secondary">
         Showing {filtered.length} artisan{filtered.length !== 1 ? 's' : ''}
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-light-gray bg-white">
+      <div className="overflow-x-auto rounded-xl border border-border-dark bg-bg-elevated">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-medium-gray">Loading artisans…</div>
+          <div className="p-8 text-center text-sm text-text-secondary">Loading artisans…</div>
         ) : error ? (
           <div className="p-8 text-center text-sm text-red-500">Failed to load artisans.</div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 p-12 text-center">
             <UserCheck className="h-10 w-10 text-light-gray" />
-            <p className="text-sm text-medium-gray">
+            <p className="text-sm text-text-secondary">
               {artisans.length === 0 ? 'No artisans yet.' : 'No artisans match this filter.'}
             </p>
           </div>
         ) : (
           <table className="w-full text-left text-sm">
-            <thead className="bg-light-gray/50">
+            <thead className="bg-bg-surface/60">
               <tr>
-                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-medium-gray">Artisan</th>
-                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-medium-gray">Region</th>
-                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-medium-gray">Products</th>
-                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-medium-gray">Status</th>
-                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-medium-gray">Rating</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-medium-gray">Actions</th>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">Artisan</th>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">Region</th>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">Products</th>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">Status</th>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">Rating</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-secondary">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-light-gray">
+            <tbody className="divide-y divide-border-dark">
               {filtered.map((artisan) => {
                 const name = artisan.user.profile
                   ? `${artisan.user.profile.firstName} ${artisan.user.profile.lastName}`
                   : artisan.user.email;
 
                 return (
-                  <tr key={artisan.id} className="transition-colors hover:bg-light-gray/30">
+                  <tr key={artisan.id} className="transition-colors hover:bg-white/[0.03]">
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-medium text-charcoal">{name}</p>
-                        <p className="text-xs text-medium-gray">{artisan.businessName}</p>
-                        <p className="text-xs text-medium-gray">{artisan.user.email}</p>
+                        <p className="font-medium text-text-primary">{name}</p>
+                        <p className="text-xs text-text-secondary">{artisan.businessName}</p>
+                        <p className="text-xs text-text-secondary">{artisan.user.email}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-medium-gray">{artisan.region ?? '—'}</td>
-                    <td className="px-6 py-4 text-medium-gray">{artisan._count.products}</td>
+                    <td className="px-6 py-4 text-text-secondary">{artisan.region ?? '—'}</td>
+                    <td className="px-6 py-4 text-text-secondary">{artisan._count.products}</td>
                     <td className="px-6 py-4">
                       <Badge variant={getStatusVariant(artisan.status)}>
                         {STATUS_LABELS[artisan.status as StatusFilter] ?? artisan.status}

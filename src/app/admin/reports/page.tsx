@@ -14,20 +14,20 @@ function StatCard({ label, value, icon: Icon, color }: {
   color: string;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-light-gray p-6 flex items-center gap-4">
+    <div className="bg-bg-elevated rounded-xl border border-border-dark p-6 flex items-center gap-4">
       <div className={`rounded-xl p-3 ${color}`}>
         <Icon className="h-5 w-5 text-white" />
       </div>
       <div>
-        <p className="text-sm text-medium-gray">{label}</p>
-        <p className="text-2xl font-bold text-charcoal">{value}</p>
+        <p className="text-sm text-text-secondary">{label}</p>
+        <p className="text-2xl font-bold text-text-primary">{value}</p>
       </div>
     </div>
   );
 }
 
 function StatSkeleton() {
-  return <div className="h-24 animate-pulse rounded-xl border border-light-gray bg-light-gray/40" />;
+  return <div className="h-24 animate-pulse rounded-xl border border-border-dark bg-bg-surface/60" />;
 }
 
 const REPORTS = [
@@ -87,13 +87,13 @@ export default function ReportsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-charcoal mb-2">Reports</h1>
-        <p className="text-medium-gray">Platform overview and analytics</p>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">Reports</h1>
+        <p className="text-text-secondary">Platform overview and analytics</p>
       </div>
 
       {/* Live platform stats */}
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-medium-gray mb-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-text-secondary mb-4">
           Live Platform Stats
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -132,7 +132,7 @@ export default function ReportsPage() {
 
       {/* Report Cards */}
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-medium-gray mb-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-text-secondary mb-4">
           Generate Reports
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -141,20 +141,20 @@ export default function ReportsPage() {
             return (
               <div
                 key={report.id}
-                className="bg-white rounded-xl border border-light-gray p-6 space-y-4"
+                className="bg-bg-elevated rounded-xl border border-border-dark p-6 space-y-4"
               >
                 <div className="flex items-start gap-4">
                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${report.color}`}>
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-charcoal mb-1">{report.title}</h3>
-                    <p className="text-sm text-medium-gray">{report.description}</p>
+                    <h3 className="font-bold text-text-primary mb-1">{report.title}</h3>
+                    <p className="text-sm text-text-secondary">{report.description}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-xs text-medium-gray bg-light-gray rounded px-2.5 py-1">
+                  <span className="text-xs text-text-secondary bg-bg-surface rounded px-2.5 py-1">
                     Coming soon
                   </span>
                 </div>

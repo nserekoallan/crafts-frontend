@@ -48,8 +48,8 @@ export default function QcPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-charcoal mb-2">Quality Control Queue</h1>
-        <p className="text-medium-gray">Review and approve products before listing</p>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">Quality Control Queue</h1>
+        <p className="text-text-secondary">Review and approve products before listing</p>
       </div>
 
       {isLoading ? (
@@ -57,12 +57,12 @@ export default function QcPage() {
           <Loader2 className="h-6 w-6 animate-spin text-hunter-green" />
         </div>
       ) : error ? (
-        <div className="bg-white rounded-xl border border-light-gray p-8 text-center text-medium-gray">
+        <div className="bg-bg-elevated rounded-xl border border-border-dark p-8 text-center text-text-secondary">
           Failed to load QC queue.
         </div>
       ) : (
         <>
-          <div className="text-sm text-medium-gray">
+          <div className="text-sm text-text-secondary">
             {total} product{total !== 1 ? 's' : ''} pending review
           </div>
 
@@ -76,19 +76,19 @@ export default function QcPage() {
               return (
                 <div
                   key={product.id}
-                  className="bg-white rounded-xl border border-light-gray p-6 space-y-4"
+                  className="bg-bg-elevated rounded-xl border border-border-dark p-6 space-y-4"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-charcoal mb-1 truncate">{product.name}</h3>
-                      <p className="text-sm text-medium-gray">
+                      <h3 className="font-bold text-text-primary mb-1 truncate">{product.name}</h3>
+                      <p className="text-sm text-text-secondary">
                         by {product.artisan.businessName}
                       </p>
                     </div>
                     <Badge variant="pending">PENDING QC</Badge>
                   </div>
 
-                  <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-light-gray">
+                  <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-bg-surface">
                     <Image
                       src={mainImage}
                       alt={product.name}
@@ -102,18 +102,18 @@ export default function QcPage() {
 
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-medium-gray">Category:</span>
-                      <span className="font-medium text-charcoal">{product.category.name}</span>
+                      <span className="text-text-secondary">Category:</span>
+                      <span className="font-medium text-text-primary">{product.category.name}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-medium-gray">Submitted:</span>
-                      <span className="font-medium text-charcoal">
+                      <span className="text-text-secondary">Submitted:</span>
+                      <span className="font-medium text-text-primary">
                         {new Date(product.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-medium-gray">Region:</span>
-                      <span className="font-medium text-charcoal">{product.artisan.region}</span>
+                      <span className="text-text-secondary">Region:</span>
+                      <span className="font-medium text-text-primary">{product.artisan.region}</span>
                     </div>
                   </div>
 
@@ -121,7 +121,7 @@ export default function QcPage() {
                   {rejecting === product.id && (
                     <div className="space-y-2">
                       <textarea
-                        className="w-full rounded-lg border border-light-gray px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-hunter-green"
+                        className="w-full rounded-lg border border-border-dark bg-bg-primary text-text-primary px-3 py-2 text-sm placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-gold"
                         rows={2}
                         placeholder="Reason for rejection (required)"
                         value={rejectReason}
@@ -175,9 +175,9 @@ export default function QcPage() {
           </div>
 
           {products.length === 0 && (
-            <div className="bg-white rounded-xl border border-light-gray p-12 text-center">
-              <p className="font-medium text-charcoal mb-1">Queue is clear</p>
-              <p className="text-sm text-medium-gray">No products pending QC review</p>
+            <div className="bg-bg-elevated rounded-xl border border-border-dark p-12 text-center">
+              <p className="font-medium text-text-primary mb-1">Queue is clear</p>
+              <p className="text-sm text-text-secondary">No products pending QC review</p>
             </div>
           )}
         </>

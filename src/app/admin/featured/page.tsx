@@ -55,19 +55,19 @@ function RejectDialog({ id, onClose }: { id: string; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-        <h2 className="text-base font-bold text-charcoal">Reject Feature Request</h2>
+      <div className="relative w-full max-w-sm rounded-2xl bg-bg-surface p-6 shadow-xl">
+        <h2 className="text-base font-bold text-text-primary">Reject Feature Request</h2>
         <div className="mt-4 space-y-3">
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Optional reason for the artisan…"
             rows={3}
-            className="w-full resize-none rounded-lg border border-light-gray px-3 py-2 text-sm text-charcoal placeholder:text-medium-gray focus:border-hunter-green focus:outline-none"
+            className="w-full resize-none rounded-lg border border-border-dark bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none"
           />
         </div>
         <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-lg border border-light-gray px-4 py-2 text-sm text-medium-gray hover:border-medium-gray">
+          <button onClick={onClose} className="rounded-lg border border-border-dark px-4 py-2 text-sm text-text-secondary hover:border-white/30">
             Cancel
           </button>
           <button
@@ -104,19 +104,19 @@ export default function FeaturedRequestsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-charcoal">Featured Requests</h1>
-        <p className="mt-1 text-medium-gray">Approve or reject artisan requests for featured product placement</p>
+        <h1 className="text-3xl font-bold text-text-primary">Featured Requests</h1>
+        <p className="mt-1 text-text-secondary">Approve or reject artisan requests for featured product placement</p>
       </div>
 
       {/* Status filter tabs */}
-      <div className="flex flex-wrap gap-2 rounded-xl border border-light-gray bg-white p-4">
+      <div className="flex flex-wrap gap-2 rounded-xl border border-border-dark bg-bg-elevated p-4">
         {STATUS_FILTERS.map((s) => (
           <button
             key={s}
             onClick={() => setFilter(s)}
             className={cn(
               'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-              filter === s ? 'bg-hunter-green text-white' : 'bg-light-gray text-charcoal hover:bg-medium-gray/20',
+              filter === s ? 'bg-hunter-green text-white' : 'bg-white/[0.05] text-text-secondary hover:bg-white/[0.08]',
             )}
           >
             {s === 'all' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
@@ -127,15 +127,15 @@ export default function FeaturedRequestsPage() {
       {/* List */}
       <div className="space-y-3">
         {isLoading ? (
-          <div className="rounded-xl border border-light-gray bg-white p-8 text-center text-sm text-medium-gray">
+          <div className="rounded-xl border border-border-dark bg-bg-elevated p-8 text-center text-sm text-text-secondary">
             Loading…
           </div>
         ) : error ? (
           <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">Failed to load requests.</div>
         ) : requests.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-light-gray bg-white py-16 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-border-dark bg-bg-elevated py-16 text-center">
             <Sparkles className="h-10 w-10 text-light-gray" />
-            <p className="text-sm text-medium-gray">No {filter !== 'all' ? filter.toLowerCase() : ''} requests.</p>
+            <p className="text-sm text-text-secondary">No {filter !== 'all' ? filter.toLowerCase() : ''} requests.</p>
           </div>
         ) : (
           requests.map((req) => {
@@ -148,24 +148,24 @@ export default function FeaturedRequestsPage() {
             return (
               <div
                 key={req.id}
-                className="flex items-center gap-4 rounded-xl border border-light-gray bg-white p-4 shadow-sm"
+                className="flex items-center gap-4 rounded-xl border border-border-dark bg-bg-elevated p-4 shadow-sm"
               >
                 {/* Thumbnail */}
                 {thumb ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={thumb} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
                 ) : (
-                  <div className="h-14 w-14 shrink-0 rounded-lg bg-light-gray/60" />
+                  <div className="h-14 w-14 shrink-0 rounded-lg bg-bg-surface/60" />
                 )}
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-charcoal truncate">{req.product.name}</p>
-                  <p className="text-xs text-medium-gray">
+                  <p className="font-semibold text-text-primary truncate">{req.product.name}</p>
+                  <p className="text-xs text-text-secondary">
                     {artisanName} · {req.artisan.businessName} · {date}
                   </p>
                   {req.message && (
-                    <p className="mt-1 text-sm text-medium-gray italic">"{req.message}"</p>
+                    <p className="mt-1 text-sm text-text-secondary italic">"{req.message}"</p>
                   )}
                   {req.adminNote && (
                     <p className="mt-1 text-xs text-red-500">Note: {req.adminNote}</p>

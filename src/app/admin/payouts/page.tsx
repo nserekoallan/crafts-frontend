@@ -82,43 +82,43 @@ export default function AdminPayoutsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-charcoal mb-2">Payouts</h1>
-        <p className="text-medium-gray">Manage artisan payout requests</p>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">Payouts</h1>
+        <p className="text-text-secondary">Manage artisan payout requests</p>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl border border-light-gray p-6 flex items-center gap-4">
+        <div className="bg-bg-elevated rounded-xl border border-border-dark p-6 flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
             <Clock className="w-6 h-6 text-amber-600" />
           </div>
           <div>
-            <p className="text-sm text-medium-gray mb-1">Total Pending</p>
-            <p className="text-2xl font-bold text-charcoal">{formatPrice(pendingTotal)}</p>
+            <p className="text-sm text-text-secondary mb-1">Total Pending</p>
+            <p className="text-2xl font-bold text-text-primary">{formatPrice(pendingTotal)}</p>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-light-gray p-6 flex items-center gap-4">
+        <div className="bg-bg-elevated rounded-xl border border-border-dark p-6 flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
             <DollarSign className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <p className="text-sm text-medium-gray mb-1">Processing</p>
-            <p className="text-2xl font-bold text-charcoal">{formatPrice(processingTotal)}</p>
+            <p className="text-sm text-text-secondary mb-1">Processing</p>
+            <p className="text-2xl font-bold text-text-primary">{formatPrice(processingTotal)}</p>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-light-gray p-6 flex items-center gap-4">
+        <div className="bg-bg-elevated rounded-xl border border-border-dark p-6 flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
             <CheckCircle className="w-6 h-6 text-green-600" />
           </div>
           <div>
-            <p className="text-sm text-medium-gray mb-1">Completed</p>
-            <p className="text-2xl font-bold text-charcoal">{formatPrice(completedTotal)}</p>
+            <p className="text-sm text-text-secondary mb-1">Completed</p>
+            <p className="text-2xl font-bold text-text-primary">{formatPrice(completedTotal)}</p>
           </div>
         </div>
       </div>
 
       {/* Status Filter */}
-      <div className="bg-white rounded-xl border border-light-gray p-2">
+      <div className="bg-bg-elevated rounded-xl border border-border-dark p-2">
         <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map((f) => (
             <button
@@ -128,7 +128,7 @@ export default function AdminPayoutsPage() {
                 'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                 statusFilter === f.value
                   ? 'bg-hunter-green text-white'
-                  : 'bg-transparent text-charcoal hover:bg-light-gray'
+                  : 'bg-transparent text-text-primary hover:bg-white/[0.05]'
               )}
             >
               {f.label}
@@ -141,7 +141,7 @@ export default function AdminPayoutsPage() {
       {isLoading && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-light-gray/60" />
+            <div key={i} className="h-16 animate-pulse rounded-xl bg-bg-surface/60" />
           ))}
         </div>
       )}
@@ -153,15 +153,15 @@ export default function AdminPayoutsPage() {
 
       {/* Desktop Table */}
       {!isLoading && !error && payouts.length > 0 && (
-        <div className="hidden md:block bg-white rounded-xl border border-light-gray overflow-hidden">
+        <div className="hidden md:block bg-bg-elevated rounded-xl border border-border-dark overflow-hidden">
           <table className="w-full">
-            <thead className="bg-light-gray/50">
+            <thead className="bg-bg-surface/60">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Artisan</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-medium-gray uppercase tracking-wider">Requested</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-medium-gray uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Artisan</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Amount</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Requested</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-light-gray">
@@ -169,18 +169,18 @@ export default function AdminPayoutsPage() {
                 const isUpdating = pendingVars?.payoutId === payout.id;
                 const artisanName = payout.artisan.businessName;
                 return (
-                  <tr key={payout.id} className="hover:bg-light-gray/30 transition-colors">
+                  <tr key={payout.id} className="hover:bg-white/[0.03] transition-colors">
                     <td className="px-6 py-4">
-                      <p className="text-sm font-medium text-charcoal">{artisanName}</p>
-                      <p className="text-xs text-medium-gray">{payout.artisan.user.email}</p>
+                      <p className="text-sm font-medium text-text-primary">{artisanName}</p>
+                      <p className="text-xs text-text-secondary">{payout.artisan.user.email}</p>
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-charcoal">{formatPrice(payout.amount)}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-text-primary">{formatPrice(payout.amount)}</td>
                     <td className="px-6 py-4">
                       <Badge variant={STATUS_VARIANT[payout.status] ?? 'default'}>
                         {payout.status}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4 text-sm text-medium-gray">
+                    <td className="px-6 py-4 text-sm text-text-secondary">
                       {new Date(payout.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
@@ -235,16 +235,16 @@ export default function AdminPayoutsPage() {
           {payouts.map((payout) => {
             const isUpdating = pendingVars?.payoutId === payout.id;
             return (
-              <div key={payout.id} className="bg-white rounded-xl border border-light-gray p-4 space-y-3">
+              <div key={payout.id} className="bg-bg-elevated rounded-xl border border-border-dark p-4 space-y-3">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="font-semibold text-charcoal">{payout.artisan.businessName}</p>
-                    <p className="text-xs text-medium-gray">{payout.artisan.user.email}</p>
-                    <p className="text-lg font-bold text-charcoal mt-1">{formatPrice(payout.amount)}</p>
+                    <p className="font-semibold text-text-primary">{payout.artisan.businessName}</p>
+                    <p className="text-xs text-text-secondary">{payout.artisan.user.email}</p>
+                    <p className="text-lg font-bold text-text-primary mt-1">{formatPrice(payout.amount)}</p>
                   </div>
                   <Badge variant={STATUS_VARIANT[payout.status] ?? 'default'}>{payout.status}</Badge>
                 </div>
-                <p className="text-xs text-medium-gray">{new Date(payout.createdAt).toLocaleDateString()}</p>
+                <p className="text-xs text-text-secondary">{new Date(payout.createdAt).toLocaleDateString()}</p>
                 <div className="flex gap-2">
                   {payout.status === 'PENDING' && (
                     <button
@@ -291,8 +291,8 @@ export default function AdminPayoutsPage() {
 
       {/* Empty State */}
       {!isLoading && !error && payouts.length === 0 && (
-        <div className="bg-white rounded-xl border border-light-gray p-12 text-center">
-          <p className="text-medium-gray">No payout requests found</p>
+        <div className="bg-bg-elevated rounded-xl border border-border-dark p-12 text-center">
+          <p className="text-text-secondary">No payout requests found</p>
         </div>
       )}
     </div>

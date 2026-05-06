@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { useArtisanOrders } from '@/hooks/use-artisan';
-import { formatPrice, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useCurrency } from '@/lib/currency';
 import { Badge } from '@/components/ui/badge';
 
 type StatusFilter = 'all' | 'PENDING' | 'PAID' | 'PROCESSING' | 'QC_PASSED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
@@ -34,6 +35,7 @@ function getStatusVariant(status: string): 'default' | 'pending' | 'processing' 
 }
 
 export default function OrdersPage() {
+  const { formatPrice } = useCurrency();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const { data, isLoading, error } = useArtisanOrders();
 
@@ -58,7 +60,7 @@ export default function OrdersPage() {
               'rounded-full px-3 py-1 text-xs font-medium transition-colors',
               statusFilter === s
                 ? 'bg-hunter-green text-white'
-                : 'border border-light-gray text-medium-gray hover:border-charcoal',
+                : 'border border-border-dark text-text-secondary hover:border-white/30',
             )}
           >
             {STATUS_LABELS[s]}
@@ -66,7 +68,7 @@ export default function OrdersPage() {
         ))}
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-light-gray bg-white">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-border-dark bg-bg-elevated">
         {isLoading ? (
           <div className="p-8 text-center text-sm text-medium-gray">Loading orders…</div>
         ) : error ? (
@@ -78,7 +80,7 @@ export default function OrdersPage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-light-gray text-xs font-semibold uppercase tracking-wider text-medium-gray">
+              <tr className="border-b border-border-dark text-xs font-semibold uppercase tracking-wider text-text-secondary">
                 <th className="px-5 py-3">Order</th>
                 <th className="px-5 py-3">Items</th>
                 <th className="px-5 py-3">Status</th>
@@ -86,9 +88,9 @@ export default function OrdersPage() {
                 <th className="px-5 py-3 text-right">Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-light-gray">
+            <tbody className="divide-y divide-border-dark">
               {filtered.map((order) => (
-                <tr key={order.id} className="hover:bg-light-gray/30">
+                <tr key={order.id} className="hover:bg-white/[0.03]">
                   <td className="px-5 py-3 font-medium">{order.orderNumber}</td>
                   <td className="px-5 py-3 text-medium-gray">{order.items?.length ?? 0}</td>
                   <td className="px-5 py-3">

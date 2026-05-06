@@ -41,7 +41,7 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="rounded-xl border border-light-gray bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-border-dark bg-bg-elevated p-6 shadow-sm">
       <div className="flex items-start gap-4">
         <div className={cn('rounded-xl p-3', color)}>
           <Icon className="h-5 w-5 text-white" />
@@ -56,7 +56,7 @@ function StatCard({
 }
 
 function StatSkeleton() {
-  return <div className="h-24 animate-pulse rounded-xl border border-light-gray bg-light-gray/40" />;
+  return <div className="h-24 animate-pulse rounded-xl border border-border-dark bg-bg-surface/60" />;
 }
 
 function Stars({ rating }: { rating: number | null }) {
@@ -133,15 +133,15 @@ export default function AnalyticsPage() {
 
       {/* Per-product table */}
       {!isLoading && !error && products.length > 0 && (
-        <div className="rounded-xl border border-light-gray bg-white shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-light-gray">
+        <div className="rounded-xl border border-border-dark bg-bg-elevated shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-border-dark">
             <h2 className="text-base font-semibold text-charcoal">Product Breakdown</h2>
           </div>
 
           {/* Desktop */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-light-gray/40">
+              <thead className="bg-bg-surface/60">
                 <tr>
                   {['Product', 'Views', 'Sold', 'Revenue', 'Avg Rating', 'Reviews'].map((h) => (
                     <th
@@ -153,9 +153,9 @@ export default function AnalyticsPage() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-light-gray">
+              <tbody className="divide-y divide-border-dark">
                 {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-light-gray/20 transition-colors">
+                  <tr key={p.id} className="hover:bg-white/[0.03] transition-colors">
                     <td className="px-6 py-4 text-sm font-medium text-charcoal max-w-[200px] truncate">
                       {p.name}
                     </td>
@@ -175,7 +175,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Mobile cards */}
-          <div className="md:hidden divide-y divide-light-gray">
+          <div className="md:hidden divide-y divide-border-dark">
             {products.map((p) => (
               <div key={p.id} className="px-4 py-4 space-y-2">
                 <p className="font-medium text-charcoal text-sm">{p.name}</p>
