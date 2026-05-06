@@ -1,7 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import type { ApiProduct, ApiProductsResponse } from '@/lib/types/product';
+
+export interface FeaturedRequestStatus {
+  productId: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
 
 interface Payout {
   id: string;
@@ -71,5 +76,30 @@ export function useArtisanProducts(page = 1) {
         .get<ApiProductsResponse>(`/products?artisanId=${artisanId}&page=${page}&limit=20`)
         .then((r) => r),
     enabled: isAuthenticated && !!artisanId,
+  });
+}
+
+export function useArtisanFeaturedRequests() {
+  const { isAuthenticated, user } = useAuth();
+
+  return useQuery({
+    queryKey: ['artisan', 'featured-requests'],
+    queryFn: () =>
+      api
+        .get<{ data: FeaturedRequestStatus[] }>('/featured-requests/me')
+        .then((r) => r.data),
+    enabled: isAuthenticated && user?.role === 'artisan',
+    retry: 1,
+  });
+}
+
+export function useRequestFeatured() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ productId, message }: { productId: string; message?: string }) =>
+      api.post('/featured-requests', { productId, message }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['artisan', 'featured-requests'] }),
   });
 }

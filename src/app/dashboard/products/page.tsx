@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { Plus, Search, Pencil, Sparkles, Trash2, Eye } from 'lucide-react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useArtisanProducts } from '@/hooks/use-artisan';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useArtisanProducts, useArtisanFeaturedRequests, useRequestFeatured } from '@/hooks/use-artisan';
 import type { ApiProduct } from '@/lib/types/product';
 import { CreateProductDialog } from '@/components/dashboard/create-product-dialog';
 import { EditProductDialog } from '@/components/dashboard/edit-product-dialog';
@@ -31,11 +31,6 @@ function getStatusVariant(status: string): 'default' | 'pending' | 'cancelled' {
   return 'cancelled';
 }
 
-interface FeaturedRequestStatus {
-  productId: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-}
-
 export default function ProductsPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,19 +40,11 @@ export default function ProductsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const { data, isLoading, error } = useArtisanProducts();
-
-  const { data: featuredRequests } = useQuery({
-    queryKey: ['artisan', 'featured-requests'],
-    queryFn: () => api.get<{ data: FeaturedRequestStatus[] }>('/featured-requests/me').then((r) => r.data),
-  });
-
-  const { mutate: requestFeatured } = useMutation({
-    mutationFn: (productId: string) => api.post('/featured-requests', { productId }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['artisan', 'featured-requests'] }),
-  });
+  const { data: featuredRequests } = useArtisanFeaturedRequests();
+  const { mutate: requestFeatured } = useRequestFeatured();
 
   const featuredStatusMap = useMemo(() => {
-    const map = new Map<string, FeaturedRequestStatus['status']>();
+    const map = new Map<string, 'PENDING' | 'APPROVED' | 'REJECTED'>();
     (featuredRequests ?? []).forEach((r) => map.set(r.productId, r.status));
     return map;
   }, [featuredRequests]);
@@ -216,7 +203,7 @@ export default function ProductsPage() {
                       if (product.status === 'ACTIVE') {
                         return (
                           <button
-                            onClick={() => requestFeatured(product.id)}
+                            onClick={() => requestFeatured({ productId: product.id })}
                             className="inline-flex items-center gap-1 rounded-md border border-satin-gold/50 px-2 py-1 text-xs font-medium text-satin-gold hover:bg-satin-gold/10 transition-colors"
                             title="Request featured spot"
                           >
