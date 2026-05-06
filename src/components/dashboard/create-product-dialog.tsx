@@ -43,6 +43,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
   const [tags, setTags] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageError, setImageError] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -75,9 +76,53 @@ export function CreateProductDialog({ open, onClose }: Props) {
   function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
-    const combined = [...imageFiles, ...files].slice(0, 5);
-    setImageFiles(combined);
-    setImagePreviews(combined.map((f) => URL.createObjectURL(f)));
+
+    const MAX_SIZE = 5 * 1024 * 1024;
+    const MIN_DIM = 800;
+
+    const validFiles: File[] = [];
+    let pendingChecks = files.length;
+
+    const finalize = () => {
+      if (validFiles.length > 0) {
+        setImageError('');
+        const combined = [...imageFiles, ...validFiles].slice(0, 5);
+        setImageFiles(combined);
+        setImagePreviews(combined.map((f) => URL.createObjectURL(f)));
+      }
+    };
+
+    files.forEach((file) => {
+      if (file.size > MAX_SIZE) {
+        setImageError(`"${file.name}" exceeds 5 MB limit and was not added.`);
+        pendingChecks -= 1;
+        if (pendingChecks === 0) finalize();
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        if (img.naturalWidth < MIN_DIM || img.naturalHeight < MIN_DIM) {
+          setImageError(`"${file.name}" must be at least ${MIN_DIM}×${MIN_DIM} px and was not added.`);
+        } else {
+          setImageError('');
+          validFiles.push(file);
+        }
+        pendingChecks -= 1;
+        if (pendingChecks === 0) finalize();
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        setImageError(`"${file.name}" could not be read.`);
+        pendingChecks -= 1;
+        if (pendingChecks === 0) finalize();
+      };
+      img.src = objectUrl;
+    });
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
   function removeImage(index: number) {
@@ -95,7 +140,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
     setCategoryId(''); setMaterials(''); setTags('');
     imagePreviews.forEach((url) => URL.revokeObjectURL(url));
     setImageFiles([]); setImagePreviews([]);
-    setError(''); setSubmitting(false);
+    setError(''); setImageError(''); setSubmitting(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
@@ -316,6 +361,9 @@ export function CreateProductDialog({ open, onClose }: Props) {
             className="hidden"
             onChange={handleImageSelect}
           />
+          {imageError && (
+            <p className="mt-1.5 text-xs text-red-500" role="alert">{imageError}</p>
+          )}
         </div>
 
         {error && (
