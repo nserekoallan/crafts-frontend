@@ -8,12 +8,18 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
 /** Supported currency codes. */
 export type CurrencyCode = 'UGX' | 'USD';
 
-const EXCHANGE_RATE = 3750;
+const FALLBACK_RATE = 3700;
 const STORAGE_KEY = 'crafts-currency';
+
+interface FxRateResponse {
+  data: { usdToUgx: number; updatedAt: string; source: 'live' | 'fallback' };
+}
 
 interface CurrencyContextValue {
   /** Active currency code. */
@@ -25,6 +31,10 @@ interface CurrencyContextValue {
    * All product prices are stored as UGX — this converts on the fly.
    */
   formatPrice: (amountUgx: number) => string;
+  /** Live USD→UGX rate (built-in fallback when the FX endpoint hasn't returned yet). */
+  usdToUgx: number;
+  /** ISO timestamp the rate was last refreshed; null when using the built-in fallback. */
+  rateUpdatedAt: string | null;
 }
 
 const CurrencyContext = createContext<CurrencyContextValue | null>(null);
@@ -48,10 +58,20 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, code);
   }, []);
 
+  const { data: fxData } = useQuery({
+    queryKey: ['platform', 'fx-rate'],
+    queryFn: () => api.get<FxRateResponse>('/platform/fx-rate'),
+    staleTime: 60 * 60 * 1000, // 1 hour
+    refetchInterval: 24 * 60 * 60 * 1000, // 24 hours
+  });
+
+  const usdToUgx = fxData?.data?.usdToUgx ?? FALLBACK_RATE;
+  const rateUpdatedAt = fxData?.data?.source === 'live' ? fxData.data.updatedAt : null;
+
   const formatPrice = useCallback(
     (amountUgx: number): string => {
       if (currency === 'USD') {
-        const usd = amountUgx / EXCHANGE_RATE;
+        const usd = amountUgx / usdToUgx;
         return new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: 'USD',
@@ -61,11 +81,11 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       }
       return `UGX ${new Intl.NumberFormat('en-UG').format(amountUgx)}`;
     },
-    [currency],
+    [currency, usdToUgx],
   );
 
   return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, formatPrice }}>
+    <CurrencyContext.Provider value={{ currency, setCurrency, formatPrice, usdToUgx, rateUpdatedAt }}>
       {children}
     </CurrencyContext.Provider>
   );
