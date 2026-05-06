@@ -16,6 +16,8 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [password, setPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [bio, setBio] = useState('');
@@ -27,12 +29,20 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
     setFirstName('');
     setLastName('');
     setEmail('');
+    setPhone('');
+    setPhoneError('');
     setPassword('');
     setBusinessName('');
     setBio('');
     setRegion('');
     setError('');
     setSubmitting(false);
+  }
+
+  function validatePhone(value: string): string {
+    if (!value) return 'Phone number is required.';
+    if (!/^\+\d{7,15}$/.test(value)) return 'Must start with + followed by 7–15 digits.';
+    return '';
   }
 
   function handleClose() {
@@ -43,12 +53,20 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
+
+    const pErr = validatePhone(phone);
+    if (pErr) {
+      setPhoneError(pErr);
+      return;
+    }
+
     setSubmitting(true);
     try {
       await api.post('/artisans/admin', {
         firstName,
         lastName,
         email,
+        phone,
         password,
         businessName,
         bio: bio || undefined,
@@ -87,6 +105,26 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
           <div className="mt-3">
             <label className="block text-sm font-medium text-charcoal" htmlFor="ca-email">Email</label>
             <Input id="ca-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" />
+          </div>
+          <div className="mt-3">
+            <label className="block text-sm font-medium text-charcoal" htmlFor="ca-phone">
+              Phone <span className="text-red-400">*</span>
+            </label>
+            <Input
+              id="ca-phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => {
+                setPhone(e.target.value);
+                if (phoneError) setPhoneError(validatePhone(e.target.value));
+              }}
+              required
+              placeholder="+256700111222"
+              className="mt-1"
+            />
+            {phoneError && (
+              <p className="mt-1 text-xs text-red-500">{phoneError}</p>
+            )}
           </div>
           <div className="mt-3">
             <label className="block text-sm font-medium text-charcoal" htmlFor="ca-password">Password</label>
