@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { formatPrice } from '@/lib/utils';
+import { useCurrency } from '@/lib/currency';
 
 interface Order {
   id: string;
@@ -39,6 +39,7 @@ const STATUS_VARIANT: Record<string, 'default' | 'pending' | 'processing' | 'shi
 export default function OrdersPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { formatPrice } = useCurrency();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -64,20 +65,20 @@ export default function OrdersPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 lg:px-8">
-      <h1 className="text-3xl font-bold">My Orders</h1>
+      <h1 className="text-3xl font-bold text-text-primary">My Orders</h1>
 
       {isLoading ? (
         <div className="mt-8 space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl border border-light-gray bg-light-gray/50" />
+            <div key={i} className="h-20 animate-pulse rounded-xl border border-border-dark bg-bg-elevated" />
           ))}
         </div>
       ) : error ? (
-        <div className="mt-8 text-center text-sm text-red-500">Failed to load orders.</div>
+        <div className="mt-8 text-center text-sm text-red-400">Failed to load orders.</div>
       ) : orders.length === 0 ? (
         <div className="py-16 text-center">
-          <p className="text-lg text-medium-gray">You have no orders yet.</p>
-          <Link href="/shop" className="mt-4 inline-block text-sm font-medium text-hunter-green hover:underline">
+          <p className="text-lg text-text-secondary">You have no orders yet.</p>
+          <Link href="/shop" className="mt-4 inline-block text-sm font-medium text-gold hover:underline">
             Start shopping
           </Link>
         </div>
@@ -87,14 +88,14 @@ export default function OrdersPage() {
             <Link
               key={order.id}
               href={`/orders/${order.id}`}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-light-gray bg-white p-5 transition-shadow hover:shadow-sm"
+              className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border-dark bg-bg-elevated p-5 transition-colors hover:border-border-dark-hover"
             >
               <div>
-                <p className="font-semibold text-charcoal">{order.orderNumber}</p>
-                <p className="text-sm text-medium-gray">
+                <p className="font-semibold text-text-primary">{order.orderNumber}</p>
+                <p className="text-sm text-text-secondary">
                   {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
-                <p className="text-xs text-medium-gray">
+                <p className="text-xs text-text-tertiary">
                   {order.items?.length ?? 0} item{(order.items?.length ?? 0) !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -102,7 +103,7 @@ export default function OrdersPage() {
                 <Badge variant={STATUS_VARIANT[order.status] ?? 'default'}>
                   {order.status.replace('_', ' ')}
                 </Badge>
-                <span className="font-heading font-bold text-hunter-green">{formatPrice(order.total)}</span>
+                <span className="font-heading font-bold text-gold">{formatPrice(order.total)}</span>
               </div>
             </Link>
           ))}

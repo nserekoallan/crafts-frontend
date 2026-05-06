@@ -52,7 +52,7 @@ function CheckoutSuccessContent() {
           <p className="mt-2 text-text-secondary">
             Order <span className="font-semibold text-text-primary">{order.orderNumber}</span> is confirmed.
           </p>
-          <p className="mt-1 text-sm text-medium-gray capitalize">
+          <p className="mt-1 text-sm text-text-secondary capitalize">
             Status: {order.status.toLowerCase().replace('_', ' ')}
           </p>
         </>
@@ -66,7 +66,7 @@ function CheckoutSuccessContent() {
         </p>
       )}
 
-      <p className="mt-4 max-w-sm text-sm text-medium-gray">
+      <p className="mt-4 max-w-sm text-sm text-text-secondary">
         You will receive an email confirmation shortly. Track your order in your account.
       </p>
 
@@ -82,7 +82,7 @@ function CheckoutSuccessContent() {
         )}
         <Link
           href="/shop"
-          className="rounded-xl border border-light-gray px-6 py-3 text-sm font-semibold text-charcoal hover:border-charcoal"
+          className="rounded-xl border border-border-dark px-6 py-3 text-sm font-semibold text-text-secondary hover:border-border-dark-hover hover:text-text-primary"
         >
           Continue Shopping
         </Link>
