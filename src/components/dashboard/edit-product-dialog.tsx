@@ -74,8 +74,10 @@ export function EditProductDialog({ product, open, onClose }: Props) {
       onClose();
     } catch (err) {
       if (err instanceof ApiError) {
-        const msg = (err.body as { message?: string | string[] })?.message;
-        setError(Array.isArray(msg) ? msg[0] : (msg ?? 'Failed to update product.'));
+        const details = err.body.error?.details?.[0]?.message;
+        setError(details ?? err.body.error?.message ?? 'Failed to update product.');
+      } else if (err instanceof Error) {
+        setError(err.message || 'Something went wrong. Please try again.');
       } else {
         setError('Something went wrong. Please try again.');
       }
@@ -114,7 +116,7 @@ export function EditProductDialog({ product, open, onClose }: Props) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-charcoal" htmlFor="ep-price">
               Your Price (UGX) <span className="text-red-400">*</span>

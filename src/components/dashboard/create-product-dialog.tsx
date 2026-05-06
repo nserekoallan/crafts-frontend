@@ -160,6 +160,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
         slug: slug.trim(),
         description: description.trim(),
         price: parseFloat(price),
+        currency: 'UGX',
         stock: parseInt(stock, 10),
         categoryId,
         materials: materials.trim() || undefined,
@@ -174,11 +175,16 @@ export function CreateProductDialog({ open, onClose }: Props) {
           const fd = new FormData();
           fd.append('file', imageFiles[i]);
           if (i === 0) fd.append('isDefault', 'true');
-          await fetch(`${base}/products/${productId}/images`, {
+          const res = await fetch(`${base}/products/${productId}/images`, {
             method: 'POST',
             headers: token ? { Authorization: `Bearer ${token}` } : {},
             body: fd,
           });
+          if (!res.ok) {
+            const errBody = await res.json().catch(() => null);
+            const msg = errBody?.error?.message ?? `Image ${i + 1} failed to upload.`;
+            throw new Error(msg);
+          }
         }
       }
 
@@ -188,8 +194,10 @@ export function CreateProductDialog({ open, onClose }: Props) {
       onClose();
     } catch (err) {
       if (err instanceof ApiError) {
-        const msg = (err.body as { message?: string | string[] })?.message;
-        setError(Array.isArray(msg) ? msg[0] : (msg ?? 'Failed to create product.'));
+        const details = err.body.error?.details?.[0]?.message;
+        setError(details ?? err.body.error?.message ?? 'Failed to create product.');
+      } else if (err instanceof Error) {
+        setError(err.message || 'Something went wrong. Please try again.');
       } else {
         setError('Something went wrong. Please try again.');
       }
@@ -242,7 +250,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-charcoal" htmlFor="cp-price">
               Your Price (UGX) <span className="text-red-400">*</span>
