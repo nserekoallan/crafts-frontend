@@ -9,6 +9,56 @@ import { CreateArtisanDialog } from '@/components/admin/create-artisan-dialog';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
+// ---------------------------------------------------------------------------
+// Inline star rating widget
+// ---------------------------------------------------------------------------
+
+function InlineStarRating({ artisanId, initialRating }: { artisanId: string; initialRating: number | null }) {
+  const queryClient = useQueryClient();
+  const [optimisticRating, setOptimisticRating] = useState<number | null>(initialRating);
+  const [hovered, setHovered] = useState(0);
+
+  const { mutate } = useMutation({
+    mutationFn: (rating: number) => api.patch(`/artisans/${artisanId}/rating`, { rating }),
+    onMutate: (rating) => {
+      const previous = optimisticRating;
+      setOptimisticRating(rating);
+      return { previous };
+    },
+    onError: (_err, _rating, context) => {
+      setOptimisticRating(context?.previous ?? null);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'artisans'] });
+    },
+  });
+
+  const displayed = hovered || optimisticRating || 0;
+
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => mutate(i)}
+          onMouseEnter={() => setHovered(i)}
+          onMouseLeave={() => setHovered(0)}
+          aria-label={`Rate ${i} star${i !== 1 ? 's' : ''}`}
+          className="p-0.5 transition-transform hover:scale-110"
+        >
+          <Star
+            className={cn(
+              'h-4 w-4 transition-colors',
+              i <= displayed ? 'fill-satin-gold text-satin-gold' : 'fill-none text-light-gray',
+            )}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 type StatusFilter = 'all' | 'VERIFIED' | 'PENDING' | 'SUSPENDED';
 
 interface ArtisanRow {
@@ -255,17 +305,10 @@ export default function ArtisansPage() {
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
-                      {artisan.adminRating ? (
-                        <span
-                          className="inline-flex items-center gap-1 rounded-full bg-satin-gold/10 px-2.5 py-0.5 text-xs font-semibold text-satin-gold cursor-help"
-                          title={artisan.adminRatingNote ?? undefined}
-                        >
-                          <Star className="h-3 w-3 fill-satin-gold" />
-                          {artisan.adminRating}/5
-                        </span>
-                      ) : (
-                        <span className="text-xs text-medium-gray">—</span>
-                      )}
+                      <InlineStarRating
+                        artisanId={artisan.id}
+                        initialRating={artisan.adminRating}
+                      />
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
