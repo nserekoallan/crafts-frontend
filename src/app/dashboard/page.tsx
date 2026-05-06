@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { AlertTriangle, DollarSign, Eye, ShoppingCart, Star, TrendingUp, Wallet } from 'lucide-react';
+import { AlertTriangle, Star } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import {
   useArtisanAnalytics,
@@ -23,10 +23,6 @@ const ORDER_STATUS_VARIANT: Record<string, BadgeVariant> = {
   PENDING: 'pending',
   CANCELLED: 'cancelled',
 };
-
-function StatSkeleton() {
-  return <div className="h-28 animate-pulse rounded-xl border border-border-dark bg-bg-surface/60" />;
-}
 
 function StarRating({ rating }: { rating: number }) {
   const full = Math.round(rating);
@@ -67,60 +63,57 @@ export default function DashboardPage() {
 
   const recentOrders = ordersData?.data?.slice(0, 5) ?? [];
 
-  const stats = [
-    {
-      label: 'Available Balance',
-      value: formatPrice(balance),
-      icon: Wallet,
-      loading: earningsLoading,
-    },
-    {
-      label: 'Total Revenue',
-      value: totals ? formatPrice(totals.revenue) : '—',
-      icon: DollarSign,
-      loading: analyticsLoading,
-    },
-    {
-      label: 'Total Views',
-      value: totals ? totals.views.toLocaleString() : '—',
-      icon: Eye,
-      loading: analyticsLoading,
-    },
-    {
-      label: 'Total Orders',
-      value: totals ? totals.orders.toLocaleString() : '—',
-      icon: ShoppingCart,
-      loading: analyticsLoading,
-    },
-  ];
-
   return (
     <div>
-      <h1 className="text-3xl font-bold text-text-primary">Dashboard</h1>
-      <p className="mt-1 text-text-secondary">
-        Welcome back, {user?.firstName}. Here&apos;s how your shop is performing.
-      </p>
+      <div className="flex items-baseline justify-between">
+        <h1 className="text-2xl font-bold text-text-primary">{user?.firstName}&apos;s Studio</h1>
+        <p className="text-xs text-text-tertiary">
+          {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+        </p>
+      </div>
 
-      {/* Stats row */}
-      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          if (stat.loading) return <StatSkeleton key={stat.label} />;
-          return (
-            <div
-              key={stat.label}
-              className="rounded-xl border border-border-dark bg-bg-elevated p-5"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-text-secondary">{stat.label}</span>
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-hunter-green/10 text-hunter-green">
-                  <Icon className="h-4 w-4" />
-                </div>
-              </div>
-              <p className="mt-2 font-heading text-2xl font-bold text-text-primary">{stat.value}</p>
+      {/* Balance hero + supporting metrics */}
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-5 gap-4">
+        {/* Balance — 3 of 5 cols */}
+        <div className="lg:col-span-3 rounded-xl border border-border-dark bg-bg-elevated p-8">
+          <p className="text-xs font-semibold uppercase tracking-widest text-text-tertiary">
+            Available Balance
+          </p>
+          {earningsLoading ? (
+            <div className="mt-3 h-14 w-48 animate-pulse rounded bg-bg-surface/60" />
+          ) : (
+            <p className="mt-3 font-heading text-5xl font-bold text-text-primary">
+              {formatPrice(balance)}
+            </p>
+          )}
+          <p className="mt-2 text-sm text-text-tertiary">Ready to transfer</p>
+          <Link
+            href="/dashboard/earnings"
+            className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-gold hover:underline"
+          >
+            Manage earnings →
+          </Link>
+        </div>
+
+        {/* Supporting metrics — 2 of 5 cols */}
+        <div className="lg:col-span-2 rounded-xl border border-border-dark bg-bg-elevated divide-y divide-border-dark">
+          {[
+            { label: 'Total Revenue', value: totals ? formatPrice(totals.revenue) : '—', loading: analyticsLoading },
+            { label: 'Product Views', value: totals ? totals.views.toLocaleString() : '—', loading: analyticsLoading },
+            { label: 'Total Orders',  value: totals ? totals.orders.toLocaleString() : '—', loading: analyticsLoading },
+          ].map((m) => (
+            <div key={m.label} className="px-6 py-5">
+              <p className="text-xs font-semibold uppercase tracking-widest text-text-tertiary">
+                {m.label}
+              </p>
+              {m.loading ? (
+                <div className="mt-1.5 h-7 w-24 animate-pulse rounded bg-bg-surface/60" />
+              ) : (
+                <p className="mt-1.5 text-2xl font-bold text-text-primary">{m.value}</p>
+              )}
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
       {/* Alert strip */}
@@ -129,12 +122,12 @@ export default function DashboardPage() {
           <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
           <span className="text-sm font-medium text-text-secondary">Shop alerts:</span>
           {pendingQcCount > 0 && (
-            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+            <span className="rounded-full bg-amber-500/15 border border-amber-500/20 px-3 py-1 text-xs font-medium text-amber-400">
               {pendingQcCount} awaiting QC
             </span>
           )}
           {suspendedCount > 0 && (
-            <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-800">
+            <span className="rounded-full bg-red-500/15 border border-red-500/20 px-3 py-1 text-xs font-medium text-red-400">
               {suspendedCount} suspended
             </span>
           )}
@@ -149,10 +142,7 @@ export default function DashboardPage() {
 
       {/* Top products by revenue */}
       <div className="mt-10">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-hunter-green" />
-          <h2 className="text-xl font-bold text-text-primary">Top Products</h2>
-        </div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-text-tertiary">Top Performers</p>
         <div className="mt-4 overflow-x-auto rounded-xl border border-border-dark bg-bg-elevated">
           {analyticsLoading ? (
             <div className="p-8 text-center text-sm text-text-secondary">Loading analytics…</div>
@@ -164,6 +154,7 @@ export default function DashboardPage() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border-dark text-xs font-semibold uppercase tracking-wider text-text-secondary">
+                  <th className="px-5 py-3 w-10">#</th>
                   <th className="px-5 py-3">Product</th>
                   <th className="px-5 py-3 text-right">Views</th>
                   <th className="px-5 py-3 text-right">Orders</th>
@@ -172,8 +163,11 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-dark">
-                {topProducts.map((product) => (
+                {topProducts.map((product, index) => (
                   <tr key={product.id} className="hover:bg-white/[0.03]">
+                    <td className="px-5 py-3 text-xs font-bold text-text-tertiary tabular-nums">
+                      {String(index + 1).padStart(2, '0')}
+                    </td>
                     <td className="px-5 py-3 font-medium text-text-primary">{product.name}</td>
                     <td className="px-5 py-3 text-right text-text-secondary">
                       {product.viewCount.toLocaleString()}
@@ -181,7 +175,7 @@ export default function DashboardPage() {
                     <td className="px-5 py-3 text-right text-text-secondary">
                       {product.purchaseCount.toLocaleString()}
                     </td>
-                    <td className="px-5 py-3 text-right font-medium text-text-primary">
+                    <td className="px-5 py-3 text-right font-semibold text-gold">
                       {formatPrice(product.revenue)}
                     </td>
                     <td className="px-5 py-3">
@@ -201,10 +195,7 @@ export default function DashboardPage() {
 
       {/* Recent orders */}
       <div className="mt-10">
-        <div className="flex items-center gap-2">
-          <ShoppingCart className="h-5 w-5 text-hunter-green" />
-          <h2 className="text-xl font-bold text-text-primary">Recent Orders</h2>
-        </div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-text-tertiary">Recent Orders</p>
         <div className="mt-4 overflow-x-auto rounded-xl border border-border-dark bg-bg-elevated">
           {ordersLoading ? (
             <div className="p-8 text-center text-sm text-text-secondary">Loading orders…</div>

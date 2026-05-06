@@ -2,16 +2,7 @@
 
 import Link from 'next/link';
 import { useQueries } from '@tanstack/react-query';
-import {
-  ShoppingCart,
-  UserCheck,
-  Package,
-  ClipboardCheck,
-  DollarSign,
-  ArrowRight,
-} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useCurrency } from '@/lib/currency';
@@ -120,150 +111,83 @@ export default function AdminOverviewPage() {
   const payoutsCount = payoutsPendingQuery.data?.meta.total ?? 0;
 
   const stats = [
-    {
-      label: 'Total Orders',
-      value: totalOrders.toLocaleString(),
-      icon: ShoppingCart,
-      color: 'text-blue-400 bg-blue-500/10',
-      loading: ordersQuery.isLoading,
-    },
-    {
-      label: 'Total Artisans',
-      value: totalArtisans.toLocaleString(),
-      icon: UserCheck,
-      color: 'text-satin-gold bg-satin-gold/10',
-      loading: artisansQuery.isLoading,
-    },
-    {
-      label: 'Total Products',
-      value: totalProducts.toLocaleString(),
-      icon: Package,
-      color: 'text-hunter-green bg-hunter-green/10',
-      loading: productsTotalQuery.isLoading,
-    },
-    {
-      label: 'Pending Verification',
-      value: pendingArtisansCount.toLocaleString(),
-      icon: ClipboardCheck,
-      color: 'text-saddle-brown bg-saddle-brown/10',
-      loading: pendingArtisansQuery.isLoading,
-    },
-  ];
-
-  const actionItems = [
-    {
-      label: 'QC Queue',
-      sublabel: 'pending reviews',
-      count: qcCount,
-      href: '/admin/qc',
-      loading: qcPendingQuery.isLoading,
-    },
-    {
-      label: 'Featured Requests',
-      sublabel: 'pending',
-      count: featuredCount,
-      href: '/admin/featured',
-      loading: featuredPendingQuery.isLoading,
-    },
-    {
-      label: 'Artisan Verifications',
-      sublabel: 'pending',
-      count: pendingArtisansCount,
-      href: '/admin/artisans',
-      loading: pendingArtisansQuery.isLoading,
-    },
-    {
-      label: 'Pending Payouts',
-      sublabel: 'pending',
-      count: payoutsCount,
-      href: '/admin/payouts',
-      loading: payoutsPendingQuery.isLoading,
-    },
+    { label: 'Total Orders',         value: totalOrders.toLocaleString(),          numValue: totalOrders,          loading: ordersQuery.isLoading },
+    { label: 'Total Artisans',       value: totalArtisans.toLocaleString(),        numValue: totalArtisans,        loading: artisansQuery.isLoading },
+    { label: 'Total Products',       value: totalProducts.toLocaleString(),        numValue: totalProducts,        loading: productsTotalQuery.isLoading },
+    { label: 'Pending Verification', value: pendingArtisansCount.toLocaleString(), numValue: pendingArtisansCount, loading: pendingArtisansQuery.isLoading, alert: true },
   ];
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Platform Overview</h1>
-        <p className="text-text-secondary">What needs attention right now</p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-widest text-text-tertiary">Admin Console</p>
+        <p className="text-xs text-text-tertiary">
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+        </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.label}
-              className="bg-bg-elevated rounded-xl border border-border-dark p-5 relative"
-            >
-              <div
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {stats.map((stat) => (
+          <div
+            key={stat.label}
+            className={cn(
+              'rounded-xl border p-6 bg-bg-elevated',
+              stat.alert && stat.numValue > 0
+                ? 'border-amber-500/20 ring-1 ring-amber-500/10'
+                : 'border-border-dark',
+            )}
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest text-text-tertiary">
+              {stat.label}
+            </p>
+            {stat.loading ? (
+              <div className="mt-3 h-10 w-20 animate-pulse rounded bg-bg-surface/60" />
+            ) : (
+              <p
                 className={cn(
-                  'absolute top-5 right-5 w-10 h-10 rounded-full flex items-center justify-center',
-                  stat.color,
+                  'mt-3 text-4xl font-bold font-heading',
+                  stat.alert && stat.numValue > 0 ? 'text-amber-400' : 'text-text-primary',
                 )}
               >
-                <Icon className="w-5 h-5" />
-              </div>
-              {stat.loading ? (
-                <div className="h-9 w-24 animate-pulse rounded bg-bg-surface/60 mb-1" />
-              ) : (
-                <div className="text-3xl font-bold text-text-primary mb-1">{stat.value}</div>
-              )}
-              <div className="text-sm text-text-secondary">{stat.label}</div>
-            </div>
-          );
-        })}
+                {stat.value}
+              </p>
+            )}
+          </div>
+        ))}
       </div>
 
-      {/* Action Queue */}
-      <div className="bg-bg-elevated rounded-xl border border-border-dark overflow-hidden">
-        <div className="p-6 border-b border-border-dark">
-          <h2 className="text-xl font-bold text-text-primary">Action Queue</h2>
-          <p className="text-sm text-text-secondary mt-1">Items that need your attention now</p>
-        </div>
-        <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-          {actionItems.map((item) => {
-            const hasItems = item.count > 0;
+      {/* Needs Attention */}
+      <div className="flex items-center gap-4 flex-wrap">
+        <p className="text-xs font-semibold uppercase tracking-widest text-text-tertiary shrink-0">
+          Needs Attention
+        </p>
+        {(() => {
+          const pills = [
+            { label: 'QC Queue', count: qcCount, href: '/admin/qc' },
+            { label: 'Featured', count: featuredCount, href: '/admin/featured' },
+            { label: 'Artisans', count: pendingArtisansCount, href: '/admin/artisans' },
+            { label: 'Payouts', count: payoutsCount, href: '/admin/payouts' },
+          ].filter((p) => p.count > 0);
+
+          if (pills.length === 0) {
             return (
-              <Link key={item.label} href={item.href}>
-                <div
-                  className={cn(
-                    'rounded-lg border p-5 transition-colors hover:bg-white/[0.03] cursor-pointer h-full',
-                    hasItems
-                      ? 'bg-amber-500/10 border-amber-500/30 ring-1 ring-amber-500/40'
-                      : 'bg-bg-surface/30 border-border-dark',
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      {item.loading ? (
-                        <div className="h-8 w-12 animate-pulse rounded bg-bg-surface/60 mb-2" />
-                      ) : (
-                        <div
-                          className={cn(
-                            'text-3xl font-bold mb-1',
-                            hasItems ? 'text-amber-400' : 'text-text-secondary',
-                          )}
-                        >
-                          {item.count.toLocaleString()}
-                        </div>
-                      )}
-                      <div className="text-sm font-medium text-text-primary">{item.label}</div>
-                      <div className="text-xs text-text-secondary">{item.sublabel}</div>
-                    </div>
-                    <ArrowRight
-                      className={cn(
-                        'w-4 h-4 mt-1 shrink-0',
-                        hasItems ? 'text-amber-400' : 'text-text-secondary',
-                      )}
-                    />
-                  </div>
-                </div>
-              </Link>
+              <p className="text-sm text-text-secondary">
+                No pending actions — platform is healthy.
+              </p>
             );
-          })}
-        </div>
+          }
+          return pills.map((pill) => (
+            <Link
+              key={pill.href}
+              href={pill.href}
+              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/15 transition-colors"
+            >
+              <span className="text-base font-bold tabular-nums">{pill.count}</span>
+              {pill.label}
+            </Link>
+          ));
+        })()}
       </div>
 
       {/* Recent Orders */}
@@ -290,16 +214,16 @@ export default function AdminOverviewPage() {
               <table className="w-full">
                 <thead className="bg-bg-elevated/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-widest">
                       Order #
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-widest">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-widest">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-widest">
                       Total
                     </th>
                   </tr>
@@ -348,10 +272,9 @@ export default function AdminOverviewPage() {
         )}
       </div>
 
-      {/* Pending Verifications & Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Pending Verifications */}
-        <div className="lg:col-span-2 bg-bg-elevated rounded-xl border border-border-dark overflow-hidden">
+      {/* Pending Verifications */}
+      <div>
+        <div className="bg-bg-elevated rounded-xl border border-border-dark overflow-hidden">
           <div className="p-6 border-b border-border-dark flex items-center justify-between">
             <h2 className="text-xl font-bold text-text-primary">Pending Verifications</h2>
             <Link
@@ -384,40 +307,16 @@ export default function AdminOverviewPage() {
                       Submitted: {new Date(artisan.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <Link href="/admin/artisans">
-                    <Button variant="primary" size="sm">
-                      Review
-                    </Button>
+                  <Link
+                    href="/admin/artisans"
+                    className="rounded-md border border-border-dark px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-white/20 transition-colors"
+                  >
+                    Review →
                   </Link>
                 </div>
               ))}
             </div>
           )}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="bg-bg-elevated rounded-xl border border-border-dark p-6">
-          <h2 className="text-xl font-bold text-text-primary mb-6">Quick Actions</h2>
-          <div className="space-y-3">
-            <Link href="/admin/payouts" className="block">
-              <Button variant="primary" className="w-full justify-start">
-                <DollarSign className="w-4 h-4 mr-2" />
-                Process Payouts
-              </Button>
-            </Link>
-            <Link href="/admin/artisans" className="block">
-              <Button variant="secondary" className="w-full justify-start">
-                <UserCheck className="w-4 h-4 mr-2" />
-                Manage Artisans
-              </Button>
-            </Link>
-            <Link href="/admin/orders" className="block">
-              <Button variant="secondary" className="w-full justify-start">
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                View Orders
-              </Button>
-            </Link>
-          </div>
         </div>
       </div>
     </div>
