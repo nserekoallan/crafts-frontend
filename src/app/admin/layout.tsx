@@ -17,6 +17,8 @@ import {
   Wallet,
   FileBarChart,
   Settings,
+  Tag,
+  AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PortalHeader } from '@/components/layout/portal-header';
@@ -26,10 +28,12 @@ const ADMIN_LINKS = [
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/artisans', label: 'Artisans', icon: UserCheck },
   { href: '/admin/products', label: 'Products', icon: Box },
+  { href: '/admin/categories', label: 'Categories', icon: Tag },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/admin/qc', label: 'QC Queue', icon: ClipboardCheck },
   { href: '/admin/featured', label: 'Featured', icon: Sparkles },
   { href: '/admin/payouts', label: 'Payouts', icon: Wallet },
+  { href: '/admin/payments/stuck', label: 'Stuck Payments', icon: AlertTriangle },
   { href: '/admin/reports', label: 'Reports', icon: FileBarChart },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ] as const;
