@@ -52,6 +52,28 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
   const relatedProducts = relatedData ?? [];
 
+  // Record view — must run before any early return so the hook order is stable
+  // across the loading → loaded transition (otherwise: React error #310).
+  useEffect(() => {
+    if (!product) return;
+    recordView({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      price: product.price,
+      imageUrl: product.imageUrl,
+      category: product.category,
+    });
+    track('product_viewed', {
+      product_id: product.id,
+      product_name: product.name,
+      artisan_id: product.artisanId,
+      price: product.price,
+      category: product.category,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id]);
+
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -76,26 +98,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const hasDiscount = !!product.originalPrice && product.originalPrice > product.price;
   const isUnavailable = product.stockStatus === 'out_of_stock';
   const wishlisted = isWishlisted(product.id);
-
-  // Record view
-  useEffect(() => {
-    recordView({
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      price: product.price,
-      imageUrl: product.imageUrl,
-      category: product.category,
-    });
-    track('product_viewed', {
-      product_id: product.id,
-      product_name: product.name,
-      artisan_id: product.artisanId,
-      price: product.price,
-      category: product.category,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product.id]);
 
   const handleAddToCart = () => {
     if (isUnavailable || isAdded) return;
