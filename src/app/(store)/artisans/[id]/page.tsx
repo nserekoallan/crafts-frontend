@@ -120,6 +120,27 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
           </div>
         )}
       </section>
+
+      {/* Story */}
+      {artisan.bio && (
+        <section className="mt-14">
+          <div className="flex items-center gap-4">
+            <div className="h-px flex-1 bg-border-dark" />
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
+              Story
+            </h2>
+            <div className="h-px flex-1 bg-border-dark" />
+          </div>
+          <blockquote className="mx-auto mt-6 max-w-2xl pl-5 border-l-2 border-gold/40">
+            <p className="text-sm italic leading-relaxed text-text-secondary md:text-base">
+              {artisan.bio}
+            </p>
+            <footer className="mt-3 text-xs text-text-tertiary not-italic">
+              — {artisan.businessName}
+            </footer>
+          </blockquote>
+        </section>
+      )}
     </div>
   );
 }

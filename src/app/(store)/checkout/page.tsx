@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Check, Lock, ShoppingBag } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
-import { ShippingStep, type ShippingAddress } from './_components/shipping-step';
+import { ShippingStep, type ShippingAddress, type SavedAddressOption } from './_components/shipping-step';
 import { PaymentStep, type PaymentSelection } from './_components/payment-step';
 import { ReviewStep } from './_components/review-step';
 
@@ -82,6 +84,14 @@ export default function CheckoutPage() {
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { items, subtotal, itemCount } = useCart();
   const { formatPrice } = useCurrency();
+
+  // Fetch saved addresses only when authenticated
+  const { data: savedAddresses } = useQuery<SavedAddressOption[]>({
+    queryKey: ['user', 'addresses'],
+    queryFn: () =>
+      api.get<{ data: SavedAddressOption[] }>('/users/addresses').then((r) => r.data),
+    enabled: isAuthenticated,
+  });
 
   const [step, setStep] = useState<Step>(1);
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
@@ -166,6 +176,11 @@ export default function CheckoutPage() {
                 setShippingAddress(addr);
                 setStep(2);
               }}
+              savedAddresses={
+                isAuthenticated && savedAddresses && savedAddresses.length > 0
+                  ? savedAddresses
+                  : undefined
+              }
             />
           )}
           {step === 2 && (

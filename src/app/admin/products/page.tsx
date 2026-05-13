@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Search, X } from 'lucide-react';
+import { Search, X, CheckSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -107,6 +107,8 @@ export default function AdminProductsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [rejectTarget, setRejectTarget] = useState<ApiProduct | null>(null);
   const [suspendTarget, setSuspendTarget] = useState<ApiProduct | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkReasonOpen, setBulkReasonOpen] = useState<'reject' | 'suspend' | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin', 'products', statusFilter, search],
@@ -151,7 +153,36 @@ export default function AdminProductsPage() {
     },
   });
 
+  const { mutate: bulkAction, isPending: isBulkPending } = useMutation({
+    mutationFn: ({ action, reason }: { action: 'approve' | 'reject' | 'suspend'; reason?: string }) =>
+      api.patch('/products/bulk', { ids: Array.from(selected), action, reason }),
+    onSuccess: () => {
+      setSelected(new Set());
+      setBulkReasonOpen(null);
+      invalidate();
+    },
+  });
+
   const products = data?.data ?? [];
+
+  const allVisibleIds = products.map((p: ApiProduct) => p.id);
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id: string) => selected.has(id));
+  const someSelected = selected.size > 0;
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(allVisibleIds));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
+  };
 
   const ActionButtons = ({ product }: { product: ApiProduct }) => {
     const isPendingQC = product.status === 'PENDING_QC';
@@ -201,6 +232,19 @@ export default function AdminProductsPage() {
 
   return (
     <>
+      {bulkReasonOpen && (
+        <ReasonDialog
+          title={bulkReasonOpen === 'reject' ? 'Bulk Reject Products' : 'Bulk Suspend Products'}
+          productName={`${selected.size} selected product${selected.size !== 1 ? 's' : ''}`}
+          ctaLabel={bulkReasonOpen === 'reject' ? 'Reject All' : 'Suspend All'}
+          pendingLabel={isBulkPending ? 'Processing…' : bulkReasonOpen === 'reject' ? 'Reject All' : 'Suspend All'}
+          placeholder={`Reason for ${bulkReasonOpen}…`}
+          isPending={isBulkPending}
+          onConfirm={(reason) => bulkAction({ action: bulkReasonOpen, reason })}
+          onCancel={() => setBulkReasonOpen(null)}
+        />
+      )}
+
       {rejectTarget && (
         <ReasonDialog
           title="Reject Product"
@@ -263,11 +307,52 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
-        {/* Count */}
+        {/* Count + Bulk toolbar */}
         {!isLoading && (
-          <p className="text-sm text-text-secondary">
-            Showing {products.length} product{products.length !== 1 ? 's' : ''}
-          </p>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-text-secondary">
+              Showing {products.length} product{products.length !== 1 ? 's' : ''}
+              {someSelected && (
+                <span className="ml-2 font-medium text-gold">({selected.size} selected)</span>
+              )}
+            </p>
+            {someSelected && (
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 text-xs text-text-tertiary">
+                  <CheckSquare className="h-4 w-4" />
+                  Bulk:
+                </span>
+                <button
+                  disabled={isBulkPending}
+                  onClick={() => bulkAction({ action: 'approve' })}
+                  className="rounded px-3 py-1 text-xs font-medium bg-green-500/15 text-green-400 hover:bg-green-500/20 disabled:opacity-50 transition-colors"
+                >
+                  Approve
+                </button>
+                <button
+                  disabled={isBulkPending}
+                  onClick={() => setBulkReasonOpen('reject')}
+                  className="rounded px-3 py-1 text-xs font-medium bg-red-500/15 text-red-400 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+                >
+                  Reject
+                </button>
+                <button
+                  disabled={isBulkPending}
+                  onClick={() => setBulkReasonOpen('suspend')}
+                  className="rounded px-3 py-1 text-xs font-medium bg-amber-500/15 text-amber-400 hover:bg-amber-500/20 disabled:opacity-50 transition-colors"
+                >
+                  Suspend
+                </button>
+                <button
+                  onClick={() => setSelected(new Set())}
+                  className="rounded p-1 text-text-tertiary hover:text-text-primary transition-colors"
+                  title="Clear selection"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Loading */}
@@ -290,6 +375,15 @@ export default function AdminProductsPage() {
             <table className="w-full">
               <thead className="bg-bg-surface/60">
                 <tr>
+                  <th className="w-10 px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleAll}
+                      className="h-4 w-4 rounded accent-gold cursor-pointer"
+                      title="Select all"
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Product</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Artisan</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Category</th>
@@ -301,13 +395,43 @@ export default function AdminProductsPage() {
               <tbody className="divide-y divide-border-dark">
                 {products.map((product: ApiProduct) => {
                   const thumb = product.images[0]?.url ?? '/products/product-01.jpg';
+                  const isChecked = selected.has(product.id);
                   return (
-                    <tr key={product.id} className="hover:bg-white/[0.03] transition-colors">
+                    <tr key={product.id} className={cn('transition-colors', isChecked ? 'bg-gold/[0.04]' : 'hover:bg-white/[0.03]')}>
+                      <td className="px-4 py-4">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleOne(product.id)}
+                          className="h-4 w-4 rounded accent-gold cursor-pointer"
+                        />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={thumb} alt={product.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
-                          <span className="text-sm font-medium text-text-primary line-clamp-2">{product.name}</span>
+                          <div>
+                            <span className="text-sm font-medium text-text-primary line-clamp-2">{product.name}</span>
+                            {product.variants && product.variants.length > 0 && (
+                              <span className="ml-1.5 inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-text-tertiary">
+                                Variants: {product.variants.length}
+                              </span>
+                            )}
+                            {product.isFeatured && product.featuredUntil && (() => {
+                              const expires = new Date(product.featuredUntil);
+                              const isFuture = expires > new Date();
+                              const dateStr = expires.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                              return isFuture ? (
+                                <span className="mt-0.5 inline-flex items-center rounded-full border border-gold/25 bg-gold/10 px-2 py-0.5 text-[10px] font-medium text-gold">
+                                  Featured until {dateStr}
+                                </span>
+                              ) : (
+                                <span className="mt-0.5 inline-flex items-center rounded-full border border-zinc-500/20 bg-zinc-500/10 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
+                                  Featured (expired)
+                                </span>
+                              );
+                            })()}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-text-secondary">{product.artisan.businessName}</td>

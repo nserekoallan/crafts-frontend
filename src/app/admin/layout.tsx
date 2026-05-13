@@ -19,21 +19,39 @@ import {
   Settings,
   Tag,
   AlertTriangle,
+  Layers,
+  Ticket,
+  ClipboardList,
+  Truck,
+  Newspaper,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PortalHeader } from '@/components/layout/portal-header';
+import { ErrorBoundary } from '@/components/error-boundary';
 
+// Links visible to all admin roles (ADMIN, SUPER_ADMIN, QC_INSPECTOR)
+const QC_LINKS = [
+  { href: '/admin', label: 'Overview', icon: LayoutDashboard },
+  { href: '/admin/qc', label: 'QC Queue', icon: ClipboardCheck },
+] as const;
+
+// Links visible to ADMIN and SUPER_ADMIN (not QC_INSPECTOR)
 const ADMIN_LINKS = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/artisans', label: 'Artisans', icon: UserCheck },
   { href: '/admin/products', label: 'Products', icon: Box },
   { href: '/admin/categories', label: 'Categories', icon: Tag },
+  { href: '/admin/collections', label: 'Collections', icon: Layers },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/admin/qc', label: 'QC Queue', icon: ClipboardCheck },
   { href: '/admin/featured', label: 'Featured', icon: Sparkles },
   { href: '/admin/payouts', label: 'Payouts', icon: Wallet },
   { href: '/admin/payments/stuck', label: 'Stuck Payments', icon: AlertTriangle },
+  { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
+  { href: '/admin/shipping', label: 'Shipping', icon: Truck },
+  { href: '/admin/content', label: 'Content', icon: Newspaper },
+  { href: '/admin/audit-logs', label: 'Audit Logs', icon: ClipboardList },
   { href: '/admin/reports', label: 'Reports', icon: FileBarChart },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ] as const;
@@ -43,6 +61,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { user, isLoading, isAuthenticated } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  const isQcInspector = user?.role === 'qc_inspector';
+  const navLinks = isQcInspector ? QC_LINKS : ADMIN_LINKS;
 
   const { data: queueData } = useQuery({
     queryKey: ['admin', 'queue', 'pendingQC'],
@@ -57,7 +77,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (pathname === '/admin/login') return;
     if (isLoading) return;
     if (!isAuthenticated) { router.replace('/admin/login'); return; }
-    if (user?.role !== 'admin' && user?.role !== 'super_admin') { router.replace('/'); return; }
+    const allowedRoles = ['admin', 'super_admin', 'qc_inspector'];
+    if (!user?.role || !allowedRoles.includes(user.role)) { router.replace('/'); return; }
   }, [pathname, isLoading, isAuthenticated, user, router]);
 
   if (isLoading || !isAuthenticated) {
@@ -75,13 +96,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-screen flex-col bg-[#111110]">
-      <PortalHeader label="Admin Console" accentClass="text-satin-gold" loginPath="/admin/login" />
+      <PortalHeader label="Admin Console" accentClass="text-satin-gold" loginPath="/admin/login" showNotifications />
 
       <div className="flex flex-1">
         {/* Dark sidebar — desktop */}
         <aside className="hidden w-56 shrink-0 lg:flex lg:flex-col border-r border-white/[0.06] bg-[#0D0D0D]">
           <nav className="flex flex-col gap-0.5 p-3 pt-4">
-            {ADMIN_LINKS.map((link) => {
+            {navLinks.map((link) => {
               const Icon = link.icon;
               const active = isActive(link.href);
               const showBadge = link.href === '/admin/qc' && pendingQC > 0;
@@ -113,7 +134,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Mobile nav strip */}
         <div className="lg:hidden sticky top-14 z-30 w-full border-b border-white/[0.06] bg-[#0D0D0D] overflow-x-auto">
           <nav className="flex gap-1 p-2 min-w-max">
-            {ADMIN_LINKS.map((link) => {
+            {navLinks.map((link) => {
               const Icon = link.icon;
               const active = isActive(link.href);
               const showBadge = link.href === '/admin/qc' && pendingQC > 0;
@@ -144,7 +165,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Main content */}
         <main className="flex-1 min-w-0 p-6 lg:p-8">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
     </div>

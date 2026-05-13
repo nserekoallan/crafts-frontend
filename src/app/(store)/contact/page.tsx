@@ -2,26 +2,27 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Instagram, Twitter, Music, CheckCircle } from 'lucide-react';
+import { Instagram, Twitter, Music, CheckCircle, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { useSiteContent, useSocialLinks } from '@/hooks/use-site-content';
 
-const SOCIAL_LINKS = [
-  {
-    href: 'https://www.instagram.com/craft_continent',
-    label: 'Instagram',
-    icon: Instagram,
-  },
-  {
-    href: 'https://x.com/Craftcontinent',
-    label: 'X (Twitter)',
-    icon: Twitter,
-  },
-  {
-    href: 'https://www.tiktok.com/@craft.continent',
-    label: 'TikTok',
-    icon: Music,
-  },
-] as const;
+const SOCIAL_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  instagram: Instagram,
+  twitter: Twitter,
+  tiktok: Music,
+};
+
+const SOCIAL_LABEL_MAP: Record<string, string> = {
+  instagram: 'Instagram',
+  twitter: 'X (Twitter)',
+  tiktok: 'TikTok',
+};
+
+const DEFAULT_CONTACT = {
+  email: 'hello@craftcontinent.com',
+  supportHours: 'Mon–Fri 9am–6pm EAT',
+};
 
 /**
  * Contact page with form and social links.
@@ -31,10 +32,24 @@ export default function ContactPage() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { data: socialLinks } = useSocialLinks();
+  const { data: contact } = useSiteContent('site.contact', DEFAULT_CONTACT);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSubmitting(true);
+    setError(null);
+    try {
+      await api.post('/contact', { name, email, message });
+      setSubmitted(true);
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -63,10 +78,10 @@ export default function ContactPage() {
             <div className="flex flex-col items-center py-12 text-center">
               <CheckCircle className="h-12 w-12 text-green-500" />
               <h2 className="mt-4 font-heading text-xl font-bold text-text-primary">
-                Message Sent
+                Message Sent!
               </h2>
               <p className="mt-2 text-sm text-text-secondary">
-                Thank you for reaching out. We&apos;ll get back to you soon.
+                We&apos;ll reply within 24 hours.
               </p>
               <button
                 onClick={() => {
@@ -136,40 +151,49 @@ export default function ContactPage() {
                 />
               </div>
 
+              {error && (
+                <p className="text-sm text-red-400">{error}</p>
+              )}
+
               <button
                 type="submit"
-                disabled={!name.trim() || !email.trim() || !message.trim()}
+                disabled={submitting || !name.trim() || !email.trim() || !message.trim()}
                 className={cn(
-                  'flex h-11 w-full items-center justify-center rounded-lg text-sm font-bold transition-colors active:scale-[0.98]',
+                  'flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-colors active:scale-[0.98]',
                   'bg-gold text-bg-primary hover:bg-gold/90',
                   'disabled:cursor-not-allowed disabled:opacity-40',
                 )}
               >
-                Send Message
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {submitting ? 'Sending…' : 'Send Message'}
               </button>
             </form>
           )}
         </div>
 
-        {/* Sidebar — social links */}
+        {/* Sidebar — social links + contact */}
         <div className="flex flex-col items-center gap-6 md:items-start md:pt-2">
           <div>
             <h2 className="text-sm font-bold uppercase tracking-widest text-gold">
               Follow Us
             </h2>
             <div className="mt-3 flex items-center gap-3">
-              {SOCIAL_LINKS.map(({ href, label, icon: Icon }) => (
-                <a
-                  key={href}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-dark bg-bg-surface text-text-secondary transition-colors hover:border-gold hover:text-gold"
-                >
-                  <Icon className="h-5 w-5" />
-                </a>
-              ))}
+              {(Object.entries(socialLinks) as [string, string][]).map(([platform, href]) => {
+                const Icon = SOCIAL_ICON_MAP[platform];
+                if (!Icon || !href) return null;
+                return (
+                  <a
+                    key={platform}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={SOCIAL_LABEL_MAP[platform] ?? platform}
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-dark bg-bg-surface text-text-secondary transition-colors hover:border-gold hover:text-gold"
+                  >
+                    <Icon className="h-5 w-5" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
@@ -178,12 +202,21 @@ export default function ContactPage() {
               Email
             </h2>
             <a
-              href="mailto:hello@craftcontinent.com"
+              href={`mailto:${contact.email}`}
               className="mt-2 block text-sm text-text-secondary transition-colors hover:text-gold"
             >
-              hello@craftcontinent.com
+              {contact.email}
             </a>
           </div>
+
+          {contact.supportHours && (
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-gold">
+                Support Hours
+              </h2>
+              <p className="mt-2 text-sm text-text-secondary">{contact.supportHours}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

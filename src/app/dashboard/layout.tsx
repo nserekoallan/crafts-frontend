@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BarChart3, Box, LayoutDashboard, ShoppingCart, Wallet } from 'lucide-react';
+import { BarChart3, Box, LayoutDashboard, Settings, ShoppingCart, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import { PortalHeader } from '@/components/layout/portal-header';
@@ -14,6 +14,7 @@ const SIDEBAR_LINKS = [
   { href: '/dashboard/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/dashboard/earnings', label: 'Earnings', icon: Wallet },
   { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ] as const;
 
 /**

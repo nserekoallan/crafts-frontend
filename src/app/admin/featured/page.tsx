@@ -17,7 +17,7 @@ interface FeaturedRequest {
   product: {
     id: string;
     name: string;
-    images: { url: string; variants?: Record<string, string> }[];
+    images: { url: string }[];
   };
   artisan: {
     businessName: string;
@@ -142,7 +142,7 @@ export default function FeaturedRequestsPage() {
             const artisanName = req.artisan.user.profile
               ? `${req.artisan.user.profile.firstName} ${req.artisan.user.profile.lastName}`
               : req.artisan.businessName;
-            const thumb = req.product.images[0]?.variants?.['thumb'] ?? req.product.images[0]?.url;
+            const thumb = req.product.images[0]?.url ?? '/placeholder-product.jpg';
             const date = new Date(req.createdAt).toLocaleDateString('en-UG', { year: 'numeric', month: 'short', day: 'numeric' });
 
             return (
@@ -151,12 +151,8 @@ export default function FeaturedRequestsPage() {
                 className="flex items-center gap-4 rounded-xl border border-border-dark bg-bg-elevated p-4 shadow-sm"
               >
                 {/* Thumbnail */}
-                {thumb ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={thumb} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
-                ) : (
-                  <div className="h-14 w-14 shrink-0 rounded-lg bg-bg-surface/60" />
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={thumb} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">

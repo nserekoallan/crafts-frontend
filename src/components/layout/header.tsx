@@ -5,16 +5,66 @@ import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Instagram, Menu, Music, Search, ShoppingBag, Twitter, User, Heart, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { CurrencyToggle } from '@/components/ui/currency-toggle';
 import { AnnouncementBar } from '@/components/ui/announcement-bar';
 import { MainNavBar, MobileMenu } from '@/components/layout/main-nav-bar';
 import { CategoryNavBar } from '@/components/layout/category-nav-bar';
 import { useCart } from '@/lib/cart';
 import { useWishlist } from '@/lib/wishlist';
+import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { useSocialLinks } from '@/hooks/use-site-content';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface AutocompleteProduct {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  displayPrice: number | null;
+  currency: string;
+  images: Array<{ url: string; isDefault: boolean }>;
+}
+
+interface AutocompleteResponse {
+  data: AutocompleteProduct[];
+}
+
+// ---------------------------------------------------------------------------
+// useDebounce
+// ---------------------------------------------------------------------------
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debouncedValue;
+}
+
+/** Renders the user icon — links to /account when authenticated, /login otherwise. */
+function AccountLink() {
+  const { isAuthenticated } = useAuth();
+  return (
+    <Link
+      href={isAuthenticated ? '/account' : '/login'}
+      className="p-2 text-text-secondary transition-colors hover:text-gold"
+      aria-label={isAuthenticated ? 'My account' : 'Sign in'}
+    >
+      <User className="h-5 w-5" />
+    </Link>
+  );
+}
 
 /**
- * Search form used in both desktop and mobile header slots.
+ * Search form with autocomplete dropdown.
+ * Used in both desktop and mobile header slots.
  */
 function SearchInput({
   value,
@@ -33,36 +83,139 @@ function SearchInput({
   inputClassName?: string;
   iconSize?: string;
 }) {
+  const router = useRouter();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const debouncedQuery = useDebounce(value, 300);
+
+  const { data, isFetching } = useQuery<AutocompleteResponse>({
+    queryKey: ['autocomplete', debouncedQuery],
+    queryFn: () =>
+      api.get<AutocompleteResponse>(`/products?search=${encodeURIComponent(debouncedQuery)}&limit=5`),
+    enabled: debouncedQuery.length >= 2,
+    staleTime: 30_000,
+  });
+
+  const results = data?.data ?? [];
+
+  // Open dropdown when we have a query and results (or are fetching)
+  useEffect(() => {
+    setDropdownOpen(value.length >= 2);
+  }, [value]);
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleResultClick = (slug: string) => {
+    router.push(`/shop/${slug}`);
+    setDropdownOpen(false);
+    onClear();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') setDropdownOpen(false);
+  };
+
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit();
-      }}
-      className={cn('relative', className)}
-    >
-      <Search className={cn('absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary', iconSize)} />
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="What are you looking for?"
-        className={cn(
-          'w-full rounded-full border border-border-dark bg-bg-surface pl-10 pr-9 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20',
-          inputClassName,
+    <div ref={containerRef} className={cn('relative', className)}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setDropdownOpen(false);
+          onSubmit();
+        }}
+        className="relative"
+      >
+        <Search className={cn('absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary', iconSize)} />
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={() => { if (value.length >= 2) setDropdownOpen(true); }}
+          placeholder="What are you looking for?"
+          autoComplete="off"
+          className={cn(
+            'w-full rounded-full border border-border-dark bg-bg-surface pl-10 pr-9 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20',
+            inputClassName,
+          )}
+        />
+        {value.length > 0 && (
+          <button
+            type="button"
+            onClick={() => { onClear(); setDropdownOpen(false); }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary transition-colors hover:text-text-primary"
+            aria-label="Clear search"
+          >
+            <X className="h-4 w-4" />
+          </button>
         )}
-      />
-      {value.length > 0 && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary transition-colors hover:text-text-primary"
-          aria-label="Clear search"
-        >
-          <X className="h-4 w-4" />
-        </button>
+      </form>
+
+      {/* Autocomplete dropdown */}
+      {dropdownOpen && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-border-dark bg-bg-elevated shadow-xl">
+          {isFetching && results.length === 0 ? (
+            <div className="space-y-2 p-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="h-8 w-8 shrink-0 animate-pulse rounded-lg bg-bg-surface" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 w-3/4 animate-pulse rounded bg-bg-surface" />
+                    <div className="h-2.5 w-1/4 animate-pulse rounded bg-bg-surface" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : results.length === 0 && !isFetching ? (
+            <p className="px-4 py-3 text-sm text-text-tertiary">
+              No results for &ldquo;{debouncedQuery}&rdquo;
+            </p>
+          ) : (
+            <ul>
+              {results.map((product) => {
+                const thumb = product.images.find((i) => i.isDefault)?.url ?? product.images[0]?.url;
+                const displayedPrice = product.displayPrice ?? product.price;
+                return (
+                  <li key={product.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleResultClick(product.slug)}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-white/[0.05]"
+                    >
+                      {thumb ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={thumb}
+                          alt={product.name}
+                          className="h-8 w-8 shrink-0 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="h-8 w-8 shrink-0 rounded-lg bg-bg-surface" />
+                      )}
+                      <span className="min-w-0 flex-1 truncate text-sm text-text-primary">
+                        {product.name}
+                      </span>
+                      <span className="shrink-0 text-xs font-semibold text-gold">
+                        {product.currency} {Number(displayedPrice).toLocaleString()}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       )}
-    </form>
+    </div>
   );
 }
 
@@ -73,6 +226,7 @@ function SearchInput({
 function HeaderInner() {
   const { itemCount, setDrawerOpen } = useCart();
   const { wishlistCount } = useWishlist();
+  const { data: socialLinks } = useSocialLinks();
   const [badgeBounce, setBadgeBounce] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const prevCount = useRef(itemCount);
@@ -154,33 +308,39 @@ function HeaderInner() {
 
             {/* Social icons — desktop only */}
             <div className="hidden items-center gap-1 border-l border-border-dark pl-3 md:flex">
-              <a
-                href="https://www.instagram.com/craft_continent"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="p-1.5 text-text-tertiary transition-colors hover:text-gold"
-              >
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a
-                href="https://x.com/Craftcontinent"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="X (Twitter)"
-                className="p-1.5 text-text-tertiary transition-colors hover:text-gold"
-              >
-                <Twitter className="h-4 w-4" />
-              </a>
-              <a
-                href="https://www.tiktok.com/@craft.continent"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="TikTok"
-                className="p-1.5 text-text-tertiary transition-colors hover:text-gold"
-              >
-                <Music className="h-4 w-4" />
-              </a>
+              {socialLinks.instagram && (
+                <a
+                  href={socialLinks.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="p-1.5 text-text-tertiary transition-colors hover:text-gold"
+                >
+                  <Instagram className="h-4 w-4" />
+                </a>
+              )}
+              {socialLinks.twitter && (
+                <a
+                  href={socialLinks.twitter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="X (Twitter)"
+                  className="p-1.5 text-text-tertiary transition-colors hover:text-gold"
+                >
+                  <Twitter className="h-4 w-4" />
+                </a>
+              )}
+              {socialLinks.tiktok && (
+                <a
+                  href={socialLinks.tiktok}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="TikTok"
+                  className="p-1.5 text-text-tertiary transition-colors hover:text-gold"
+                >
+                  <Music className="h-4 w-4" />
+                </a>
+              )}
             </div>
 
             {/* Wishlist — desktop only */}
@@ -225,9 +385,7 @@ function HeaderInner() {
               )}
             </button>
 
-            <Link href="/login" className="p-2 text-text-secondary transition-colors hover:text-gold">
-              <User className="h-5 w-5" />
-            </Link>
+            <AccountLink />
           </div>
         </div>
 

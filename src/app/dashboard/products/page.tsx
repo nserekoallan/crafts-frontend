@@ -82,6 +82,8 @@ export default function ProductsPage() {
     });
   }, [products, searchTerm, statusFilter]);
 
+  const lowStockCount = products.filter((p) => p.stock > 0 && p.stock <= 3).length;
+
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -94,6 +96,18 @@ export default function ProductsPage() {
           Add Product
         </Button>
       </div>
+
+      {!artisanVerified && (
+        <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-400">
+          Your account has not been verified. Please contact the admin to get verified.
+        </div>
+      )}
+
+      {lowStockCount > 0 && (
+        <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-400">
+          {lowStockCount} of your product{lowStockCount !== 1 ? 's are' : ' is'} running low on stock. Restock soon to avoid missed orders.
+        </div>
+      )}
 
       {submitError && (
         <div
@@ -162,6 +176,20 @@ export default function ProductsPage() {
                 <tr key={product.id} className="hover:bg-white/[0.03]">
                   <td className="px-5 py-3 font-medium">
                     {product.name}
+                    {product.isFeatured && product.featuredUntil && (() => {
+                      const expires = new Date(product.featuredUntil);
+                      const isFuture = expires > new Date();
+                      const dateStr = expires.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                      return isFuture ? (
+                        <span className="ml-2 inline-flex items-center rounded-full border border-gold/25 bg-gold/10 px-2 py-0.5 text-[10px] font-medium text-gold">
+                          Featured until {dateStr}
+                        </span>
+                      ) : (
+                        <span className="ml-2 inline-flex items-center rounded-full border border-zinc-500/20 bg-zinc-500/10 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
+                          Featured (expired)
+                        </span>
+                      );
+                    })()}
                     {product.status === 'REJECTED' && product.rejectionReason && (
                       <p className="mt-1 inline-flex items-start gap-1 text-[11px] text-red-400">
                         <AlertCircle className="mt-px h-3 w-3 shrink-0" />
@@ -180,7 +208,20 @@ export default function ProductsPage() {
                       {STATUS_LABELS[product.status] ?? product.status}
                     </Badge>
                   </td>
-                  <td className="px-5 py-3 text-text-secondary">{product.stock}</td>
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-text-secondary">{product.stock}</span>
+                      {product.stock === 0 ? (
+                        <span className="rounded-full border border-red-500/20 bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-400">
+                          Out of Stock
+                        </span>
+                      ) : product.stock <= 3 ? (
+                        <span className="rounded-full border border-amber-500/20 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
+                          Low Stock
+                        </span>
+                      ) : null}
+                    </div>
+                  </td>
                   <td className="px-5 py-3 text-right">
                     <span className="font-medium">{formatPrice(Number(product.price))}</span>
                     {product.displayPrice != null && product.displayPrice !== Number(product.price) && (
@@ -201,7 +242,7 @@ export default function ProductsPage() {
                         (() => {
                           const submittable = isSubmittable(product) && artisanVerified;
                           const reason = !artisanVerified
-                            ? 'Verify your artisan account first'
+                            ? 'Your account has not been verified. Please contact the admin to get verified.'
                             : (product.images?.length ?? 0) < 1
                               ? 'Add at least one image'
                               : Number(product.price) <= 0
@@ -222,11 +263,16 @@ export default function ProductsPage() {
                                 });
                               }}
                               disabled={!submittable || (isSubmitting && submittingId === product.id)}
-                              className="inline-flex items-center gap-1 rounded-md border border-gold/50 px-2 py-1 text-xs font-medium text-gold hover:bg-gold/10 transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                              className={cn(
+                                'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+                                product.status === 'DRAFT'
+                                  ? 'bg-gold text-bg-primary hover:bg-gold/90'
+                                  : 'border border-gold/50 text-gold hover:bg-gold/10',
+                              )}
                               title={submittable ? 'Submit for admin review' : reason}
                             >
                               <Send className="h-3 w-3" />
-                              {isSubmitting && submittingId === product.id ? 'Submitting…' : 'Submit'}
+                              {isSubmitting && submittingId === product.id ? 'Submitting…' : 'Submit for Review'}
                             </button>
                           );
                         })()}
@@ -271,21 +317,30 @@ export default function ProductsPage() {
                         return <span className="text-xs font-medium text-satin-gold">Featured</span>;
                       }
                       if (fs === 'PENDING') {
-                        return <span className="text-xs text-text-secondary">Pending</span>;
+                        return <span className="text-xs text-amber-400">Pending review</span>;
+                      }
+                      if (fs === 'APPROVED') {
+                        return <span className="text-xs font-medium text-emerald-400">Approved</span>;
                       }
                       if (product.status === 'ACTIVE') {
+                        const isRejected = fs === 'REJECTED';
                         return (
-                          <button
-                            onClick={() => {
-                              track('featured_requested', { product_id: product.id, product_name: product.name });
-                              requestFeatured({ productId: product.id });
-                            }}
-                            className="inline-flex items-center gap-1 rounded-md border border-satin-gold/50 px-2 py-1 text-xs font-medium text-satin-gold hover:bg-satin-gold/10 transition-colors"
-                            title="Request featured spot"
-                          >
-                            <Sparkles className="h-3 w-3" />
-                            Request
-                          </button>
+                          <div className="flex flex-col items-end gap-1">
+                            {isRejected && (
+                              <span className="text-[10px] text-red-400">Rejected</span>
+                            )}
+                            <button
+                              onClick={() => {
+                                track('featured_requested', { product_id: product.id, product_name: product.name });
+                                requestFeatured({ productId: product.id });
+                              }}
+                              className="inline-flex items-center gap-1 rounded-md border border-satin-gold/50 px-2 py-1 text-xs font-medium text-satin-gold hover:bg-satin-gold/10 transition-colors"
+                              title={isRejected ? 'Request feature placement again' : 'Request featured spot'}
+                            >
+                              <Sparkles className="h-3 w-3" />
+                              {isRejected ? 'Request Again' : 'Feature This Product'}
+                            </button>
+                          </div>
                         );
                       }
                       return <span className="text-xs text-text-secondary">—</span>;

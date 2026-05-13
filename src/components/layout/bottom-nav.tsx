@@ -6,13 +6,13 @@ import { Home, Heart, ShoppingBag, Store, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/lib/cart';
 import { useWishlist } from '@/lib/wishlist';
+import { useAuth } from '@/lib/auth';
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/shop', label: 'Shop', icon: Store },
   { href: '/wishlist', label: 'Wishlist', icon: Heart },
   { href: '/cart', label: 'Cart', icon: ShoppingBag },
-  { href: '/login', label: 'Account', icon: User },
 ] as const;
 
 /**
@@ -23,6 +23,12 @@ export function BottomNav() {
   const pathname = usePathname();
   const { itemCount } = useCart();
   const { wishlistCount } = useWishlist();
+  const { isAuthenticated } = useAuth();
+
+  const NAV_ITEMS = [
+    ...BASE_NAV_ITEMS,
+    { href: isAuthenticated ? '/account' : '/login', label: 'Account', icon: User },
+  ] as const;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border-dark bg-bg-elevated/95 backdrop-blur-sm md:hidden">

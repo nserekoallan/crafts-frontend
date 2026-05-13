@@ -1,12 +1,14 @@
 'use client';
 
 import { useMemo } from 'react';
+import Link from 'next/link';
 import { MapPin, Sparkles } from 'lucide-react';
 import { DenseProductCard } from '@/components/products/dense-product-card';
 import { useProducts } from '@/hooks/use-products';
+import { useSiteContent } from '@/hooks/use-site-content';
 
 /** Craft process stories keyed by real category name. */
-const CRAFT_STORIES: Record<string, string> = {
+const DEFAULT_CRAFT_STORIES: Record<string, string> = {
   'Heritage Home & Decor':
     'Each piece begins with hand-harvested natural fibres — elephant grass, sweetgrass, and raffia — sun-dried and dyed with local pigments. Weavers coil them tightly over several days using bone needles, embedding ancestral patterns that tell stories of community, harvest, and celebration.',
   'African Capsule Accessories':
@@ -17,7 +19,7 @@ const CRAFT_STORIES: Record<string, string> = {
     'Each kit is assembled by the same artisans who practise the technique professionally. You receive the same raw materials they use — natural fibres, authentic dyes, traditional tools — along with step-by-step guides so you can learn the craft at home.',
 };
 
-const FALLBACK_STORY = CRAFT_STORIES['Heritage Home & Decor'];
+const FALLBACK_STORY = DEFAULT_CRAFT_STORIES['Heritage Home & Decor'];
 
 /**
  * Daily featured product — rotates based on date seed.
@@ -25,17 +27,21 @@ const FALLBACK_STORY = CRAFT_STORIES['Heritage Home & Decor'];
  */
 export function DailyDiscovery() {
   const { products, isLoading } = useProducts({ limit: 20 });
+  const { data: craftStories } = useSiteContent('homepage.craftStories', DEFAULT_CRAFT_STORIES);
 
   const product = useMemo(() => {
-    if (products.length === 0) return null;
+    const validProducts = products.filter(
+      (p) => p.slug && p.slug.trim() !== '' && p.stockStatus !== 'out_of_stock',
+    );
+    if (validProducts.length === 0) return null;
     const today = new Date();
     const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-    return products[seed % products.length];
+    return validProducts[seed % validProducts.length];
   }, [products]);
 
-  if (isLoading || !product) return null;
+  if (isLoading || !product || !product.slug) return null;
 
-  const story = CRAFT_STORIES[product.category] ?? FALLBACK_STORY;
+  const story = craftStories[product.category] ?? FALLBACK_STORY;
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
@@ -64,12 +70,12 @@ export function DailyDiscovery() {
           <p className="mt-4 text-sm leading-relaxed text-text-secondary">
             {story}
           </p>
-          <a
+          <Link
             href={`/shop/${product.slug}`}
             className="mt-4 inline-flex w-fit items-center rounded-lg border border-gold px-5 py-2 text-sm font-semibold text-gold transition-colors hover:bg-gold hover:text-bg-primary"
           >
             Discover This Piece
-          </a>
+          </Link>
         </div>
       </div>
     </section>

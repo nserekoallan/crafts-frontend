@@ -12,6 +12,17 @@ export interface ApiProductImage {
   isDefault: boolean;
 }
 
+export interface ApiProductVariant {
+  id: string;
+  productId: string;
+  name: string;
+  options: { size?: string; color?: string; material?: string };
+  price: number | null;
+  stock: number;
+  sku: string | null;
+  isActive: boolean;
+}
+
 export interface ApiProductArtisan {
   id: string;
   businessName: string;
@@ -22,6 +33,12 @@ export interface ApiProductCategory {
   id: string;
   name: string;
   slug: string;
+}
+
+export interface ApiProductAdditionalCategory {
+  productId: string;
+  categoryId: string;
+  category: ApiProductCategory;
 }
 
 export interface ApiProduct {
@@ -39,8 +56,10 @@ export interface ApiProduct {
   dimensions: string | null;
   weight: number | null;
   images: ApiProductImage[];
+  variants?: ApiProductVariant[];
   artisan: ApiProductArtisan;
   category: ApiProductCategory;
+  additionalCategories?: ApiProductAdditionalCategory[];
   _count: { reviews: number };
   isFeatured: boolean;
   featuredUntil: string | null;

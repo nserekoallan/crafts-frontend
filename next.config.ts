@@ -3,10 +3,12 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   output: 'standalone',
   async rewrites() {
+    const apiDestination =
+      process.env.API_DESTINATION ?? 'https://api.craftcontinent.com';
     return [
       {
         source: '/api/v1/:path*',
-        destination: 'https://api.craftcontinent.com/api/v1/:path*',
+        destination: `${apiDestination}/api/v1/:path*`,
       },
     ];
   },

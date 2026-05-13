@@ -9,7 +9,7 @@ export interface User {
   phone?: string;
   firstName: string;
   lastName: string;
-  role: 'customer' | 'artisan' | 'admin' | 'super_admin';
+  role: 'customer' | 'artisan' | 'admin' | 'super_admin' | 'qc_inspector';
   artisan?: { id: string; businessName: string; status: string } | null;
 }
 
@@ -30,7 +30,7 @@ interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (payload: LoginPayload) => Promise<User>;
-  register: (payload: RegisterPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<User>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return profile;
   }, [fetchProfile]);
 
-  const register = useCallback(async (payload: RegisterPayload) => {
+  const register = useCallback(async (payload: RegisterPayload): Promise<User> => {
     const res = await api.post<{ data: { user: User; accessToken: string; refreshToken?: string } }>('/auth/register', payload);
     localStorage.setItem(TOKEN_KEY, res.data.accessToken);
     if (res.data.refreshToken) localStorage.setItem(REFRESH_KEY, res.data.refreshToken);
@@ -110,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       lastName: payload.lastName,
     }));
     setUser(profile);
+    return profile;
   }, [fetchProfile]);
 
   const refreshUser = useCallback(async () => {

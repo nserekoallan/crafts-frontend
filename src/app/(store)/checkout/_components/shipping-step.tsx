@@ -17,9 +17,22 @@ export interface ShippingAddress {
   notes: string;
 }
 
+export interface SavedAddressOption {
+  id: string;
+  label: string;
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2: string | null;
+  city: string;
+  region: string;
+  isDefault: boolean;
+}
+
 interface ShippingStepProps {
   initial: ShippingAddress;
   onContinue: (address: ShippingAddress) => void;
+  savedAddresses?: SavedAddressOption[];
 }
 
 interface FieldErrors {
@@ -94,8 +107,13 @@ function validateAddress(address: ShippingAddress): FieldErrors {
 /**
  * Shipping address form step in the checkout wizard.
  */
-export function ShippingStep({ initial, onContinue }: ShippingStepProps) {
+export function ShippingStep({ initial, onContinue, savedAddresses }: ShippingStepProps) {
   const [form, setForm] = useState<ShippingAddress>(initial);
+  const [selectedSavedId, setSelectedSavedId] = useState<string | 'new' | null>(
+    savedAddresses && savedAddresses.length > 0
+      ? (savedAddresses.find((a) => a.isDefault)?.id ?? savedAddresses[0].id)
+      : null,
+  );
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
@@ -139,6 +157,31 @@ export function ShippingStep({ initial, onContinue }: ShippingStepProps) {
   const errorBorder = 'border-error/60';
   const normalBorder = 'border-border-dark';
 
+  function applySavedAddress(savedId: string) {
+    const addr = savedAddresses?.find((a) => a.id === savedId);
+    if (!addr) return;
+    setForm({
+      street: addr.addressLine1 + (addr.addressLine2 ? `, ${addr.addressLine2}` : ''),
+      city: addr.city,
+      country: 'Uganda',
+      state: addr.region,
+      zip: '',
+      phone: addr.phone,
+      notes: '',
+    });
+  }
+
+  function handleSavedSelect(value: string) {
+    setSelectedSavedId(value);
+    if (value !== 'new') {
+      applySavedAddress(value);
+    } else {
+      setForm(initial);
+    }
+  }
+
+  const hasSaved = savedAddresses && savedAddresses.length > 0;
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2 text-gold">
@@ -147,6 +190,65 @@ export function ShippingStep({ initial, onContinue }: ShippingStepProps) {
           Shipping Address
         </h2>
       </div>
+
+      {/* Saved address selector — only shown when authenticated with saved addresses */}
+      {hasSaved && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-text-secondary">Saved Addresses</p>
+          <div className="space-y-2">
+            {savedAddresses!.map((addr) => (
+              <label
+                key={addr.id}
+                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                  selectedSavedId === addr.id
+                    ? 'border-gold/40 bg-gold/5'
+                    : 'border-border-dark hover:border-border-dark/70'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="savedAddress"
+                  value={addr.id}
+                  checked={selectedSavedId === addr.id}
+                  onChange={() => handleSavedSelect(addr.id)}
+                  className="mt-0.5 accent-gold"
+                />
+                <div className="text-sm">
+                  <p className="font-semibold text-text-primary">
+                    {addr.label}
+                    {addr.isDefault && (
+                      <span className="ml-2 rounded-full bg-gold/15 px-2 py-0.5 text-xs font-medium text-gold">
+                        Default
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-text-secondary">{addr.fullName} · {addr.phone}</p>
+                  <p className="text-text-tertiary">
+                    {addr.addressLine1}{addr.addressLine2 ? `, ${addr.addressLine2}` : ''}, {addr.city}, {addr.region}
+                  </p>
+                </div>
+              </label>
+            ))}
+            <label
+              className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors ${
+                selectedSavedId === 'new'
+                  ? 'border-gold/40 bg-gold/5'
+                  : 'border-border-dark hover:border-border-dark/70'
+              }`}
+            >
+              <input
+                type="radio"
+                name="savedAddress"
+                value="new"
+                checked={selectedSavedId === 'new'}
+                onChange={() => handleSavedSelect('new')}
+                className="accent-gold"
+              />
+              <span className="text-sm font-medium text-text-secondary">Use a new address</span>
+            </label>
+          </div>
+        </div>
+      )}
 
       {/* Street */}
       <div>

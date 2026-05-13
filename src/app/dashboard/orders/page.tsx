@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useArtisanOrders } from '@/hooks/use-artisan';
 import { cn } from '@/lib/utils';
 import { useCurrency } from '@/lib/currency';
 import { Badge } from '@/components/ui/badge';
+import { Search } from 'lucide-react';
 
 type StatusFilter = 'all' | 'PENDING' | 'PAID' | 'PROCESSING' | 'QC_PASSED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
@@ -37,21 +38,45 @@ function getStatusVariant(status: string): 'default' | 'pending' | 'processing' 
 export default function OrdersPage() {
   const { formatPrice } = useCurrency();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { data, isLoading, error } = useArtisanOrders();
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setSearchQuery(searchInput.trim()), 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [searchInput]);
 
   const orders = data?.data ?? [];
 
   const filtered = useMemo(() => {
-    if (statusFilter === 'all') return orders;
-    return orders.filter((o) => o.status === statusFilter);
-  }, [orders, statusFilter]);
+    const q = searchQuery.toLowerCase();
+    return orders.filter((o) => {
+      const matchesStatus = statusFilter === 'all' || o.status === statusFilter;
+      const matchesSearch = !q || o.orderNumber.toLowerCase().includes(q);
+      return matchesStatus && matchesSearch;
+    });
+  }, [orders, statusFilter, searchQuery]);
 
   return (
     <div>
       <h1 className="text-2xl font-bold">Orders</h1>
       <p className="mt-1 text-sm text-text-secondary">Orders containing your products</p>
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="mt-6 relative max-w-xs">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search by order number…"
+          className="w-full rounded-lg border border-border-dark bg-bg-elevated py-2 pl-9 pr-4 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none"
+        />
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
         {STATUS_TABS.map((s) => (
           <button
             key={s}

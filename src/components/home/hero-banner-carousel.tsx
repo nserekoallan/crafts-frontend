@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { HOMEPAGE_BANNERS } from '@/lib/mock-data';
+import { useSiteContent } from '@/hooks/use-site-content';
 import { cn } from '@/lib/utils';
 
 /**
@@ -12,24 +13,27 @@ import { cn } from '@/lib/utils';
  */
 export function HeroBannerCarousel() {
   const [active, setActive] = useState(0);
+  const { data: banners } = useSiteContent('homepage.banners', HOMEPAGE_BANNERS);
 
   const next = useCallback(() => {
-    setActive((prev) => (prev + 1) % HOMEPAGE_BANNERS.length);
-  }, []);
+    setActive((prev) => (prev + 1) % banners.length);
+  }, [banners.length]);
 
   useEffect(() => {
     const id = setInterval(next, 6000);
     return () => clearInterval(id);
   }, [next]);
 
+  const safeActive = banners.length > 0 ? active % banners.length : 0;
+
   return (
     <section className="relative h-[320px] w-full overflow-hidden md:h-[500px]">
-      {HOMEPAGE_BANNERS.map((banner, i) => (
+      {banners.map((banner, i) => (
         <div
           key={banner.id}
           className={cn(
             'absolute inset-0 transition-opacity duration-700',
-            i === active ? 'opacity-100' : 'pointer-events-none opacity-0',
+            i === safeActive ? 'opacity-100' : 'pointer-events-none opacity-0',
           )}
         >
           {/* Background image */}
@@ -74,13 +78,13 @@ export function HeroBannerCarousel() {
 
       {/* Dots */}
       <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
-        {HOMEPAGE_BANNERS.map((_, i) => (
+        {banners.map((_, i) => (
           <button
             key={i}
             onClick={() => setActive(i)}
             className={cn(
               'h-2 rounded-full transition-all',
-              i === active ? 'w-6 bg-gold' : 'w-2 bg-text-tertiary',
+              i === safeActive ? 'w-6 bg-gold' : 'w-2 bg-text-tertiary',
             )}
             aria-label={`Go to slide ${i + 1}`}
           />

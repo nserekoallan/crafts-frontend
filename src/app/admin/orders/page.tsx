@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Download, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useCurrency } from '@/lib/currency';
+import { exportToCsv } from '@/lib/export-csv';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -76,6 +78,15 @@ export default function AdminOrdersPage() {
   const { formatPrice } = useCurrency();
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setSearchQuery(searchInput.trim()), 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [searchInput]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin', 'orders', statusFilter],
@@ -94,7 +105,32 @@ export default function AdminOrdersPage() {
     },
   });
 
-  const orders = data?.data ?? [];
+  const allOrders = data?.data ?? [];
+
+  const orders = useMemo(() => {
+    if (!searchQuery) return allOrders;
+    const q = searchQuery.toLowerCase();
+    return allOrders.filter(
+      (o) =>
+        o.orderNumber.toLowerCase().includes(q) ||
+        o.items?.some((item) => item.product?.name?.toLowerCase().includes(q)),
+    );
+  }, [allOrders, searchQuery]);
+
+  function handleExport() {
+    exportToCsv(
+      'orders.csv',
+      ['Order#', 'Date', 'Customer', 'Status', 'Total', 'Payment Method'],
+      allOrders.map((o) => [
+        o.orderNumber,
+        new Date(o.createdAt).toLocaleDateString(),
+        o.items[0]?.product?.name ?? '',
+        o.status,
+        Number(o.total),
+        '',
+      ]),
+    );
+  }
 
   const toggleExpanded = (id: string) => {
     setExpandedOrders((prev) => {
@@ -107,9 +143,31 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Orders</h1>
-        <p className="text-text-secondary">Manage all platform orders</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">Orders</h1>
+          <p className="text-text-secondary">Manage all platform orders</p>
+        </div>
+        <button
+          onClick={handleExport}
+          disabled={allOrders.length === 0}
+          className="flex items-center gap-2 rounded-lg border border-border-dark bg-bg-elevated px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-gold/40 hover:text-text-primary disabled:opacity-40"
+        >
+          <Download className="h-4 w-4" />
+          Export CSV
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search by order number or product…"
+          className="w-full rounded-lg border border-border-dark bg-bg-elevated py-2 pl-9 pr-4 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none"
+        />
       </div>
 
       {/* Status Filter Tabs */}
@@ -167,6 +225,7 @@ export default function AdminOrdersPage() {
                 <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Actions</th>
                 <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Total</th>
+                <th className="px-6 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider">View</th>
                 <th className="px-6 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider"></th>
               </tr>
             </thead>
@@ -209,6 +268,14 @@ export default function AdminOrdersPage() {
                       <td className="px-6 py-4 text-sm font-semibold text-text-primary text-right">
                         {formatPrice(order.total)}
                       </td>
+                      <td className="px-6 py-4 text-center">
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="text-xs font-medium text-gold hover:underline"
+                        >
+                          View →
+                        </Link>
+                      </td>
                       <td
                         className="px-6 py-4 text-center cursor-pointer"
                         onClick={() => toggleExpanded(order.id)}
@@ -221,7 +288,7 @@ export default function AdminOrdersPage() {
                     </tr>
                     {isExpanded && (
                       <tr key={`${order.id}-detail`}>
-                        <td colSpan={7} className="px-6 py-4 bg-bg-surface/40">
+                        <td colSpan={8} className="px-6 py-4 bg-bg-surface/40">
                           <p className="text-sm font-semibold text-text-primary mb-3">Order Items</p>
                           <div className="space-y-2">
                             {order.items?.map((item) => (
@@ -268,7 +335,16 @@ export default function AdminOrdersPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <p className="font-semibold text-text-primary">{formatPrice(order.total)}</p>
-                    {isExpanded ? <ChevronUp className="w-5 h-5 text-text-secondary" /> : <ChevronDown className="w-5 h-5 text-text-secondary" />}
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href={`/admin/orders/${order.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs font-medium text-gold hover:underline"
+                      >
+                        View →
+                      </Link>
+                      {isExpanded ? <ChevronUp className="w-5 h-5 text-text-secondary" /> : <ChevronDown className="w-5 h-5 text-text-secondary" />}
+                    </div>
                   </div>
                 </div>
                 {isExpanded && (

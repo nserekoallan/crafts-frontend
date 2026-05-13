@@ -122,14 +122,20 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      <div className="max-w-lg rounded-xl border border-border-dark bg-bg-surface p-6 shadow-sm opacity-50">
+      <div className="max-w-lg rounded-xl border border-border-dark bg-bg-surface p-6 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/10">
             <Settings className="h-5 w-5 text-gold" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-text-primary">More Settings</h2>
-            <p className="text-xs text-text-secondary">Featured slots, shipping rules, and more — coming soon.</p>
+            <p className="text-xs text-text-secondary">
+              Manage{' '}
+              <a href="/admin/shipping" className="text-gold hover:underline">shipping zones</a>,{' '}
+              <a href="/admin/categories" className="text-gold hover:underline">categories</a>,{' '}
+              <a href="/admin/collections" className="text-gold hover:underline">collections</a>, and{' '}
+              <a href="/admin/coupons" className="text-gold hover:underline">coupons</a> from their dedicated pages.
+            </p>
           </div>
         </div>
       </div>

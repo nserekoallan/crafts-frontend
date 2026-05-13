@@ -1,10 +1,11 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, Eye, ShoppingBag, DollarSign, Star } from 'lucide-react';
+import { BarChart3, Eye, ShoppingBag, DollarSign, Star, Download } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useCurrency } from '@/lib/currency';
+import { exportToCsv } from '@/lib/export-csv';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -83,11 +84,36 @@ export default function AnalyticsPage() {
   const totals = data?.totals;
   const products = data?.products ?? [];
 
+  function handleExport() {
+    exportToCsv(
+      'analytics.csv',
+      ['Product', 'Views', 'Orders', 'Revenue', 'Avg Rating', 'Reviews'],
+      products.map((p) => [
+        p.name,
+        p.viewCount,
+        p.purchaseCount,
+        p.revenue,
+        p.avgRating ?? '',
+        p.reviewCount,
+      ]),
+    );
+  }
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary">Analytics</h1>
-        <p className="mt-1 text-sm text-text-secondary">Insights about your shop&apos;s performance</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">Analytics</h1>
+          <p className="mt-1 text-sm text-text-secondary">Insights about your shop&apos;s performance</p>
+        </div>
+        <button
+          onClick={handleExport}
+          disabled={products.length === 0}
+          className="flex items-center gap-2 rounded-lg border border-border-dark bg-bg-elevated px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-gold/40 hover:text-text-primary disabled:opacity-40"
+        >
+          <Download className="h-4 w-4" />
+          Export CSV
+        </button>
       </div>
 
       {/* Summary cards */}

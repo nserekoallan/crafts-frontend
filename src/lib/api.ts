@@ -85,13 +85,14 @@ async function tryRefresh(): Promise<string | null> {
 
 /**
  * Core request handler with automatic 401 → refresh → retry.
+ * When `skipContentType` is true the Content-Type header is omitted so the
+ * browser can set it automatically (needed for multipart/form-data).
  */
-async function request<T>(endpoint: string, options: RequestInit = {}, retry = true): Promise<T> {
+async function request<T>(endpoint: string, options: RequestInit = {}, retry = true, skipContentType = false): Promise<T> {
   const token = getToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
+  const headers: Record<string, string> = skipContentType
+    ? { ...(options.headers as Record<string, string>) }
+    : { 'Content-Type': 'application/json', ...(options.headers as Record<string, string>) };
 
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -100,7 +101,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}, retry = t
   if (response.status === 401 && retry) {
     const newToken = await tryRefresh();
     if (newToken) {
-      return request<T>(endpoint, options, false);
+      return request<T>(endpoint, options, false, skipContentType);
     }
     // Refresh failed — redirect to login
     if (typeof window !== 'undefined') {
@@ -140,5 +141,13 @@ export const api = {
   },
   delete<T>(endpoint: string): Promise<T> {
     return request<T>(endpoint, { method: 'DELETE' });
+  },
+  /** Sends multipart/form-data — do NOT set Content-Type manually, let the browser handle the boundary. */
+  postForm<T>(endpoint: string, form: FormData): Promise<T> {
+    return request<T>(endpoint, { method: 'POST', body: form }, true, true);
+  },
+  /** Sends multipart/form-data via PATCH — do NOT set Content-Type manually. */
+  patchForm<T>(endpoint: string, form: FormData): Promise<T> {
+    return request<T>(endpoint, { method: 'PATCH', body: form }, true, true);
   },
 };

@@ -1,12 +1,18 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { useState, useMemo, type FormEvent } from 'react';
+import Link from 'next/link';
+import { Search, Loader2, CheckSquare, X, Download, UserPlus } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { exportToCsv } from '@/lib/export-csv';
 
 type RoleFilter = 'all' | 'customer' | 'artisan' | 'admin';
 
@@ -32,10 +38,119 @@ function displayName(user: ApiUser): string {
   return name || user.email || user.phone || 'Unknown';
 }
 
+// ---------------------------------------------------------------------------
+// Create Staff Dialog
+// ---------------------------------------------------------------------------
+
+interface CreateStaffResult {
+  userId: string;
+  tempPassword: string;
+}
+
+function CreateStaffDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<'ADMIN' | 'QC_INSPECTOR'>('ADMIN');
+  const [result, setResult] = useState<CreateStaffResult | null>(null);
+  const [formError, setFormError] = useState('');
+
+  const { mutate: createStaff, isPending } = useMutation({
+    mutationFn: () =>
+      api.post<{ data: CreateStaffResult }>('/users/admin/create-staff', { name, email, role }).then((r) => r.data),
+    onSuccess: (data) => {
+      setResult(data);
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+    },
+    onError: (err) => {
+      setFormError(err instanceof ApiError ? err.message : 'Failed to create staff account.');
+    },
+  });
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setFormError('');
+    createStaff();
+  }
+
+  function handleClose() {
+    setName(''); setEmail(''); setRole('ADMIN'); setResult(null); setFormError('');
+    onClose();
+  }
+
+  return (
+    <Dialog open={open} onClose={handleClose} title="Create Staff Account" className="max-w-md">
+      {result ? (
+        <div className="mt-4 space-y-4">
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">
+            <p className="text-sm font-semibold text-emerald-400 mb-2">Account created successfully</p>
+            <p className="text-xs text-text-secondary">Share these credentials with the staff member securely. The temporary password will not be shown again.</p>
+          </div>
+          <div className="space-y-2 rounded-lg border border-border-dark bg-bg-surface p-4 text-sm">
+            <div className="flex justify-between">
+              <span className="text-text-secondary">Email</span>
+              <span className="font-medium text-text-primary">{email}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-text-secondary">Temp password</span>
+              <span className="font-mono font-semibold text-gold">{result.tempPassword}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-text-secondary">Role</span>
+              <span className="font-medium text-text-primary">{role}</span>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button variant="primary" onClick={handleClose}>Done</Button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="cs-name">Full Name</label>
+            <Input id="cs-name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1" placeholder="Jane Doe" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="cs-email">Email</label>
+            <Input id="cs-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" placeholder="jane@example.com" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="cs-role">Role</label>
+            <Select
+              id="cs-role"
+              value={role}
+              onChange={(e) => setRole(e.target.value as 'ADMIN' | 'QC_INSPECTOR')}
+              className="mt-1"
+            >
+              <option value="ADMIN">Admin</option>
+              <option value="QC_INSPECTOR">QC Inspector</option>
+            </Select>
+          </div>
+          {formError && <p className="text-sm text-red-400">{formError}</p>}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="secondary" onClick={handleClose} disabled={isPending}>Cancel</Button>
+            <Button type="submit" variant="primary" disabled={isPending}>
+              {isPending ? 'Creating…' : 'Create Account'}
+            </Button>
+          </div>
+        </form>
+      )}
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default function UsersPage() {
   const queryClient = useQueryClient();
+  const { user: authUser } = useAuth();
+  const isSuperAdmin = authUser?.role === 'super_admin';
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [showCreateStaff, setShowCreateStaff] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin', 'users', roleFilter, searchQuery],
@@ -53,6 +168,15 @@ export default function UsersPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
   });
 
+  const { mutate: bulkAction, isPending: isBulkPending } = useMutation({
+    mutationFn: (action: 'suspend' | 'activate') =>
+      api.patch('/users/bulk', { ids: Array.from(selected), action }),
+    onSuccess: () => {
+      setSelected(new Set());
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+    },
+  });
+
   const users: ApiUser[] = data?.data ?? [];
   const total = data?.meta?.total ?? 0;
 
@@ -67,11 +191,65 @@ export default function UsersPage() {
     });
   }, [users, searchQuery]);
 
+  const allVisibleIds = filteredUsers.map((u) => u.id);
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id) => selected.has(id));
+  const someSelected = selected.size > 0;
+
+  const toggleAll = () => {
+    if (allSelected) setSelected(new Set());
+    else setSelected(new Set(allVisibleIds));
+  };
+
+  const toggleOne = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
+  };
+
+  function handleExport() {
+    exportToCsv(
+      'users.csv',
+      ['Name', 'Email', 'Phone', 'Role', 'Status', 'Joined Date'],
+      filteredUsers.map((u) => [
+        displayName(u),
+        u.email ?? '',
+        u.phone ?? '',
+        u.role,
+        u.isActive ? 'Active' : 'Suspended',
+        new Date(u.createdAt).toLocaleDateString(),
+      ]),
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Users</h1>
-        <p className="text-text-secondary">Manage platform users</p>
+      <CreateStaffDialog open={showCreateStaff} onClose={() => setShowCreateStaff(false)} />
+
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">Users</h1>
+          <p className="text-text-secondary">Manage platform users</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {isSuperAdmin && (
+            <button
+              onClick={() => setShowCreateStaff(true)}
+              className="flex items-center gap-2 rounded-lg border border-hunter-green bg-hunter-green/10 px-4 py-2 text-sm font-medium text-hunter-green transition-colors hover:bg-hunter-green/20"
+            >
+              <UserPlus className="h-4 w-4" />
+              Create Staff Account
+            </button>
+          )}
+          <button
+            onClick={handleExport}
+            disabled={filteredUsers.length === 0}
+            className="flex items-center gap-2 rounded-lg border border-border-dark bg-bg-elevated px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-gold/40 hover:text-text-primary disabled:opacity-40"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </button>
+        </div>
       </div>
 
       <div className="bg-bg-elevated rounded-xl border border-border-dark p-6 space-y-4">
@@ -114,8 +292,42 @@ export default function UsersPage() {
         </div>
       ) : (
         <>
-          <div className="text-sm text-text-secondary">
-            Showing {filteredUsers.length} of {total} users
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-text-secondary">
+              Showing {filteredUsers.length} of {total} users
+              {someSelected && (
+                <span className="ml-2 font-medium text-gold">({selected.size} selected)</span>
+              )}
+            </p>
+            {someSelected && (
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 text-xs text-text-tertiary">
+                  <CheckSquare className="h-4 w-4" />
+                  Bulk:
+                </span>
+                <button
+                  disabled={isBulkPending}
+                  onClick={() => bulkAction('suspend')}
+                  className="rounded px-3 py-1 text-xs font-medium bg-red-500/15 text-red-400 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+                >
+                  Suspend
+                </button>
+                <button
+                  disabled={isBulkPending}
+                  onClick={() => bulkAction('activate')}
+                  className="rounded px-3 py-1 text-xs font-medium bg-green-500/15 text-green-400 hover:bg-green-500/20 disabled:opacity-50 transition-colors"
+                >
+                  Activate
+                </button>
+                <button
+                  onClick={() => setSelected(new Set())}
+                  className="rounded p-1 text-text-tertiary hover:text-text-primary transition-colors"
+                  title="Clear selection"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Desktop Table */}
@@ -124,6 +336,15 @@ export default function UsersPage() {
               <table className="w-full">
                 <thead className="bg-bg-surface/60">
                   <tr>
+                    <th className="w-10 px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={toggleAll}
+                        className="h-4 w-4 rounded accent-gold cursor-pointer"
+                        title="Select all"
+                      />
+                    </th>
                     {['Name', 'Contact', 'Role', 'Joined', 'Status', 'Actions'].map((h) => (
                       <th
                         key={h}
@@ -138,8 +359,18 @@ export default function UsersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-dark">
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-white/[0.03] transition-colors">
+                  {filteredUsers.map((user) => {
+                    const isChecked = selected.has(user.id);
+                    return (
+                    <tr key={user.id} className={cn('transition-colors', isChecked ? 'bg-gold/[0.04]' : 'hover:bg-white/[0.03]')}>
+                      <td className="px-4 py-4">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleOne(user.id)}
+                          className="h-4 w-4 rounded accent-gold cursor-pointer"
+                        />
+                      </td>
                       <td className="px-6 py-4 text-sm font-medium text-text-primary">
                         {displayName(user)}
                       </td>
@@ -169,19 +400,27 @@ export default function UsersPage() {
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-sm text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          disabled={isToggling}
-                          onClick={() =>
-                            toggleStatus({ userId: user.id, isActive: !user.isActive })
-                          }
-                        >
-                          {user.isActive ? 'Suspend' : 'Activate'}
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Link
+                            href={`/admin/users/${user.id}`}
+                            className="rounded-md border border-border-dark px-3 py-1 text-xs font-medium text-text-secondary hover:border-gold/40 hover:text-gold transition-colors"
+                          >
+                            View
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={isToggling}
+                            onClick={() =>
+                              toggleStatus({ userId: user.id, isActive: !user.isActive })
+                            }
+                          >
+                            {user.isActive ? 'Suspend' : 'Activate'}
+                          </Button>
+                        </div>
                       </td>
                     </tr>
-                  ))}
+                  ); })}
                 </tbody>
               </table>
             </div>

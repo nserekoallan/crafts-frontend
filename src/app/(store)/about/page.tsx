@@ -1,6 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, Globe, ShieldCheck, Users } from 'lucide-react';
+import { useSiteContent } from '@/hooks/use-site-content';
 
 const VALUES = [
   {
@@ -29,10 +32,21 @@ const VALUES = [
   },
 ] as const;
 
+const DEFAULT_ABOUT = {
+  heroTitle: 'About Crafts Continent',
+  heroDescription:
+    'Crafts Continent is an online marketplace dedicated to bringing authentic African artisan products to the world. We bridge the gap between talented makers and conscious consumers who value quality, heritage, and fair trade.',
+  mission:
+    'To preserve and promote African craftsmanship by providing artisans with a global platform, fair compensation, and the tools they need to thrive — while offering customers unique, handcrafted products with a story.',
+  ctaText: 'Discover unique, handcrafted pieces from across the continent.',
+};
+
 /**
  * About page — brand story, mission, and values.
  */
 export default function AboutPage() {
+  const { data: about } = useSiteContent('about.content', DEFAULT_ABOUT);
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 md:py-20 lg:px-8">
       {/* Hero */}
@@ -45,12 +59,10 @@ export default function AboutPage() {
           className="mx-auto mb-6 h-20 w-20 rounded-2xl object-cover md:h-24 md:w-24"
         />
         <h1 className="font-heading text-3xl font-bold text-text-primary md:text-4xl">
-          About Crafts Continent
+          {about.heroTitle}
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-text-secondary">
-          Crafts Continent is an online marketplace dedicated to bringing authentic African
-          artisan products to the world. We bridge the gap between talented makers and
-          conscious consumers who value quality, heritage, and fair trade.
+          {about.heroDescription}
         </p>
       </div>
 
@@ -60,9 +72,7 @@ export default function AboutPage() {
           Our Mission
         </h2>
         <p className="mt-4 text-base leading-relaxed text-text-secondary">
-          To preserve and promote African craftsmanship by providing artisans with a
-          global platform, fair compensation, and the tools they need to thrive &mdash;
-          while offering customers unique, handcrafted products with a story.
+          {about.mission}
         </p>
       </div>
 
@@ -90,7 +100,7 @@ export default function AboutPage() {
       {/* CTA */}
       <div className="mt-16 text-center">
         <p className="text-base text-text-secondary">
-          Discover unique, handcrafted pieces from across the continent.
+          {about.ctaText}
         </p>
         <Link
           href="/shop"

@@ -10,41 +10,51 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
+interface WishlistProduct {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  originalPrice: number | null;
+  currency: string;
+  stockCount: number;
+  status: string;
+  category: string;
+  imageUrl: string | null;
+}
+
+interface WishlistItem {
+  id: string;
+  product: WishlistProduct;
+}
+
+interface WishlistResponse {
+  data: { items: WishlistItem[] };
+}
+
 interface WishlistContextValue {
-  /** Set of wishlisted product IDs. */
   wishlistedIds: Set<string>;
-  /** Total wishlisted count. */
   wishlistCount: number;
-  /** Toggle a product in/out of the wishlist. */
   toggleWishlist: (productId: string) => void;
-  /** Check if a product is wishlisted. */
   isWishlisted: (productId: string) => boolean;
-  /** Clear entire wishlist. */
   clearWishlist: () => void;
 }
 
 // ---------------------------------------------------------------------------
-// Constants
+// localStorage helpers (guest path)
 // ---------------------------------------------------------------------------
 
 const STORAGE_KEY = 'crafts-wishlist';
 
-// ---------------------------------------------------------------------------
-// Context
-// ---------------------------------------------------------------------------
-
-const WishlistContext = createContext<WishlistContextValue | null>(null);
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function loadWishlist(): Set<string> {
+function loadLocalWishlist(): Set<string> {
   if (typeof window === 'undefined') return new Set();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -57,70 +67,129 @@ function loadWishlist(): Set<string> {
   }
 }
 
-function saveWishlist(ids: Set<string>): void {
+function saveLocalWishlist(ids: Set<string>): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
   } catch {
-    // silently fail
+    // silently fail — localStorage may be unavailable
   }
 }
+
+// ---------------------------------------------------------------------------
+// Context
+// ---------------------------------------------------------------------------
+
+const WishlistContext = createContext<WishlistContextValue | null>(null);
 
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
 
 /**
- * Provides wishlist state and actions to the app.
- * Persists to localStorage.
+ * Provides wishlist state to the app.
+ *
+ * When the user is authenticated, wishlist state is managed server-side via
+ * React Query (GET/POST/DELETE /wishlist). When the user is a guest the
+ * previous localStorage behaviour is preserved so the heart toggle still works
+ * on product cards without an account.
  */
 export function WishlistProvider({ children }: { children: ReactNode }) {
-  const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(new Set());
-  const hydrated = useRef(false);
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+
+  // ── Guest state (localStorage) ──────────────────────────────────────────
+  const [guestIds, setGuestIds] = useState<Set<string>>(new Set());
+  const guestHydrated = useRef(false);
 
   useEffect(() => {
-    setWishlistedIds(loadWishlist());
-  }, []);
+    if (!isAuthenticated) {
+      setGuestIds(loadLocalWishlist());
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!hydrated.current) {
-      hydrated.current = true;
+    if (isAuthenticated) return;
+    if (!guestHydrated.current) {
+      guestHydrated.current = true;
       return;
     }
-    saveWishlist(wishlistedIds);
-  }, [wishlistedIds]);
+    saveLocalWishlist(guestIds);
+  }, [guestIds, isAuthenticated]);
 
-  const toggleWishlist = useCallback((productId: string) => {
-    setWishlistedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(productId)) {
-        next.delete(productId);
+  // ── Server state (authenticated) ────────────────────────────────────────
+  const { data: serverData } = useQuery({
+    queryKey: ['wishlist'],
+    queryFn: () => api.get<WishlistResponse>('/wishlist'),
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  });
+
+  const serverIds = useMemo<Set<string>>(() => {
+    if (!serverData?.data?.items) return new Set();
+    return new Set(serverData.data.items.map((item) => item.product.id));
+  }, [serverData]);
+
+  const { mutate: addMutation } = useMutation({
+    mutationFn: (productId: string) =>
+      api.post('/wishlist/items', { productId }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wishlist'] }),
+  });
+
+  const { mutate: removeMutation } = useMutation({
+    mutationFn: (productId: string) =>
+      api.delete(`/wishlist/items/${productId}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wishlist'] }),
+  });
+
+  // ── Unified actions ──────────────────────────────────────────────────────
+  const toggleWishlist = useCallback(
+    (productId: string) => {
+      if (isAuthenticated) {
+        if (serverIds.has(productId)) {
+          removeMutation(productId);
+        } else {
+          addMutation(productId);
+        }
       } else {
-        next.add(productId);
+        setGuestIds((prev) => {
+          const next = new Set(prev);
+          if (next.has(productId)) {
+            next.delete(productId);
+          } else {
+            next.add(productId);
+          }
+          return next;
+        });
       }
-      return next;
-    });
-  }, []);
+    },
+    [isAuthenticated, serverIds, addMutation, removeMutation],
+  );
+
+  const clearWishlist = useCallback(() => {
+    if (isAuthenticated) {
+      // No bulk-clear endpoint — invalidate to refetch
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+    } else {
+      setGuestIds(new Set());
+    }
+  }, [isAuthenticated, queryClient]);
+
+  const wishlistedIds = isAuthenticated ? serverIds : guestIds;
 
   const isWishlisted = useCallback(
     (productId: string) => wishlistedIds.has(productId),
     [wishlistedIds],
   );
 
-  const clearWishlist = useCallback(() => {
-    setWishlistedIds(new Set());
-  }, []);
-
-  const wishlistCount = wishlistedIds.size;
-
   const value = useMemo<WishlistContextValue>(
     () => ({
       wishlistedIds,
-      wishlistCount,
+      wishlistCount: wishlistedIds.size,
       toggleWishlist,
       isWishlisted,
       clearWishlist,
     }),
-    [wishlistedIds, wishlistCount, toggleWishlist, isWishlisted, clearWishlist],
+    [wishlistedIds, toggleWishlist, isWishlisted, clearWishlist],
   );
 
   return (

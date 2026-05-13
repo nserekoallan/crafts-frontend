@@ -14,6 +14,7 @@ import { track } from '@/lib/analytics';
 interface Category {
   id: string;
   name: string;
+  slug: string;
 }
 
 interface Props {
@@ -39,6 +40,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [additionalCategoryIds, setAdditionalCategoryIds] = useState<Set<string>>(new Set());
   const [materials, setMaterials] = useState('');
   const [tags, setTags] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -48,7 +50,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: categoriesData } = useQuery({
+  const { data: categoriesData, isLoading: isLoadingCategories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => api.get<{ data: Category[] }>('/categories').then((r) => r.data),
     enabled: open,
@@ -134,10 +136,19 @@ export function CreateProductDialog({ open, onClose }: Props) {
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
+  function toggleAdditionalCategory(id: string) {
+    setAdditionalCategoryIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
   function reset() {
     setName(''); setSlug('');
     setDescription(''); setPrice(''); setStock('');
-    setCategoryId(''); setMaterials(''); setTags('');
+    setCategoryId(''); setAdditionalCategoryIds(new Set()); setMaterials(''); setTags('');
     imagePreviews.forEach((url) => URL.revokeObjectURL(url));
     setImageFiles([]); setImagePreviews([]);
     setError(''); setImageError(''); setSubmitting(false);
@@ -166,8 +177,10 @@ export function CreateProductDialog({ open, onClose }: Props) {
         tags: tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
       });
 
+      const productId = created.data.id;
+
+      // Upload images
       if (imageFiles.length > 0) {
-        const productId = created.data.id;
         const token = typeof window !== 'undefined' ? localStorage.getItem('cc_token') : null;
         const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.craftcontinent.com/api/v1';
         for (let i = 0; i < imageFiles.length; i++) {
@@ -184,6 +197,13 @@ export function CreateProductDialog({ open, onClose }: Props) {
             const msg = errBody?.error?.message ?? `Image ${i + 1} failed to upload.`;
             throw new Error(msg);
           }
+        }
+      }
+
+      // Add additional categories
+      for (const catId of additionalCategoryIds) {
+        if (catId !== categoryId) {
+          await api.post(`/products/${productId}/categories`, { categoryId: catId });
         }
       }
 
@@ -297,6 +317,39 @@ export function CreateProductDialog({ open, onClose }: Props) {
           </Select>
         </div>
 
+        {categories.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-text-secondary">
+              Additional Categories <span className="text-xs text-medium-gray">(optional)</span>
+            </label>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {categories
+                .filter((c) => c.id !== categoryId)
+                .map((c) => {
+                  const checked = additionalCategoryIds.has(c.id);
+                  return (
+                    <label
+                      key={c.id}
+                      className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                        checked
+                          ? 'border-hunter-green bg-hunter-green/10 text-hunter-green'
+                          : 'border-border-dark bg-bg-surface text-text-secondary hover:border-gold/40'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={checked}
+                        onChange={() => toggleAdditionalCategory(c.id)}
+                      />
+                      {c.name}
+                    </label>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-text-secondary" htmlFor="cp-materials">
             Materials
@@ -363,6 +416,12 @@ export function CreateProductDialog({ open, onClose }: Props) {
           )}
         </div>
 
+        {!isLoadingCategories && categories.length === 0 && (
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-400">
+            Could not load categories. Please close and reopen this dialog, or contact support.
+          </div>
+        )}
+
         {error && (
           <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400" role="alert">
             {error}
@@ -373,7 +432,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
           <Button type="button" variant="secondary" onClick={handleClose} disabled={submitting}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" disabled={submitting}>
+          <Button type="submit" variant="primary" disabled={submitting || !categoryId.trim()} className="disabled:opacity-50 disabled:cursor-not-allowed">
             {submitting ? 'Creating…' : 'Create Product'}
           </Button>
         </div>

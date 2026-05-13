@@ -27,6 +27,7 @@ export interface CartItem {
   category: string;
   region: string;
   stock?: number;
+  variantId?: string;
 }
 
 interface CartContextValue {
@@ -45,7 +46,7 @@ interface CartContextValue {
   /** Open / close the cart drawer. */
   setDrawerOpen: (open: boolean) => void;
   /** Add a product to the cart. Merges duplicates. */
-  addItem: (product: Product, qty?: number) => void;
+  addItem: (product: Product, qty?: number, variantId?: string) => void;
   /** Remove an item entirely by id. */
   removeItem: (id: string) => void;
   /** Set the quantity for a specific item. Removes if qty <= 0. */
@@ -97,7 +98,7 @@ function saveCart(items: CartItem[]): void {
 }
 
 /** Convert a Product to a CartItem. */
-function productToCartItem(product: Product, qty: number): CartItem {
+function productToCartItem(product: Product, qty: number, variantId?: string): CartItem {
   return {
     id: product.id,
     name: product.name,
@@ -109,6 +110,7 @@ function productToCartItem(product: Product, qty: number): CartItem {
     category: product.category,
     region: product.region,
     stock: product.stockCount,
+    variantId,
   };
 }
 
@@ -152,18 +154,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addItem = useCallback(
-    (product: Product, qty = 1) => {
+    (product: Product, qty = 1, variantId?: string) => {
       if (qty < 1) return;
-      const newItem = productToCartItem(product, qty);
+      const newItem = productToCartItem(product, qty, variantId);
+      // Use composite key for deduplication: product id + variant id
+      const itemKey = variantId ? `${product.id}:${variantId}` : product.id;
 
       setItems((prev) => {
-        const existing = prev.find((i) => i.id === product.id);
+        const existing = prev.find((i) => {
+          const key = i.variantId ? `${i.id}:${i.variantId}` : i.id;
+          return key === itemKey;
+        });
         if (existing) {
-          return prev.map((i) =>
-            i.id === product.id
-              ? { ...i, quantity: i.quantity + qty }
-              : i,
-          );
+          return prev.map((i) => {
+            const key = i.variantId ? `${i.id}:${i.variantId}` : i.id;
+            return key === itemKey ? { ...i, quantity: i.quantity + qty } : i;
+          });
         }
         return [...prev, newItem];
       });

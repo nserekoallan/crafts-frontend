@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle, Edit2, Loader2, Phone, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit2, Loader2, Phone, ShieldCheck, Tag, Truck, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
 import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
@@ -90,6 +91,29 @@ export function ReviewStep({
   /** Set when DusuPay mobile money STK push succeeds — no redirect, waiting for webhook. */
   const [pushPending, setPushPending] = useState<{ orderId: string; phone: string } | null>(null);
 
+  // Coupon state
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
+  // Shipping calculation — use city as region (most specific location in form)
+  const shippingRegion = shippingAddress.city.trim();
+  const { data: shippingData } = useQuery({
+    queryKey: ['shipping', 'calculate', shippingRegion, items.map((i) => i.id + i.quantity).join(',')],
+    queryFn: () =>
+      api.post<{ data: { zone: { id: string; name: string } | null; shippingCost: number; breakdown: string } }>(
+        '/shipping/calculate',
+        {
+          region: shippingRegion,
+          items: items.map((i) => ({ productId: i.id, quantity: i.quantity })),
+        },
+      ).then((r) => r.data),
+    enabled: shippingRegion.length > 0 && items.length > 0,
+    staleTime: 30_000,
+  });
+  const shippingCost = shippingData?.shippingCost ?? 0;
+
   // Poll for payment confirmation once the STK push is sent
   useEffect(() => {
     if (!pushPending) return;
@@ -105,6 +129,28 @@ export function ReviewStep({
     }, 4000);
     return () => clearInterval(interval);
   }, [pushPending, router]);
+
+  async function handleApplyCoupon() {
+    if (!couponInput.trim()) return;
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const res = await api.post<{ data: { valid: boolean; discountAmount?: number; error?: string } }>(
+        '/coupons/validate',
+        { code: couponInput.trim().toUpperCase(), orderAmount: subtotal },
+      );
+      if (res.data.valid) {
+        setAppliedCoupon({ code: couponInput.trim().toUpperCase(), discountAmount: res.data.discountAmount ?? 0 });
+        setCouponInput('');
+      } else {
+        setCouponError(res.data.error ?? 'Invalid coupon code.');
+      }
+    } catch {
+      setCouponError('Failed to validate coupon.');
+    } finally {
+      setCouponLoading(false);
+    }
+  }
 
   const handlePlaceOrder = useCallback(async () => {
     if (isSubmitting || items.length === 0) return;
@@ -130,6 +176,8 @@ export function ReviewStep({
           phone: shippingAddress.phone?.trim() || undefined,
         },
         notes: shippingAddress.notes?.trim() || undefined,
+        couponCode: appliedCoupon?.code || undefined,
+        shippingRegion: shippingRegion || undefined,
       });
 
       const orderId = orderRes.data.id;
@@ -168,7 +216,7 @@ export function ReviewStep({
       }
       setIsSubmitting(false);
     }
-  }, [isSubmitting, items, shippingAddress, paymentSelection, clearCart]);
+  }, [isSubmitting, items, shippingAddress, shippingRegion, paymentSelection, clearCart, appliedCoupon]);
 
   // ---------------------------------------------------------------------------
   // Push-pending screen
@@ -300,14 +348,74 @@ export function ReviewStep({
           ))}
         </div>
 
-        <div className="mt-4 border-t border-border-dark pt-4">
+        <div className="mt-4 border-t border-border-dark pt-4 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm text-text-secondary">Subtotal</span>
-            <span className="font-heading font-bold text-gold">{formatPrice(subtotal)}</span>
+            <span className="text-sm text-text-primary">{formatPrice(subtotal)}</span>
           </div>
-          <p className="mt-1 text-xs text-text-tertiary">
-            Shipping calculated after order confirmation
-          </p>
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1 text-sm text-text-secondary">
+              <Truck className="h-3.5 w-3.5" />
+              Shipping
+              {shippingData?.zone ? ` (${shippingData.zone.name})` : ''}
+            </span>
+            <span className="text-sm text-text-primary">
+              {shippingCost > 0 ? formatPrice(shippingCost) : 'Free'}
+            </span>
+          </div>
+          {appliedCoupon && (
+            <div className="flex items-center justify-between text-emerald-400">
+              <span className="flex items-center gap-1 text-sm">
+                <Tag className="h-3.5 w-3.5" />
+                Coupon ({appliedCoupon.code})
+              </span>
+              <span className="text-sm font-medium">−{formatPrice(appliedCoupon.discountAmount)}</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between border-t border-border-dark pt-2">
+            <span className="text-sm font-semibold text-text-primary">Total</span>
+            <span className="font-heading font-bold text-gold">
+              {formatPrice(Math.max(0, subtotal + shippingCost - (appliedCoupon?.discountAmount ?? 0)))}
+            </span>
+          </div>
+        </div>
+
+        {/* Coupon input */}
+        <div className="mt-3">
+          {appliedCoupon ? (
+            <div className="flex items-center justify-between rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2">
+              <div className="flex items-center gap-2 text-sm text-emerald-400">
+                <Tag className="h-3.5 w-3.5" />
+                <span className="font-mono font-medium">{appliedCoupon.code}</span>
+                <span className="text-xs">applied</span>
+              </div>
+              <button
+                onClick={() => setAppliedCoupon(null)}
+                className="text-emerald-400/60 hover:text-emerald-400"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={couponInput}
+                onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(null); }}
+                placeholder="Coupon code"
+                className="flex-1 rounded-lg border border-border-dark bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none font-mono"
+                onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+              />
+              <button
+                onClick={handleApplyCoupon}
+                disabled={couponLoading || !couponInput.trim()}
+                className="flex items-center gap-1.5 rounded-lg border border-border-dark px-3 py-2 text-xs font-medium text-text-secondary hover:border-gold/40 hover:text-text-primary disabled:opacity-40 transition-colors"
+              >
+                {couponLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Apply'}
+              </button>
+            </div>
+          )}
+          {couponError && <p className="mt-1 text-xs text-red-400">{couponError}</p>}
         </div>
       </div>
 

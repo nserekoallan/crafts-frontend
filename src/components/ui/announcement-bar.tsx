@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { X } from 'lucide-react';
 import { ANNOUNCEMENT_MESSAGES } from '@/lib/mock-data';
 import type { AnnouncementMessage } from '@/lib/mock-data';
+import { useSiteContent } from '@/hooks/use-site-content';
 
 /**
  * Renders a single announcement message — plain text, internal link, or external link.
@@ -44,6 +45,7 @@ function MessageContent({ message }: { message: AnnouncementMessage }) {
 export function AnnouncementBar() {
   const [visible, setVisible] = useState(true);
   const [index, setIndex] = useState(0);
+  const { data: messages } = useSiteContent('homepage.announcements', ANNOUNCEMENT_MESSAGES);
 
   // Check sessionStorage after mount to avoid hydration mismatch
   useEffect(() => {
@@ -53,19 +55,21 @@ export function AnnouncementBar() {
   }, []);
 
   const rotate = useCallback(() => {
-    setIndex((prev) => (prev + 1) % ANNOUNCEMENT_MESSAGES.length);
-  }, []);
+    setIndex((prev) => (prev + 1) % messages.length);
+  }, [messages.length]);
 
   useEffect(() => {
     const id = setInterval(rotate, 4000);
     return () => clearInterval(id);
   }, [rotate]);
 
-  if (!visible) return null;
+  if (!visible || messages.length === 0) return null;
+
+  const safeIndex = index % messages.length;
 
   return (
     <div className="gold-shimmer relative flex h-8 items-center justify-center border-b border-border-dark">
-      <MessageContent message={ANNOUNCEMENT_MESSAGES[index]} />
+      <MessageContent message={messages[safeIndex]} />
       <button
         onClick={() => {
           setVisible(false);

@@ -23,8 +23,8 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      await register({ firstName, lastName, phone, password });
-      router.push('/');
+      const user = await register({ firstName, lastName, phone, password });
+      if (user) router.push('/account');
     } catch {
       setError('Registration failed. Please check your details and try again.');
     } finally {

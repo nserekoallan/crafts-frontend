@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Star, UserCheck } from 'lucide-react';
+import { Plus, Star, UserCheck, Pencil, Archive, BookOpen, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CreateArtisanDialog } from '@/components/admin/create-artisan-dialog';
@@ -61,6 +62,8 @@ function InlineStarRating({ artisanId, initialRating }: { artisanId: string; ini
 
 type StatusFilter = 'all' | 'VERIFIED' | 'PENDING' | 'SUSPENDED';
 
+type StoryStatus = 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
+
 interface ArtisanRow {
   id: string;
   businessName: string;
@@ -68,11 +71,22 @@ interface ArtisanRow {
   status: 'VERIFIED' | 'PENDING' | 'SUSPENDED';
   adminRating: number | null;
   adminRatingNote: string | null;
+  // storyStatus/storyNote added by backend — may be absent until backend deploys
+  storyStatus?: StoryStatus;
+  storyNote?: string | null;
   _count: { products: number };
   user: {
     email: string;
     profile: { firstName: string; lastName: string } | null;
   };
+}
+
+interface ArtisanDetail {
+  id: string;
+  businessName: string;
+  bio: string | null;
+  storyStatus?: StoryStatus;
+  storyNote?: string | null;
 }
 
 interface ArtisansResponse {
@@ -93,6 +107,194 @@ function getStatusVariant(status: string): 'default' | 'pending' | 'cancelled' {
   if (status === 'VERIFIED') return 'default';
   if (status === 'PENDING') return 'pending';
   return 'cancelled';
+}
+
+// ---------------------------------------------------------------------------
+// Edit dialog
+// ---------------------------------------------------------------------------
+
+function EditArtisanDialog({
+  artisan,
+  onClose,
+}: {
+  artisan: ArtisanRow;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [businessName, setBusinessName] = useState(artisan.businessName);
+  const [bio, setBio] = useState('');
+  const [region, setRegion] = useState(artisan.region ?? '');
+  const [status, setStatus] = useState<'PENDING' | 'VERIFIED' | 'SUSPENDED'>(artisan.status);
+  const [adminRating, setAdminRating] = useState(artisan.adminRating ?? 0);
+  const [editError, setEditError] = useState('');
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: () =>
+      api.patch(`/artisans/${artisan.id}`, {
+        businessName: businessName.trim() || undefined,
+        bio: bio.trim() || undefined,
+        region: region.trim() || undefined,
+        status,
+        adminRating: adminRating > 0 ? adminRating : undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'artisans'] });
+      onClose();
+    },
+    onError: () => {
+      setEditError('Failed to update artisan. Please try again.');
+    },
+  });
+
+  const name = artisan.user.profile
+    ? `${artisan.user.profile.firstName} ${artisan.user.profile.lastName}`
+    : artisan.businessName;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-2xl bg-bg-surface p-6 shadow-xl">
+        <h2 className="text-lg font-bold text-text-primary">Edit Artisan</h2>
+        <p className="mt-1 text-sm text-text-secondary">{name}</p>
+
+        <div className="mt-6 space-y-4">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              Business Name
+            </label>
+            <input
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              className="w-full rounded-lg border border-border-dark bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              Bio
+            </label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Leave blank to keep existing…"
+              rows={3}
+              className="w-full resize-none rounded-lg border border-border-dark bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              Region
+            </label>
+            <input
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              className="w-full rounded-lg border border-border-dark bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              Status
+            </label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as 'PENDING' | 'VERIFIED' | 'SUSPENDED')}
+              className="w-full rounded-lg border border-border-dark bg-bg-primary px-3 py-2 text-sm text-text-primary focus:border-gold focus:outline-none"
+            >
+              <option value="PENDING">Pending</option>
+              <option value="VERIFIED">Verified</option>
+              <option value="SUSPENDED">Suspended</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              Admin Rating (1–5)
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={5}
+              value={adminRating || ''}
+              onChange={(e) => setAdminRating(Number(e.target.value))}
+              placeholder="Leave blank to keep existing"
+              className="w-full rounded-lg border border-border-dark bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {editError && (
+          <p className="mt-3 text-sm text-red-400">{editError}</p>
+        )}
+
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-border-dark px-4 py-2 text-sm text-text-secondary hover:border-white/30"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => mutate()}
+            disabled={isPending}
+            className="rounded-lg bg-hunter-green px-4 py-2 text-sm font-semibold text-white hover:bg-hunter-green/90 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+          >
+            {isPending ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Archive confirmation dialog
+// ---------------------------------------------------------------------------
+
+function ArchiveConfirmDialog({
+  artisan,
+  onClose,
+}: {
+  artisan: ArtisanRow;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => api.patch(`/artisans/${artisan.id}`, { status: 'SUSPENDED' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'artisans'] });
+      onClose();
+    },
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative w-full max-w-sm rounded-2xl bg-bg-surface p-6 shadow-xl">
+        <h2 className="text-base font-bold text-text-primary">Archive this artisan?</h2>
+        <p className="mt-2 text-sm text-text-secondary">
+          They will be suspended and hidden from the storefront.
+        </p>
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-border-dark px-4 py-2 text-sm text-text-secondary hover:border-white/30"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => mutate()}
+            disabled={isPending}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+          >
+            {isPending ? 'Archiving…' : 'Archive'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -195,6 +397,193 @@ function RateDialog({
 }
 
 // ---------------------------------------------------------------------------
+// Story status badge
+// ---------------------------------------------------------------------------
+
+function StoryBadge({
+  status,
+  onReview,
+}: {
+  status: StoryStatus | undefined;
+  onReview: () => void;
+}) {
+  if (!status || status === 'NONE') {
+    return <span className="text-text-tertiary">—</span>;
+  }
+
+  if (status === 'PENDING') {
+    return (
+      <div className="flex items-center gap-1.5">
+        <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-400 border border-amber-500/20">
+          Pending
+        </span>
+        <button
+          onClick={onReview}
+          className="rounded-md border border-amber-500/30 px-2 py-0.5 text-xs font-medium text-amber-400 hover:bg-amber-500/10"
+        >
+          Review
+        </button>
+      </div>
+    );
+  }
+
+  if (status === 'APPROVED') {
+    return (
+      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
+        Approved
+      </span>
+    );
+  }
+
+  // REJECTED
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-semibold text-red-400 border border-red-500/20">
+        Rejected
+      </span>
+      <button
+        onClick={onReview}
+        className="rounded-md border border-border-dark px-2 py-0.5 text-xs font-medium text-text-secondary hover:border-gold/40 hover:text-gold"
+      >
+        Re-review
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Story review dialog
+// ---------------------------------------------------------------------------
+
+function StoryReviewDialog({
+  artisan,
+  onClose,
+}: {
+  artisan: ArtisanRow;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [rejectMode, setRejectMode] = useState(false);
+  const [rejectNote, setRejectNote] = useState('');
+  const [actionError, setActionError] = useState('');
+
+  // Fetch full artisan detail to get bio (public endpoint returns bio only when APPROVED,
+  // but admin PATCH /artisans/:id already shows the edit dialog's bio field.
+  // Here we fetch GET /artisans/:id — bio may be null if not approved yet, but admin auth
+  // means the backend should return it; we fall back to showing "No bio yet" if null.)
+  const { data: detail, isLoading } = useQuery({
+    queryKey: ['artisan', 'detail', artisan.id],
+    queryFn: () =>
+      api.get<{ data: ArtisanDetail }>(`/artisans/${artisan.id}`).then((r) => r.data),
+  });
+
+  const { mutate: updateStoryStatus, isPending } = useMutation({
+    mutationFn: ({ status, note }: { status: 'APPROVED' | 'REJECTED'; note?: string }) =>
+      api.patch(`/artisans/${artisan.id}/story-status`, { status, note }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'artisans'] });
+      queryClient.invalidateQueries({ queryKey: ['artisan', 'detail', artisan.id] });
+      onClose();
+    },
+    onError: () => {
+      setActionError('Failed to update story status. Please try again.');
+    },
+  });
+
+  const name = artisan.user.profile
+    ? `${artisan.user.profile.firstName} ${artisan.user.profile.lastName}`
+    : artisan.businessName;
+
+  function handleApprove() {
+    setActionError('');
+    updateStoryStatus({ status: 'APPROVED' });
+  }
+
+  function handleReject() {
+    if (!rejectMode) {
+      setRejectMode(true);
+      return;
+    }
+    setActionError('');
+    updateStoryStatus({ status: 'REJECTED', note: rejectNote.trim() || undefined });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative w-full max-w-lg rounded-2xl bg-bg-surface p-6 shadow-xl">
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-5 w-5 text-gold" />
+          <h2 className="text-lg font-bold text-text-primary">Review Story</h2>
+        </div>
+        <p className="mt-1 text-sm text-text-secondary">{name} · {artisan.businessName}</p>
+
+        <div className="mt-5">
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+            Bio / Story
+          </p>
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-sm text-text-tertiary">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border-dark bg-bg-primary p-3 text-sm text-text-primary whitespace-pre-wrap">
+              {detail?.bio ?? (
+                <span className="text-text-tertiary italic">No bio text on record.</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {rejectMode && (
+          <div className="mt-4">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              Rejection Reason (optional)
+            </label>
+            <textarea
+              value={rejectNote}
+              onChange={(e) => setRejectNote(e.target.value)}
+              rows={3}
+              placeholder="Explain why the story was rejected…"
+              className="w-full resize-none rounded-lg border border-border-dark bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none"
+            />
+          </div>
+        )}
+
+        {actionError && <p className="mt-3 text-sm text-red-400">{actionError}</p>}
+
+        <div className="mt-6 flex items-center justify-between gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-border-dark px-4 py-2 text-sm text-text-secondary hover:border-white/30"
+          >
+            Cancel
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleReject}
+              disabled={isPending}
+              className="rounded-lg border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+            >
+              {isPending && rejectMode ? <Loader2 className="inline h-3.5 w-3.5 animate-spin mr-1" /> : null}
+              {rejectMode ? 'Confirm Reject' : 'Reject'}
+            </button>
+            <button
+              onClick={handleApprove}
+              disabled={isPending}
+              className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors"
+            >
+              {isPending && !rejectMode ? <Loader2 className="inline h-3.5 w-3.5 animate-spin mr-1" /> : null}
+              Approve
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -202,6 +591,9 @@ export default function ArtisansPage() {
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [ratingTarget, setRatingTarget] = useState<ArtisanRow | null>(null);
+  const [editTarget, setEditTarget] = useState<ArtisanRow | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<ArtisanRow | null>(null);
+  const [storyTarget, setStoryTarget] = useState<ArtisanRow | null>(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
@@ -278,6 +670,7 @@ export default function ArtisansPage() {
                 <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">Region</th>
                 <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">Products</th>
                 <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">Status</th>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">Story</th>
                 <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">Rating</th>
                 <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-secondary">Actions</th>
               </tr>
@@ -305,6 +698,12 @@ export default function ArtisansPage() {
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
+                      <StoryBadge
+                        status={artisan.storyStatus}
+                        onReview={() => setStoryTarget(artisan)}
+                      />
+                    </td>
+                    <td className="px-6 py-4">
                       <InlineStarRating
                         artisanId={artisan.id}
                         initialRating={artisan.adminRating}
@@ -312,6 +711,19 @@ export default function ArtisansPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
+                        <Link
+                          href={`/admin/artisans/${artisan.id}`}
+                          className="rounded-md border border-border-dark px-3 py-1 text-xs font-medium text-text-secondary hover:border-gold/40 hover:text-gold"
+                        >
+                          View
+                        </Link>
+                        <button
+                          onClick={() => setEditTarget(artisan)}
+                          className="rounded-md border border-border-dark p-1.5 text-text-secondary hover:border-gold/40 hover:text-gold"
+                          title="Edit artisan"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
                         <button
                           onClick={() => setRatingTarget(artisan)}
                           className="rounded-md border border-satin-gold/40 px-3 py-1 text-xs font-medium text-satin-gold hover:bg-satin-gold/10"
@@ -328,10 +740,11 @@ export default function ArtisansPage() {
                         )}
                         {artisan.status !== 'SUSPENDED' && (
                           <button
-                            onClick={() => updateStatus({ id: artisan.id, status: 'SUSPENDED' })}
-                            className="rounded-md border border-red-500/30 px-3 py-1 text-xs font-medium text-red-400 hover:bg-red-500/10"
+                            onClick={() => setArchiveTarget(artisan)}
+                            className="inline-flex items-center gap-1 rounded-md border border-red-500/30 px-3 py-1 text-xs font-medium text-red-400 hover:bg-red-500/10"
                           >
-                            Suspend
+                            <Archive className="h-3 w-3" />
+                            Archive
                           </button>
                         )}
                       </div>
@@ -352,6 +765,18 @@ export default function ArtisansPage() {
 
       {ratingTarget && (
         <RateDialog artisan={ratingTarget} onClose={() => setRatingTarget(null)} />
+      )}
+
+      {editTarget && (
+        <EditArtisanDialog artisan={editTarget} onClose={() => setEditTarget(null)} />
+      )}
+
+      {archiveTarget && (
+        <ArchiveConfirmDialog artisan={archiveTarget} onClose={() => setArchiveTarget(null)} />
+      )}
+
+      {storyTarget && (
+        <StoryReviewDialog artisan={storyTarget} onClose={() => setStoryTarget(null)} />
       )}
     </div>
   );

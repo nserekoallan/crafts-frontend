@@ -1,0 +1,16 @@
+{
+  "name": "Crafts Continent",
+  "short_name": "Crafts",
+  "description": "Beautiful handcrafted pieces from across Africa",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#c9a84c",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/logo.jpg", "sizes": "192x192", "type": "image/jpeg", "purpose": "any maskable" },
+    { "src": "/logo.jpg", "sizes": "512x512", "type": "image/jpeg", "purpose": "any maskable" }
+  ],
+  "categories": ["shopping", "lifestyle"],
+  "lang": "en-UG"
+}

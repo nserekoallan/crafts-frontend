@@ -5,6 +5,7 @@ import { CurrencyProvider } from '@/lib/currency';
 import { CartProvider } from '@/lib/cart';
 import { WishlistProvider } from '@/lib/wishlist';
 import { RecentlyViewedProvider } from '@/lib/recently-viewed';
+import { ErrorBoundary } from '@/components/error-boundary';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -12,6 +13,12 @@ export const metadata: Metadata = {
   description:
     'Discover and purchase authentic handcrafted African art, textiles, jewelry, and home decor directly from skilled artisans across the continent.',
   icons: { icon: '/logo.jpg' },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Crafts Continent',
+  },
   openGraph: {
     title: 'Crafts Continent | Authentic African Artisan Marketplace',
     description:
@@ -28,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <meta name="theme-color" content="#c9a84c" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -42,7 +50,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <CartProvider>
                 <WishlistProvider>
                   <RecentlyViewedProvider>
-                    {children}
+                    <ErrorBoundary>
+                      {children}
+                    </ErrorBoundary>
                   </RecentlyViewedProvider>
                 </WishlistProvider>
               </CartProvider>
