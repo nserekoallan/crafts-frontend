@@ -106,8 +106,14 @@ export function EditProductDialog({ product, open, onClose }: Props) {
       await api.postForm(`/products/${product.id}/images`, form);
       await refetchImages();
       if (fileInputRef.current) fileInputRef.current.value = '';
-    } catch {
-      setUploadError('Failed to upload image. Please try again.');
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 503) {
+        setUploadError(
+          'Image upload is temporarily unavailable. Please try again later or contact the platform administrator.',
+        );
+      } else {
+        setUploadError('Failed to upload image. Please try again.');
+      }
     } finally {
       setIsUploading(false);
     }

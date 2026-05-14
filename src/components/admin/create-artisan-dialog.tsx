@@ -41,7 +41,7 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
 
   function validatePhone(value: string): string {
     if (!value) return 'Phone number is required.';
-    if (!/^\+\d{7,15}$/.test(value)) return 'Must start with + followed by 7–15 digits.';
+    if (!/^\+[1-9]\d{6,14}$/.test(value)) return 'International format: +256700000001 (min 8 digits after +)';
     return '';
   }
 

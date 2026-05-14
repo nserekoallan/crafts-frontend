@@ -48,6 +48,9 @@ export function CreateProductDialog({ open, onClose }: Props) {
   const [imageError, setImageError] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState('');
+  const [createdProductId, setCreatedProductId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: categoriesData, isLoading: isLoadingCategories } = useQuery({
@@ -152,6 +155,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
     imagePreviews.forEach((url) => URL.revokeObjectURL(url));
     setImageFiles([]); setImagePreviews([]);
     setError(''); setImageError(''); setSubmitting(false);
+    setUploadingImages(false); setImageUploadError(''); setCreatedProductId(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
@@ -163,6 +167,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
+    setImageUploadError('');
     setSubmitting(true);
     try {
       const created = await api.post<{ data: { id: string } }>('/products', {
@@ -178,27 +183,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
       });
 
       const productId = created.data.id;
-
-      // Upload images
-      if (imageFiles.length > 0) {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('cc_token') : null;
-        const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.craftcontinent.com/api/v1';
-        for (let i = 0; i < imageFiles.length; i++) {
-          const fd = new FormData();
-          fd.append('file', imageFiles[i]);
-          if (i === 0) fd.append('isDefault', 'true');
-          const res = await fetch(`${base}/products/${productId}/images`, {
-            method: 'POST',
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-            body: fd,
-          });
-          if (!res.ok) {
-            const errBody = await res.json().catch(() => null);
-            const msg = errBody?.error?.message ?? `Image ${i + 1} failed to upload.`;
-            throw new Error(msg);
-          }
-        }
-      }
+      setCreatedProductId(productId);
 
       // Add additional categories
       for (const catId of additionalCategoryIds) {
@@ -208,6 +193,45 @@ export function CreateProductDialog({ open, onClose }: Props) {
       }
 
       track('product_created', { product_name: name.trim(), price: parseFloat(price) });
+
+      // If no images selected, close normally
+      if (imageFiles.length === 0) {
+        queryClient.invalidateQueries({ queryKey: ['artisan', 'products'] });
+        reset();
+        onClose();
+        return;
+      }
+
+      // Upload images — keep dialog open during upload
+      setSubmitting(false);
+      setUploadingImages(true);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('cc_token') : null;
+      const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.craftcontinent.com/api/v1';
+      for (let i = 0; i < imageFiles.length; i++) {
+        const fd = new FormData();
+        fd.append('file', imageFiles[i]);
+        if (i === 0) fd.append('isDefault', 'true');
+        const res = await fetch(`${base}/products/${productId}/images`, {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: fd,
+        });
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => null);
+          if (res.status === 503) {
+            setImageUploadError(
+              'Image upload is temporarily unavailable. Your product was saved — you can add images from the Edit Product dialog later.',
+            );
+          } else {
+            const msg = errBody?.error?.message ?? `Image ${i + 1} failed to upload.`;
+            setImageUploadError(msg);
+          }
+          setUploadingImages(false);
+          queryClient.invalidateQueries({ queryKey: ['artisan', 'products'] });
+          return;
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ['artisan', 'products'] });
       reset();
       onClose();
@@ -222,7 +246,14 @@ export function CreateProductDialog({ open, onClose }: Props) {
       }
     } finally {
       setSubmitting(false);
+      setUploadingImages(false);
     }
+  }
+
+  function handleDoneAfterUploadFailure() {
+    queryClient.invalidateQueries({ queryKey: ['artisan', 'products'] });
+    reset();
+    onClose();
   }
 
   return (
@@ -428,13 +459,27 @@ export function CreateProductDialog({ open, onClose }: Props) {
           </div>
         )}
 
+        {imageUploadError && (
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-400" role="alert">
+            {imageUploadError}
+          </div>
+        )}
+
         <div className="flex justify-end gap-3 pt-2">
-          <Button type="button" variant="secondary" onClick={handleClose} disabled={submitting}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" disabled={submitting || !categoryId.trim()} className="disabled:opacity-50 disabled:cursor-not-allowed">
-            {submitting ? 'Creating…' : 'Create Product'}
-          </Button>
+          {imageUploadError ? (
+            <Button type="button" variant="primary" onClick={handleDoneAfterUploadFailure}>
+              Done (add images later)
+            </Button>
+          ) : (
+            <>
+              <Button type="button" variant="secondary" onClick={handleClose} disabled={submitting || uploadingImages}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" disabled={submitting || uploadingImages || !categoryId.trim()} className="disabled:opacity-50 disabled:cursor-not-allowed">
+                {uploadingImages ? 'Uploading images…' : submitting ? 'Creating…' : 'Create Product'}
+              </Button>
+            </>
+          )}
         </div>
       </form>
     </Dialog>
