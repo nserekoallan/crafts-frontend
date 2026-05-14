@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Upload } from 'lucide-react';
+import { ExternalLink, Loader2, Upload } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -19,9 +19,9 @@ interface ArtisanProfile {
   bio: string | null;
   region: string | null;
   status: 'PENDING' | 'VERIFIED' | 'SUSPENDED';
-  // storyStatus/storyNote require backend to include them in GET /artisans/:id response
   storyStatus?: StoryStatus;
   storyNote?: string | null;
+  adminRating?: number;
   documents?: ArtisanDocument[];
 }
 
@@ -227,28 +227,25 @@ function BusinessInfoSection({ artisanId }: { artisanId: string }) {
         <div className="mt-2 space-y-2">
           {(!artisan?.storyStatus || artisan.storyStatus === 'NONE') && (
             <p className="text-xs text-text-tertiary">
-              Save your story, then submit it for admin review.
+              Your story hasn&apos;t been submitted. Save your bio below and click Submit for Review.
             </p>
           )}
           {artisan?.storyStatus === 'PENDING' && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-400 border border-amber-500/20">
-              Story pending review by admin
+              Story submitted — admin will review shortly
             </span>
           )}
           {artisan?.storyStatus === 'APPROVED' && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
-              Your story is live on your public profile
+              Story approved and visible to buyers ✓
             </span>
           )}
           {artisan?.storyStatus === 'REJECTED' && (
             <div className="space-y-1.5">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1 text-xs font-semibold text-red-400 border border-red-500/20">
-                Story rejected
+                Story rejected{artisan.storyNote ? `: ${artisan.storyNote}` : ''}
               </span>
-              {artisan.storyNote && (
-                <p className="text-xs text-text-secondary">Admin note: {artisan.storyNote}</p>
-              )}
-              <p className="text-xs text-text-tertiary">Update your bio above and resubmit for review.</p>
+              <p className="text-xs text-text-tertiary">Update your bio and resubmit.</p>
             </div>
           )}
 
@@ -543,9 +540,49 @@ function NotificationsSection() {
 // Page
 // ---------------------------------------------------------------------------
 
+const VERIFICATION_BADGE: Record<
+  ArtisanProfile['status'],
+  { label: string; className: string }
+> = {
+  VERIFIED: {
+    label: 'Verified ✓',
+    className: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20',
+  },
+  PENDING: {
+    label: 'Pending Verification',
+    className: 'bg-amber-500/15 text-amber-400 border border-amber-500/20',
+  },
+  SUSPENDED: {
+    label: 'Suspended',
+    className: 'bg-red-500/15 text-red-400 border border-red-500/20',
+  },
+};
+
+function StarDisplay({ rating }: { rating: number }) {
+  const full = Math.round(rating);
+  return (
+    <span className="flex items-center gap-0.5">
+      {Array.from({ length: 5 }, (_, i) => (
+        <span key={i} className={i < full ? 'text-amber-400' : 'text-border-dark'}>
+          &#9733;
+        </span>
+      ))}
+      <span className="ml-1 text-xs text-text-secondary">({rating.toFixed(1)})</span>
+    </span>
+  );
+}
+
 export default function DashboardSettingsPage() {
   const { user } = useAuth();
   const artisanId = user?.artisan?.id;
+
+  const { data: artisan } = useQuery({
+    queryKey: ['artisan', 'profile', artisanId],
+    queryFn: () =>
+      api.get<{ data: ArtisanProfile }>(`/artisans/${artisanId}`).then((r) => r.data),
+    enabled: !!artisanId,
+    staleTime: 5 * 60 * 1000,
+  });
 
   if (!artisanId) {
     return (
@@ -554,6 +591,8 @@ export default function DashboardSettingsPage() {
       </div>
     );
   }
+
+  const badge = artisan ? VERIFICATION_BADGE[artisan.status] : null;
 
   return (
     <div className="space-y-10">
@@ -564,9 +603,65 @@ export default function DashboardSettingsPage() {
         </p>
       </div>
 
-      {/* Business info */}
+      {/* Admin-set profile banner */}
+      {artisan && badge && (
+        <div className="rounded-xl border border-border-dark bg-bg-elevated p-5 mb-6">
+          <p className="text-sm font-semibold text-text-primary">Your Artisan Profile</p>
+          <p className="mt-0.5 text-xs text-text-tertiary">
+            This information is set by the admin
+          </p>
+
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-1">
+                Verification Status
+              </p>
+              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', badge.className)}>
+                {badge.label}
+              </span>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-1">
+                Admin Rating
+              </p>
+              {artisan.adminRating != null && artisan.adminRating > 0 ? (
+                <StarDisplay rating={artisan.adminRating} />
+              ) : (
+                <span className="text-xs text-text-tertiary">Not rated yet</span>
+              )}
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-1">
+                Region
+              </p>
+              <p className="text-sm text-text-primary">{artisan.region ?? 'Not set'}</p>
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-1">
+              Business Name
+            </p>
+            <p className="text-sm text-text-primary">{artisan.businessName}</p>
+          </div>
+
+          <a
+            href={`/artisans/${artisanId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-gold hover:underline"
+          >
+            View my public profile
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
+      )}
+
+      {/* Edit profile */}
       <section>
-        <h2 className="mb-4 text-lg font-semibold text-text-primary">Business Info</h2>
+        <h2 className="mb-4 text-lg font-semibold text-text-primary">Edit Profile</h2>
         <div className="rounded-xl border border-border-dark bg-bg-elevated p-5">
           <BusinessInfoSection artisanId={artisanId} />
         </div>

@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { AlertTriangle, Star } from 'lucide-react';
+import { AlertTriangle, ExternalLink, Settings, Star } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
 import {
   useArtisanAnalytics,
@@ -9,8 +10,24 @@ import {
   useArtisanOrders,
   useArtisanProducts,
 } from '@/hooks/use-artisan';
+import { api } from '@/lib/api';
 import { useCurrency } from '@/lib/currency';
 import { Badge } from '@/components/ui/badge';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface ArtisanProfile {
+  id: string;
+  businessName: string;
+  bio: string | null;
+  region: string | null;
+  status: 'PENDING' | 'VERIFIED' | 'SUSPENDED';
+  storyStatus?: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
+  storyNote?: string | null;
+  adminRating?: number;
+}
 
 type BadgeVariant = 'default' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -23,6 +40,87 @@ const ORDER_STATUS_VARIANT: Record<string, BadgeVariant> = {
   PENDING: 'pending',
   CANCELLED: 'cancelled',
 };
+
+const VERIFICATION_BADGE: Record<
+  ArtisanProfile['status'],
+  { label: string; className: string }
+> = {
+  VERIFIED: {
+    label: 'Verified ✓',
+    className: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20',
+  },
+  PENDING: {
+    label: 'Pending Verification',
+    className: 'bg-amber-500/15 text-amber-400 border border-amber-500/20',
+  },
+  SUSPENDED: {
+    label: 'Suspended',
+    className: 'bg-red-500/15 text-red-400 border border-red-500/20',
+  },
+};
+
+function ProfileSummaryCard({ artisanId }: { artisanId: string }) {
+  const { data: artisan } = useQuery({
+    queryKey: ['artisan', 'profile', artisanId],
+    queryFn: () =>
+      api.get<{ data: ArtisanProfile }>(`/artisans/${artisanId}`).then((r) => r.data),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!artisanId,
+  });
+
+  if (!artisan) return null;
+
+  const initials = artisan.businessName
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('');
+
+  const badge = VERIFICATION_BADGE[artisan.status];
+
+  return (
+    <div className="mt-4 rounded-xl border border-border-dark bg-bg-elevated p-4 flex items-center gap-4">
+      {/* Avatar */}
+      <div className="h-14 w-14 shrink-0 rounded-full bg-gold/20 text-gold font-bold text-xl flex items-center justify-center">
+        {initials}
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-text-primary truncate">{artisan.businessName}</p>
+        <p className="text-sm text-text-tertiary">{artisan.region ?? 'No region set'}</p>
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.className}`}>
+            {badge.label}
+          </span>
+          {artisan.adminRating != null && artisan.adminRating > 0 && (
+            <span className="text-xs text-gold">&#9733; {artisan.adminRating.toFixed(1)}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Links */}
+      <div className="flex flex-col items-end gap-2 shrink-0">
+        <Link
+          href="/dashboard/settings"
+          className="flex items-center gap-1 text-xs text-text-secondary hover:text-gold transition-colors"
+        >
+          <Settings className="h-3 w-3" />
+          Edit Profile
+        </Link>
+        <a
+          href={`/artisans/${artisanId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 text-xs text-text-secondary hover:text-gold transition-colors"
+        >
+          <ExternalLink className="h-3 w-3" />
+          View Public Profile
+        </a>
+      </div>
+    </div>
+  );
+}
 
 function StarRating({ rating }: { rating: number }) {
   const full = Math.round(rating);
@@ -42,6 +140,7 @@ function StarRating({ rating }: { rating: number }) {
 export default function DashboardPage() {
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
+  const artisanId = user?.artisan?.id;
 
   const { data: earnings, isLoading: earningsLoading } = useArtisanEarnings();
   const { data: analyticsData, isLoading: analyticsLoading } = useArtisanAnalytics();
@@ -71,6 +170,8 @@ export default function DashboardPage() {
           {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
         </p>
       </div>
+
+      {artisanId && <ProfileSummaryCard artisanId={artisanId} />}
 
       {/* Balance hero + supporting metrics */}
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-5 gap-4">
