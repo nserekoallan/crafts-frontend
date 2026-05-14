@@ -238,75 +238,92 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-5 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {(product.status === 'DRAFT' || product.status === 'REJECTED') &&
-                        (() => {
-                          const submittable = isSubmittable(product) && artisanVerified;
-                          const reason = !artisanVerified
-                            ? 'Your account has not been verified. Please contact the admin to get verified.'
-                            : (product.images?.length ?? 0) < 1
-                              ? 'Add at least one image'
-                              : Number(product.price) <= 0
-                                ? 'Price must be greater than 0'
-                                : '';
-                          return (
-                            <button
-                              onClick={() => {
-                                setSubmitError(null);
-                                submitProduct(product.id, {
-                                  onError: (err) => {
-                                    const msg =
-                                      err && typeof err === 'object' && 'message' in err
-                                        ? String((err as { message: unknown }).message)
-                                        : 'Failed to submit product';
-                                    setSubmitError(msg);
-                                  },
-                                });
-                              }}
-                              disabled={!submittable || (isSubmitting && submittingId === product.id)}
-                              className={cn(
-                                'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40',
-                                product.status === 'DRAFT'
-                                  ? 'bg-gold text-bg-primary hover:bg-gold/90'
-                                  : 'border border-gold/50 text-gold hover:bg-gold/10',
-                              )}
-                              title={submittable ? 'Submit for admin review' : reason}
-                            >
-                              <Send className="h-3 w-3" />
-                              {isSubmitting && submittingId === product.id ? 'Submitting…' : 'Submit for Review'}
-                            </button>
-                          );
-                        })()}
-                      <button
-                        onClick={() => setEditProduct(product)}
-                        className="rounded p-1.5 hover:bg-white/[0.06] transition-colors text-text-secondary hover:text-text-primary"
-                        title="Edit"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      {deleteConfirm === product.id ? (
-                        <div className="flex items-center gap-1">
+                      {product.status === 'SUSPENDED' ? (
+                        <span className="text-xs text-text-secondary">Contact admin</span>
+                      ) : product.status === 'PENDING_QC' ? (
+                        <>
+                          <span className="text-xs text-amber-400">Under review</span>
                           <button
-                            onClick={() => deleteProduct(product.id)}
-                            disabled={isDeleting}
-                            className="rounded px-2 py-1 text-xs font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                            onClick={() => setEditProduct(product)}
+                            className="rounded p-1.5 hover:bg-white/[0.06] transition-colors text-text-secondary hover:text-text-primary"
+                            title="Edit"
                           >
-                            Confirm
+                            <Pencil className="h-4 w-4" />
                           </button>
-                          <button
-                            onClick={() => setDeleteConfirm(null)}
-                            className="rounded px-2 py-1 text-xs font-medium text-text-secondary hover:text-text-primary"
-                          >
-                            Cancel
-                          </button>
-                        </div>
+                        </>
                       ) : (
-                        <button
-                          onClick={() => setDeleteConfirm(product.id)}
-                          className="rounded p-1.5 hover:bg-red-500/10 transition-colors text-text-secondary hover:text-red-400"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <>
+                          {(product.status === 'DRAFT' || product.status === 'REJECTED') &&
+                            (() => {
+                              const submittable = isSubmittable(product) && artisanVerified;
+                              const reason = !artisanVerified
+                                ? 'Your account has not been verified. Please contact the admin to get verified.'
+                                : (product.images?.length ?? 0) < 1
+                                  ? 'Add at least one image'
+                                  : Number(product.price) <= 0
+                                    ? 'Price must be greater than 0'
+                                    : '';
+                              return (
+                                <button
+                                  onClick={() => {
+                                    setSubmitError(null);
+                                    submitProduct(product.id, {
+                                      onError: (err) => {
+                                        const msg =
+                                          err && typeof err === 'object' && 'message' in err
+                                            ? String((err as { message: unknown }).message)
+                                            : 'Failed to submit product';
+                                        setSubmitError(msg);
+                                      },
+                                    });
+                                  }}
+                                  disabled={!submittable || (isSubmitting && submittingId === product.id)}
+                                  className={cn(
+                                    'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+                                    product.status === 'DRAFT'
+                                      ? 'bg-gold text-bg-primary hover:bg-gold/90'
+                                      : 'border border-gold/50 text-gold hover:bg-gold/10',
+                                  )}
+                                  title={submittable ? 'Submit for admin review' : reason}
+                                >
+                                  <Send className="h-3 w-3" />
+                                  {isSubmitting && submittingId === product.id ? 'Submitting…' : 'Submit for Review'}
+                                </button>
+                              );
+                            })()}
+                          <button
+                            onClick={() => setEditProduct(product)}
+                            className="rounded p-1.5 hover:bg-white/[0.06] transition-colors text-text-secondary hover:text-text-primary"
+                            title="Edit"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          {deleteConfirm === product.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => deleteProduct(product.id)}
+                                disabled={isDeleting}
+                                className="rounded px-2 py-1 text-xs font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                              >
+                                Confirm
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="rounded px-2 py-1 text-xs font-medium text-text-secondary hover:text-text-primary"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeleteConfirm(product.id)}
+                              className="rounded p-1.5 hover:bg-red-500/10 transition-colors text-text-secondary hover:text-red-400"
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </td>

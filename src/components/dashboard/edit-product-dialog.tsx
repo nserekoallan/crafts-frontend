@@ -78,10 +78,12 @@ export function EditProductDialog({ product, open, onClose }: Props) {
   }>({
     queryKey: ['product', product.id, 'images'],
     queryFn: () =>
-      api.get<{ data: { id: string; url: string; isDefault: boolean; position: number }[] }>(
+      api.get<{ data: { images: { id: string; url: string; isDefault: boolean; position: number }[] } }>(
         `/products/${product.id}`,
-      ).then((r) => ({ data: (r as unknown as { data: { images: { id: string; url: string; isDefault: boolean; position: number }[] } }).data.images ?? [] })),
-    enabled: open && showImages,
+      ).then((r) => ({ data: r.data.images ?? [] })),
+    // Seed from the product prop so thumbnails render immediately without a fetch
+    initialData: { data: product.images ?? [] },
+    enabled: open,
   });
   const existingImages = imagesData?.data ?? [];
 
