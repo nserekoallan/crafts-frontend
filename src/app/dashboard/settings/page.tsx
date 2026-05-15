@@ -322,7 +322,7 @@ function DocumentsSection({ artisanId }: { artisanId: string }) {
   const { mutate: uploadDoc, isPending: isUploading } = useMutation({
     mutationFn: ({ file, type }: { file: File; type: ArtisanDocument['type'] }) => {
       const form = new FormData();
-      form.append('document', file);
+      form.append('file', file);
       form.append('type', type);
       return api.postForm('/artisans/documents', form);
     },

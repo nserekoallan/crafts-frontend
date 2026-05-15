@@ -8,6 +8,7 @@ import { useSiteContent, useSocialLinks } from '@/hooks/use-site-content';
 
 const FOOTER_LINKS = [
   { href: '/shop', label: 'Shop' },
+  { href: '/artisans', label: 'Artisans' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ] as const;
