@@ -194,6 +194,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
               ref={heroImgRef}
               src={product.images[selectedImage]}
               alt={product.name}
+              style={{ viewTransitionName: 'product-hero' }}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             />
             <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">

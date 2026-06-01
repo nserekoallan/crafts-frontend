@@ -9,6 +9,7 @@ import { useWishlist } from '@/lib/wishlist';
 import { useCurrency } from '@/lib/currency';
 import { useTilt } from '@/hooks/use-tilt';
 import { useFlyToCart } from '@/components/motion/fly-to-cart';
+import { armProductMorph } from '@/lib/product-morph';
 import { cn } from '@/lib/utils';
 import { DiscountBadge } from '@/components/ui/discount-badge';
 import { StockBadge } from '@/components/ui/stock-badge';
@@ -68,6 +69,7 @@ export function DenseProductCard({ product, className }: DenseProductCardProps) 
       {/* Image */}
       <Link
         href={`/shop/${product.slug}`}
+        onPointerDown={() => armProductMorph(imgRef.current)}
         className="relative block aspect-square overflow-hidden bg-bg-surface"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
