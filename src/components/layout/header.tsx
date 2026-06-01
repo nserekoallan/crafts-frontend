@@ -350,15 +350,15 @@ function HeaderInner() {
       <div className="border-b border-border-dark bg-bg-primary/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 md:h-[72px] md:gap-4 lg:px-8">
           {/* Logo */}
-          <Link href="/" className="flex shrink-0 items-center gap-2">
+          <Link href="/" className="flex min-w-0 shrink items-center gap-2">
             <Image
               src="/logo.jpg"
               alt="Crafts Continent"
               width={48}
               height={48}
-              className="h-10 w-10 rounded-lg object-cover md:h-12 md:w-12"
+              className="h-10 w-10 shrink-0 rounded-lg object-cover md:h-12 md:w-12"
             />
-            <span className="font-heading text-base font-bold uppercase tracking-[0.12em] text-gold md:text-xl md:tracking-[0.15em]">
+            <span className="truncate font-heading text-sm font-bold uppercase tracking-[0.08em] text-gold sm:text-base sm:tracking-[0.12em] md:text-xl md:tracking-[0.15em]">
               Crafts Continent
             </span>
           </Link>
@@ -374,7 +374,7 @@ function HeaderInner() {
           />
 
           {/* Right actions */}
-          <div className="flex items-center gap-1.5 md:gap-3">
+          <div className="flex shrink-0 items-center gap-1.5 md:gap-3">
             <CurrencyToggle />
 
             {/* Social icons — desktop only */}
