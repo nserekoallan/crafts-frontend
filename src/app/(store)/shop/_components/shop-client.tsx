@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, Search, SlidersHorizontal, X } from 'lucide-react';
 import { DenseProductCard } from '@/components/products/dense-product-card';
+import { Stagger, StaggerItem } from '@/components/motion/stagger';
 import { FilterSidebar, DEFAULT_FILTERS } from '@/components/shop/filter-sidebar';
 import { FilterBottomSheet } from '@/components/shop/filter-bottom-sheet';
 import { ActiveFilters } from '@/components/shop/active-filters';
@@ -279,15 +280,13 @@ function ShopPageInner() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
-                {visible.map((product, i) => (
-                  <DenseProductCard
-                    key={product.id}
-                    product={product}
-                    animationDelay={i * 40}
-                  />
+              <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
+                {visible.map((product) => (
+                  <StaggerItem key={product.id}>
+                    <DenseProductCard product={product} />
+                  </StaggerItem>
                 ))}
-              </div>
+              </Stagger>
 
               {hasMore && (
                 <div className="mt-8 text-center md:mt-10">

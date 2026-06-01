@@ -11,6 +11,8 @@ import { FlashDeals } from '@/components/home/flash-deals';
 import { CollectionsStrip } from '@/components/home/collections-strip';
 import { SurpriseMe } from '@/components/home/surprise-me';
 import { RecentlyViewedStrip } from '@/components/products/recently-viewed-strip';
+import { Stagger, StaggerItem } from '@/components/motion/stagger';
+import { Reveal } from '@/components/motion/reveal';
 import { useProducts } from '@/hooks/use-products';
 import { useCategories } from '@/hooks/use-categories';
 import { useSiteContent } from '@/hooks/use-site-content';
@@ -111,11 +113,13 @@ export default function HomePage() {
               Featured Picks
             </h2>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
-            {featuredProducts.map((product, i) => (
-              <DenseProductCard key={product.id} product={product} animationDelay={i * 50} />
+          <Stagger className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
+            {featuredProducts.map((product) => (
+              <StaggerItem key={product.id}>
+                <DenseProductCard product={product} />
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         </section>
       )}
 
@@ -135,11 +139,13 @@ export default function HomePage() {
             View All <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
-          {trendingProducts.map((product, i) => (
-            <DenseProductCard key={product.id} product={product} animationDelay={i * 50} />
+        <Stagger className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
+          {trendingProducts.map((product) => (
+            <StaggerItem key={product.id}>
+              <DenseProductCard product={product} />
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       </section>
 
       {/* 6. Collections Strip */}
@@ -155,7 +161,7 @@ export default function HomePage() {
         />
         <div className="absolute inset-0 bg-bg-primary/60" />
         <div className="absolute inset-0 flex items-center justify-center px-4 text-center">
-          <div>
+          <Reveal>
             <Image
               src="/logo.jpg"
               alt=""
@@ -172,7 +178,7 @@ export default function HomePage() {
             >
               {lifestyleBanner.ctaLabel} <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -189,11 +195,13 @@ export default function HomePage() {
             View All <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
-          {newArrivals.map((product, i) => (
-            <DenseProductCard key={product.id} product={product} animationDelay={i * 50} />
+        <Stagger className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
+          {newArrivals.map((product) => (
+            <StaggerItem key={product.id}>
+              <DenseProductCard product={product} />
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       </section>
 
       {/* 9. Surprise Me */}
@@ -204,11 +212,11 @@ export default function HomePage() {
         <h2 className="text-center text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
           Why Crafts Continent
         </h2>
-        <div className="mt-6 grid grid-cols-2 gap-4 md:mt-8 md:grid-cols-4 md:gap-6">
+        <Stagger className="mt-6 grid grid-cols-2 gap-4 md:mt-8 md:grid-cols-4 md:gap-6">
           {trustPoints.map((point) => {
             const Icon = ICON_MAP[point.icon] ?? Gem;
             return (
-              <div
+              <StaggerItem
                 key={point.id}
                 className="rounded-xl border border-border-dark bg-bg-elevated p-4 text-center md:p-6"
               >
@@ -219,10 +227,10 @@ export default function HomePage() {
                 <p className="mt-1.5 text-xs leading-relaxed text-text-secondary md:text-sm">
                   {point.description}
                 </p>
-              </div>
+              </StaggerItem>
             );
           })}
-        </div>
+        </Stagger>
       </section>
 
       {/* 11. Recently Viewed */}

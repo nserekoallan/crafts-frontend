@@ -23,7 +23,7 @@ interface DenseProductCardProps {
  * Dense, dark-themed product card with cart + wishlist integration.
  * Subtle hover effects, gold accents, mobile-optimised touch targets.
  */
-export function DenseProductCard({ product, className, animationDelay = 0 }: DenseProductCardProps) {
+export function DenseProductCard({ product, className }: DenseProductCardProps) {
   const { formatPrice } = useCurrency();
   const { addItem } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
@@ -51,10 +51,9 @@ export function DenseProductCard({ product, className, animationDelay = 0 }: Den
   return (
     <div
       className={cn(
-        'group overflow-hidden rounded-xl border border-border-dark bg-bg-elevated transition-all duration-300 hover:border-gold/40 hover:gold-glow card-tilt animate-grid-item',
+        'group overflow-hidden rounded-xl border border-border-dark bg-bg-elevated transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:gold-glow',
         className,
       )}
-      style={{ animationDelay: `${animationDelay}ms` }}
     >
       {/* Image */}
       <Link

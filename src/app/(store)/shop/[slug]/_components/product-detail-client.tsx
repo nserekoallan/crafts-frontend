@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Check, Copy, Heart, MapPin, Minus, Plus, Share2, ShoppingBag, Star, Truck, X, ZoomIn } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { DenseProductCard } from '@/components/products/dense-product-card';
+import { Stagger, StaggerItem } from '@/components/motion/stagger';
 import { useCart } from '@/lib/cart';
 import { useWishlist } from '@/lib/wishlist';
 import { useRecentlyViewed } from '@/lib/recently-viewed';
@@ -471,11 +472,13 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
           <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
             You May Also Like
           </h2>
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
-            {relatedProducts.map((p, i) => (
-              <DenseProductCard key={p.id} product={p} animationDelay={i * 50} />
+          <Stagger className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+            {relatedProducts.map((p) => (
+              <StaggerItem key={p.id}>
+                <DenseProductCard product={p} />
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         </section>
       )}
 
