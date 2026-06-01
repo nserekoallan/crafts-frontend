@@ -111,7 +111,7 @@ export default function HomePage() {
               Featured Picks
             </h2>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-3 md:mt-6 md:grid-cols-3 md:gap-5">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
             {featuredProducts.map((product, i) => (
               <DenseProductCard key={product.id} product={product} animationDelay={i * 50} />
             ))}
@@ -135,7 +135,7 @@ export default function HomePage() {
             View All <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-3 md:mt-6 md:grid-cols-4 md:gap-5">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
           {trendingProducts.map((product, i) => (
             <DenseProductCard key={product.id} product={product} animationDelay={i * 50} />
           ))}
@@ -146,7 +146,7 @@ export default function HomePage() {
       <CollectionsStrip />
 
       {/* 7. Full-Width Lifestyle Banner */}
-      <section className="relative h-56 w-full overflow-hidden md:h-80 lg:h-96">
+      <section className="relative h-52 w-full overflow-hidden sm:h-64 md:h-80">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={lifestyleBanner.imageUrl}
@@ -189,7 +189,7 @@ export default function HomePage() {
             View All <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-3 md:mt-6 md:grid-cols-4 md:gap-5">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
           {newArrivals.map((product, i) => (
             <DenseProductCard key={product.id} product={product} animationDelay={i * 50} />
           ))}

@@ -158,7 +158,7 @@ function CollectionSkeleton() {
         <div className="h-4 w-96 animate-pulse rounded bg-bg-surface" />
         <div className="h-3 w-24 animate-pulse rounded bg-bg-surface" />
       </div>
-      <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <div key={i} className="overflow-hidden rounded-xl border border-border-dark bg-bg-elevated">
             <div className="aspect-[3/4] animate-pulse bg-bg-surface" />
@@ -267,7 +267,7 @@ export function CollectionClient({ slug }: CollectionClientProps) {
 
           {/* Product grid */}
           {collection.products.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
               {collection.products.map((product) => (
                 <CollectionProductCard key={product.id} product={product} />
               ))}

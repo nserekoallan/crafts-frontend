@@ -471,7 +471,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
           <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
             You May Also Like
           </h2>
-          <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
             {relatedProducts.map((p, i) => (
               <DenseProductCard key={p.id} product={p} animationDelay={i * 50} />
             ))}

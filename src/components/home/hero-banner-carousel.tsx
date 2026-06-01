@@ -27,7 +27,7 @@ export function HeroBannerCarousel() {
   const safeActive = banners.length > 0 ? active % banners.length : 0;
 
   return (
-    <section className="relative h-[320px] w-full overflow-hidden md:h-[500px]">
+    <section className="relative h-[300px] w-full overflow-hidden sm:h-[360px] lg:h-[440px]">
       {banners.map((banner, i) => (
         <div
           key={banner.id}
