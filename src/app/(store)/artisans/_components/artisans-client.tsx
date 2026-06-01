@@ -203,6 +203,22 @@ export function ArtisansClient() {
         </p>
       </div>
 
+      {/* Become-an-artisan CTA */}
+      <div className="mb-8 flex flex-col items-center justify-between gap-4 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 to-transparent p-6 sm:flex-row">
+        <div>
+          <h2 className="font-heading text-lg font-bold text-text-primary">Are you an artisan?</h2>
+          <p className="mt-1 text-sm text-text-secondary">
+            Join our community and sell your handcrafted work across the continent.
+          </p>
+        </div>
+        <Link
+          href="/become-artisan"
+          className="shrink-0 rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-bg-primary transition-opacity hover:opacity-90"
+        >
+          Become an Artisan
+        </Link>
+      </div>
+
       {/* Filters */}
       <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center">
         {/* Search */}
