@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Search, Star } from 'lucide-react';
+import { Stagger, StaggerItem } from '@/components/motion/stagger';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -259,11 +260,13 @@ export function ArtisansClient() {
       ) : artisans.length === 0 ? (
         <div className="py-20 text-center text-text-secondary">No artisans found.</div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+        <Stagger className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
           {artisans.map((artisan) => (
-            <ArtisanCardItem key={artisan.id} artisan={artisan} />
+            <StaggerItem key={artisan.id}>
+              <ArtisanCardItem artisan={artisan} />
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       )}
     </div>
   );

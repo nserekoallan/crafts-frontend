@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Zap } from 'lucide-react';
 import { DenseProductCard } from '@/components/products/dense-product-card';
+import { Stagger, StaggerItem } from '@/components/motion/stagger';
 import { useProducts } from '@/hooks/use-products';
 
 /**
@@ -70,11 +71,11 @@ export function FlashDeals() {
       </div>
 
       {/* Horizontal scroll strip */}
-      <div className="scrollbar-hide mt-5 flex gap-3 overflow-x-auto pb-2 md:gap-4">
+      <Stagger className="scrollbar-hide mt-5 flex gap-3 overflow-x-auto pb-2 md:gap-4">
         {products.map((product) => (
-          <div key={product.id} className="w-44 shrink-0 md:w-56">
+          <StaggerItem key={product.id} className="w-44 shrink-0 md:w-56">
             <DenseProductCard product={product} />
-          </div>
+          </StaggerItem>
         ))}
 
         {/* See All link card */}
@@ -85,7 +86,7 @@ export function FlashDeals() {
           <ArrowRight className="h-6 w-6 text-gold" />
           <span className="mt-2 text-sm font-semibold text-gold">Shop All</span>
         </Link>
-      </div>
+      </Stagger>
     </section>
   );
 }

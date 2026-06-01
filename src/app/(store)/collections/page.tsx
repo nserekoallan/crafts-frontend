@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Layers } from 'lucide-react';
+import { Stagger, StaggerItem } from '@/components/motion/stagger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -104,10 +105,10 @@ export default function CollectionsPage() {
 
         {/* Collections grid */}
         {!isLoading && !isError && collections.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
+          <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
             {collections.map((collection) => (
+              <StaggerItem key={collection.id}>
               <Link
-                key={collection.id}
                 href={`/collections/${collection.slug}`}
                 className="group relative overflow-hidden rounded-2xl border border-border-dark"
               >
@@ -145,8 +146,9 @@ export default function CollectionsPage() {
                   </p>
                 </div>
               </Link>
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         )}
       </div>
     </div>

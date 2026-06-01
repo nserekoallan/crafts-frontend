@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, Globe, ShieldCheck, Users } from 'lucide-react';
 import { useSiteContent } from '@/hooks/use-site-content';
+import { Reveal } from '@/components/motion/reveal';
 
 const VALUES = [
   {
@@ -67,48 +68,54 @@ export default function AboutPage() {
       </div>
 
       {/* Mission */}
-      <div className="mt-16 rounded-2xl border border-border-dark bg-bg-surface p-8 text-center md:p-12">
-        <h2 className="font-heading text-xl font-bold text-gold md:text-2xl">
-          Our Mission
-        </h2>
-        <p className="mt-4 text-base leading-relaxed text-text-secondary">
-          {about.mission}
-        </p>
-      </div>
+      <Reveal>
+        <div className="mt-16 rounded-2xl border border-border-dark bg-bg-surface p-8 text-center md:p-12">
+          <h2 className="font-heading text-xl font-bold text-gold md:text-2xl">
+            Our Mission
+          </h2>
+          <p className="mt-4 text-base leading-relaxed text-text-secondary">
+            {about.mission}
+          </p>
+        </div>
+      </Reveal>
 
       {/* Values */}
-      <div className="mt-16">
-        <h2 className="text-center font-heading text-xl font-bold text-text-primary md:text-2xl">
-          What We Stand For
-        </h2>
-        <div className="mt-8 grid gap-6 sm:grid-cols-2">
-          {VALUES.map(({ icon: Icon, title, description }) => (
-            <div
-              key={title}
-              className="rounded-xl border border-border-dark bg-bg-surface p-6"
-            >
-              <Icon className="h-6 w-6 text-gold" />
-              <h3 className="mt-3 text-sm font-bold text-text-primary">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-                {description}
-              </p>
-            </div>
-          ))}
+      <Reveal>
+        <div className="mt-16">
+          <h2 className="text-center font-heading text-xl font-bold text-text-primary md:text-2xl">
+            What We Stand For
+          </h2>
+          <div className="mt-8 grid gap-6 sm:grid-cols-2">
+            {VALUES.map(({ icon: Icon, title, description }) => (
+              <div
+                key={title}
+                className="rounded-xl border border-border-dark bg-bg-surface p-6"
+              >
+                <Icon className="h-6 w-6 text-gold" />
+                <h3 className="mt-3 text-sm font-bold text-text-primary">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+                  {description}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </Reveal>
 
       {/* CTA */}
-      <div className="mt-16 text-center">
-        <p className="text-base text-text-secondary">
-          {about.ctaText}
-        </p>
-        <Link
-          href="/shop"
-          className="mt-4 inline-flex h-11 items-center rounded-lg bg-gold px-8 text-sm font-bold text-bg-primary transition-colors hover:bg-gold/90 active:scale-[0.98]"
-        >
-          Explore the Shop
-        </Link>
-      </div>
+      <Reveal>
+        <div className="mt-16 text-center">
+          <p className="text-base text-text-secondary">
+            {about.ctaText}
+          </p>
+          <Link
+            href="/shop"
+            className="mt-4 inline-flex h-11 items-center rounded-lg bg-gold px-8 text-sm font-bold text-bg-primary transition-colors hover:bg-gold/90 active:scale-[0.98]"
+          >
+            Explore the Shop
+          </Link>
+        </div>
+      </Reveal>
     </div>
   );
 }
