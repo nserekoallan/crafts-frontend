@@ -4,6 +4,7 @@ import { BottomNav } from '@/components/layout/bottom-nav';
 import { CartDrawer } from '@/components/cart/cart-drawer';
 import { CartToast } from '@/components/ui/cart-toast';
 import { BackToTop } from '@/components/ui/back-to-top';
+import { MotionProvider } from '@/components/motion/motion-provider';
 
 /**
  * Store layout — wraps all consumer-facing pages with the storefront chrome:
@@ -11,7 +12,7 @@ import { BackToTop } from '@/components/ui/back-to-top';
  */
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <MotionProvider>
       <Header />
       <main className="flex-1 pb-16 md:pb-0">{children}</main>
       <Footer />
@@ -19,6 +20,6 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
       <CartDrawer />
       <CartToast />
       <BackToTop />
-    </>
+    </MotionProvider>
   );
 }
