@@ -59,7 +59,7 @@ export function DenseProductCard({ product, className, animationDelay = 0 }: Den
       {/* Image */}
       <Link
         href={`/shop/${product.slug}`}
-        className="relative block aspect-[3/4] overflow-hidden bg-bg-surface"
+        className="relative block aspect-square overflow-hidden bg-bg-surface"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
