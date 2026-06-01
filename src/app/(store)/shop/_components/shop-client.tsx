@@ -59,7 +59,7 @@ function ProductCardSkeleton() {
 
 function ProductGridSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
       {Array.from({ length: 6 }).map((_, i) => (
         <ProductCardSkeleton key={i} />
       ))}
@@ -279,7 +279,7 @@ function ShopPageInner() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
                 {visible.map((product, i) => (
                   <DenseProductCard
                     key={product.id}
