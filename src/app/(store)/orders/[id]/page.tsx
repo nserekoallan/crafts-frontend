@@ -332,7 +332,7 @@ export default function OrderDetailPage() {
             })}
           </p>
         </div>
-        {order.status === 'PENDING' && !cancelSuccess && (
+        {['PENDING', 'PAID', 'PROCESSING', 'QC_PASSED'].includes(order.status) && !cancelSuccess && (
           <button
             onClick={() => { setShowCancelConfirm(true); setCancelError(null); }}
             className="shrink-0 rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/10"
