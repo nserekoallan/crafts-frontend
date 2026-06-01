@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ViewTransitions } from 'next-view-transitions';
 import { QueryProvider } from '@/providers/query-provider';
 import { AuthProvider } from '@/lib/auth';
 import { CurrencyProvider } from '@/lib/currency';
@@ -33,6 +34,7 @@ export const metadata: Metadata = {
  */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
+    <ViewTransitions>
     <html lang="en">
       <head>
         <meta name="theme-color" content="#c9a84c" />
@@ -61,5 +63,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </QueryProvider>
       </body>
     </html>
+    </ViewTransitions>
   );
 }

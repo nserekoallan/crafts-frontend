@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next';
 
-const baseConfig: NextConfig = {
+const nextConfig: NextConfig = {
   output: 'standalone',
   async rewrites() {
     const apiDestination =
@@ -25,14 +25,6 @@ const baseConfig: NextConfig = {
       },
     ],
   },
-};
-
-// `viewTransition` is experimental in Next 16; merged so it doesn't fight the
-// NextConfig type. Wraps client navigations in startViewTransition so matching
-// `view-transition-name` pairs morph (product card image → detail hero).
-const nextConfig = {
-  ...baseConfig,
-  experimental: { viewTransition: true },
 };
 
 export default nextConfig;

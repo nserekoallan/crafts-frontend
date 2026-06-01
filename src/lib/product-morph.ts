@@ -11,6 +11,20 @@ export const supportsViewTransitions =
 
 let active: HTMLElement | null = null;
 
+/**
+ * Remembers the clicked card's image URL per slug so the detail page can paint
+ * its hero immediately (the morph destination) instead of behind a spinner.
+ */
+const heroStash = new Map<string, string>();
+
+export function stashHeroImage(slug: string, url: string): void {
+  heroStash.set(slug, url);
+}
+
+export function getStashedHero(slug: string): string | undefined {
+  return heroStash.get(slug);
+}
+
 /** Mark `el` as the source that should morph into the detail hero on next nav. */
 export function armProductMorph(el: HTMLElement | null): void {
   if (!supportsViewTransitions || !el) return;
