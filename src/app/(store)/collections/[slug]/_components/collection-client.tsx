@@ -8,6 +8,7 @@ import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { Stagger, StaggerItem } from '@/components/motion/stagger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -267,11 +268,13 @@ export function CollectionClient({ slug }: CollectionClientProps) {
 
           {/* Product grid */}
           {collection.products.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
+            <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
               {collection.products.map((product) => (
-                <CollectionProductCard key={product.id} product={product} />
+                <StaggerItem key={product.id}>
+                  <CollectionProductCard product={product} />
+                </StaggerItem>
               ))}
-            </div>
+            </Stagger>
           )}
         </>
       )}

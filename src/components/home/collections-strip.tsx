@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { COLLECTIONS } from '@/lib/mock-data';
+import { Stagger, StaggerItem } from '@/components/motion/stagger';
 
 /**
  * Horizontal scrollable strip of themed collection cards on the homepage.
@@ -22,12 +23,12 @@ export function CollectionsStrip() {
         </Link>
       </div>
 
-      <div className="scrollbar-hide mt-5 flex gap-3 overflow-x-auto pb-2 md:gap-4">
+      <Stagger className="scrollbar-hide mt-5 flex gap-3 overflow-x-auto pb-2 md:gap-4">
         {COLLECTIONS.map((collection) => (
+          <StaggerItem key={collection.id} className="shrink-0">
           <Link
-            key={collection.id}
             href={`/collections?collection=${collection.slug}`}
-            className="group relative w-40 shrink-0 overflow-hidden rounded-xl border border-border-dark md:w-56"
+            className="group relative block w-40 overflow-hidden rounded-xl border border-border-dark md:w-56"
           >
             {/* Image */}
             <div className="aspect-[4/5] overflow-hidden">
@@ -51,8 +52,9 @@ export function CollectionsStrip() {
               </p>
             </div>
           </Link>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
     </section>
   );
 }
