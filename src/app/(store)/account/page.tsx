@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Camera, Loader2, MapPin, Pencil, Plus, Star, Trash2 } from 'lucide-react';
+import { Camera, Loader2, LogOut, MapPin, Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -929,8 +929,13 @@ type Tab = (typeof TABS)[number];
 
 export default function AccountPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('Profile');
+
+  function handleLogout() {
+    logout();
+    router.replace('/');
+  }
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -948,10 +953,21 @@ export default function AccountPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 lg:px-8">
-      <h1 className="text-3xl font-bold text-text-primary">My Account</h1>
-      <p className="mt-1 text-sm text-text-secondary">
-        Manage your profile and notification preferences.
-      </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary">My Account</h1>
+          <p className="mt-1 text-sm text-text-secondary">
+            Manage your profile and notification preferences.
+          </p>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="flex shrink-0 items-center gap-2 rounded-lg border border-red-500/30 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/10"
+        >
+          <LogOut className="h-4 w-4" />
+          Log out
+        </button>
+      </div>
 
       {/* Tab bar */}
       <div className="mt-6 flex gap-1 rounded-xl border border-border-dark bg-bg-elevated p-1">
