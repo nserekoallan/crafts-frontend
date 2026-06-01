@@ -381,3 +381,17 @@
     }
   }
 }
+
+/* View Transitions — smooth shared-element product morph (card image -> detail hero) */
+::view-transition-group(product-hero) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

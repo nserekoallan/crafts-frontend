@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { DenseProductCard } from '@/components/products/dense-product-card';
 import { Stagger, StaggerItem } from '@/components/motion/stagger';
 import { useFlyToCart } from '@/components/motion/fly-to-cart';
+import { getStashedHero } from '@/lib/product-morph';
 import { useCart } from '@/lib/cart';
 import { useWishlist } from '@/lib/wishlist';
 import { useRecentlyViewed } from '@/lib/recently-viewed';
@@ -96,9 +97,28 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   }, [lightboxOpen]);
 
   if (isLoading) {
+    const stashed = getStashedHero(slug);
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold border-t-transparent" />
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
+        <div className="grid gap-6 md:gap-10 lg:grid-cols-2">
+          {/* Hero placeholder — paints the morph destination instantly */}
+          <div className="mx-auto w-full max-w-[420px] lg:max-w-none">
+            <div className="relative aspect-square overflow-hidden rounded-xl bg-bg-surface">
+              {stashed && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={stashed}
+                  alt=""
+                  style={{ viewTransitionName: 'product-hero' }}
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </div>
+          </div>
+          <div className="flex min-h-[40vh] items-center justify-center lg:items-start lg:pt-10">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold border-t-transparent" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -194,6 +214,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
               ref={heroImgRef}
               src={product.images[selectedImage]}
               alt={product.name}
+              style={{ viewTransitionName: 'product-hero' }}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             />
             <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 import { m } from 'motion/react';
 import { Check, Heart, Plus, Star } from 'lucide-react';
 import { useCart } from '@/lib/cart';
@@ -9,6 +9,7 @@ import { useWishlist } from '@/lib/wishlist';
 import { useCurrency } from '@/lib/currency';
 import { useTilt } from '@/hooks/use-tilt';
 import { useFlyToCart } from '@/components/motion/fly-to-cart';
+import { armProductMorph, stashHeroImage } from '@/lib/product-morph';
 import { cn } from '@/lib/utils';
 import { DiscountBadge } from '@/components/ui/discount-badge';
 import { StockBadge } from '@/components/ui/stock-badge';
@@ -59,6 +60,10 @@ export function DenseProductCard({ product, className }: DenseProductCardProps) 
     <m.div
       onPointerMove={tilt.onPointerMove}
       onPointerLeave={tilt.onPointerLeave}
+      onPointerDown={() => {
+        armProductMorph(imgRef.current);
+        stashHeroImage(product.slug, product.imageUrl);
+      }}
       style={tilt.style}
       className={cn(
         'group overflow-hidden rounded-xl border border-border-dark bg-bg-elevated transition-[border-color,box-shadow] duration-300 hover:border-gold/40 hover:gold-glow',
