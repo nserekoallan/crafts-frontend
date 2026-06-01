@@ -1,15 +1,15 @@
 'use client';
 
-import { LazyMotion, domAnimation } from 'motion/react';
+import { LazyMotion, domMax } from 'motion/react';
 
 /**
- * Loads only the DOM animation feature set (~18kb) and enables `m.*` components
- * across the storefront. `strict` forbids the heavy `motion.*` import so the
- * lean bundle is enforced.
+ * Loads the full DOM feature set (layout, layoutId, drag, scroll-linked) and
+ * enables `m.*` components across the storefront. `strict` forbids the heavy
+ * `motion.*` import so the lean `m.*` form is enforced.
  */
 export function MotionProvider({ children }: { children: React.ReactNode }) {
   return (
-    <LazyMotion features={domAnimation} strict>
+    <LazyMotion features={domMax} strict>
       {children}
     </LazyMotion>
   );

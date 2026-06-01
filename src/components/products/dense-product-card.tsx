@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
+import { m } from 'motion/react';
 import { Check, Heart, Plus, Star } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import { useWishlist } from '@/lib/wishlist';
 import { useCurrency } from '@/lib/currency';
+import { useTilt } from '@/hooks/use-tilt';
+import { useFlyToCart } from '@/components/motion/fly-to-cart';
 import { cn } from '@/lib/utils';
 import { DiscountBadge } from '@/components/ui/discount-badge';
 import { StockBadge } from '@/components/ui/stock-badge';
@@ -29,6 +32,9 @@ export function DenseProductCard({ product, className }: DenseProductCardProps) 
   const { isWishlisted, toggleWishlist } = useWishlist();
   const [isAdded, setIsAdded] = useState(false);
   const [heartBounce, setHeartBounce] = useState(false);
+  const tilt = useTilt();
+  const { flyToCart } = useFlyToCart();
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const hasDiscount = !!product.originalPrice && product.originalPrice > product.price;
   const isUnavailable = product.stockStatus === 'out_of_stock';
@@ -37,6 +43,7 @@ export function DenseProductCard({ product, className }: DenseProductCardProps) 
 
   const handleAddToCart = () => {
     if (isUnavailable || isAdded) return;
+    flyToCart(imgRef.current, product.imageUrl);
     addItem(product, 1);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1500);
@@ -49,9 +56,12 @@ export function DenseProductCard({ product, className }: DenseProductCardProps) 
   };
 
   return (
-    <div
+    <m.div
+      onPointerMove={tilt.onPointerMove}
+      onPointerLeave={tilt.onPointerLeave}
+      style={tilt.style}
       className={cn(
-        'group overflow-hidden rounded-xl border border-border-dark bg-bg-elevated transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:gold-glow',
+        'group overflow-hidden rounded-xl border border-border-dark bg-bg-elevated transition-[border-color,box-shadow] duration-300 hover:border-gold/40 hover:gold-glow',
         className,
       )}
     >
@@ -62,10 +72,11 @@ export function DenseProductCard({ product, className }: DenseProductCardProps) 
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
+          ref={imgRef}
           src={product.imageUrl}
           alt={product.name}
           className={cn(
-            'h-full w-full object-cover transition-transform duration-500 group-hover:scale-103',
+            'h-full w-full object-cover transition-transform duration-500 group-hover:scale-105',
             isUnavailable && 'opacity-50',
           )}
           loading="lazy"
@@ -207,6 +218,6 @@ export function DenseProductCard({ product, className }: DenseProductCardProps) 
           )}
         </button>
       </div>
-    </div>
+    </m.div>
   );
 }

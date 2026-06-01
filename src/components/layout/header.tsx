@@ -16,6 +16,7 @@ import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useSocialLinks } from '@/hooks/use-site-content';
+import { useFlyToCart } from '@/components/motion/fly-to-cart';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -297,6 +298,7 @@ function SearchInput({
 function HeaderInner() {
   const { itemCount, setDrawerOpen } = useCart();
   const { wishlistCount } = useWishlist();
+  const { registerCart } = useFlyToCart();
   const { data: socialLinks } = useSocialLinks();
   const [badgeBounce, setBadgeBounce] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -439,6 +441,7 @@ function HeaderInner() {
 
             {/* Cart */}
             <button
+              ref={registerCart}
               onClick={() => setDrawerOpen(true)}
               className="relative p-2 text-text-secondary transition-colors hover:text-gold"
               aria-label="Open cart"
