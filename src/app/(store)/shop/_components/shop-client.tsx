@@ -59,7 +59,7 @@ function ProductCardSkeleton() {
 
 function ProductGridSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
       {Array.from({ length: 6 }).map((_, i) => (
         <ProductCardSkeleton key={i} />
       ))}
@@ -155,7 +155,7 @@ function ShopPageInner() {
   const showError = isError;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 md:py-8 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -279,7 +279,7 @@ function ShopPageInner() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
                 {visible.map((product, i) => (
                   <DenseProductCard
                     key={product.id}

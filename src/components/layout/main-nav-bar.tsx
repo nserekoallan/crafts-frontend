@@ -3,9 +3,10 @@
 import { useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { LogOut, User, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -77,6 +78,14 @@ interface MobileMenuProps {
  */
 export function MobileMenu({ open, onClose }: MobileMenuProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, logout } = useAuth();
+
+  function handleLogout() {
+    logout();
+    onClose();
+    router.replace('/');
+  }
 
   // Close on Escape key
   useEffect(() => {
@@ -158,6 +167,38 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
             );
           })}
         </nav>
+
+        {/* Account / auth actions */}
+        <div className="border-t border-border-dark px-5 py-2">
+          {isAuthenticated ? (
+            <>
+              <Link
+                href="/account"
+                onClick={onClose}
+                className="flex h-12 items-center gap-2 text-base font-semibold text-text-primary transition-colors hover:text-gold"
+              >
+                <User className="h-5 w-5" />
+                My Account
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex h-12 w-full items-center gap-2 text-base font-semibold text-red-400 transition-colors hover:text-red-300"
+              >
+                <LogOut className="h-5 w-5" />
+                Log out
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              onClick={onClose}
+              className="flex h-12 items-center gap-2 text-base font-semibold text-text-primary transition-colors hover:text-gold"
+            >
+              <User className="h-5 w-5" />
+              Sign in
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   );

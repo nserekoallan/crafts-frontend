@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { Instagram, Menu, Music, Search, ShoppingBag, Twitter, User, Heart, X } from 'lucide-react';
+import { Instagram, LogOut, Menu, Music, Search, ShoppingBag, Twitter, User, Heart, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { CurrencyToggle } from '@/components/ui/currency-toggle';
 import { AnnouncementBar } from '@/components/ui/announcement-bar';
@@ -48,17 +48,88 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-/** Renders the user icon — links to /account when authenticated, /login otherwise. */
+/**
+ * User icon. When signed out, links to /login. When signed in, opens a small
+ * menu with My Account and Log out — so logout is reachable from any page.
+ */
 function AccountLink() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  if (!isAuthenticated) {
+    return (
+      <Link
+        href="/login"
+        className="p-2 text-text-secondary transition-colors hover:text-gold"
+        aria-label="Sign in"
+      >
+        <User className="h-5 w-5" />
+      </Link>
+    );
+  }
+
+  function handleLogout() {
+    logout();
+    setOpen(false);
+    router.replace('/');
+  }
+
   return (
-    <Link
-      href={isAuthenticated ? '/account' : '/login'}
-      className="p-2 text-text-secondary transition-colors hover:text-gold"
-      aria-label={isAuthenticated ? 'My account' : 'Sign in'}
-    >
-      <User className="h-5 w-5" />
-    </Link>
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="p-2 text-text-secondary transition-colors hover:text-gold"
+        aria-label="My account"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <User className="h-5 w-5" />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-xl border border-border-dark bg-bg-elevated shadow-xl"
+        >
+          <Link
+            href="/account"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-4 py-2.5 text-sm text-text-primary transition-colors hover:bg-white/[0.05]"
+          >
+            <User className="h-4 w-4" />
+            My Account
+          </Link>
+          <Link
+            href="/orders"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-4 py-2.5 text-sm text-text-primary transition-colors hover:bg-white/[0.05]"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            My Orders
+          </Link>
+          <button
+            role="menuitem"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-2 border-t border-border-dark px-4 py-2.5 text-sm text-red-400 transition-colors hover:bg-red-500/10"
+          >
+            <LogOut className="h-4 w-4" />
+            Log out
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -279,15 +350,15 @@ function HeaderInner() {
       <div className="border-b border-border-dark bg-bg-primary/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 md:h-[72px] md:gap-4 lg:px-8">
           {/* Logo */}
-          <Link href="/" className="flex shrink-0 items-center gap-2">
+          <Link href="/" className="flex min-w-0 shrink items-center gap-2">
             <Image
               src="/logo.jpg"
               alt="Crafts Continent"
               width={48}
               height={48}
-              className="h-10 w-10 rounded-lg object-cover md:h-12 md:w-12"
+              className="h-10 w-10 shrink-0 rounded-lg object-cover md:h-12 md:w-12"
             />
-            <span className="font-heading text-base font-bold uppercase tracking-[0.12em] text-gold md:text-xl md:tracking-[0.15em]">
+            <span className="truncate font-heading text-sm font-bold uppercase tracking-[0.08em] text-gold sm:text-base sm:tracking-[0.12em] md:text-xl md:tracking-[0.15em]">
               Crafts Continent
             </span>
           </Link>
@@ -303,7 +374,7 @@ function HeaderInner() {
           />
 
           {/* Right actions */}
-          <div className="flex items-center gap-1.5 md:gap-3">
+          <div className="flex shrink-0 items-center gap-1.5 md:gap-3">
             <CurrencyToggle />
 
             {/* Social icons — desktop only */}

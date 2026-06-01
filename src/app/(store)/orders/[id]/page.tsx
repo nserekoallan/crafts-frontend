@@ -310,7 +310,7 @@ export default function OrderDetailPage() {
   const currentIndex = getStatusIndex(order.status);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6 md:py-8 lg:px-8">
+    <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
       {/* Header */}
       <div className="flex items-start gap-3">
         <Link
@@ -332,7 +332,7 @@ export default function OrderDetailPage() {
             })}
           </p>
         </div>
-        {order.status === 'PENDING' && !cancelSuccess && (
+        {['PENDING', 'PAID', 'PROCESSING', 'QC_PASSED'].includes(order.status) && !cancelSuccess && (
           <button
             onClick={() => { setShowCancelConfirm(true); setCancelError(null); }}
             className="shrink-0 rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/10"

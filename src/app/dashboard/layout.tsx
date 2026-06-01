@@ -7,6 +7,7 @@ import { BarChart3, Box, LayoutDashboard, Settings, ShoppingCart, Wallet } from 
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import { PortalHeader } from '@/components/layout/portal-header';
+import { ContractGate } from '@/components/dashboard/contract-gate';
 
 const SIDEBAR_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -99,7 +100,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Main content */}
         <main className="flex-1 min-w-0 p-6 lg:p-8">
-          {children}
+          {user?.artisan?.id && pathname !== '/dashboard/login' ? (
+            <ContractGate artisanId={user.artisan.id}>{children}</ContractGate>
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>

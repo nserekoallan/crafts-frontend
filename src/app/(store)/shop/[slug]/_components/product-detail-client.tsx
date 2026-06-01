@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Check, Copy, Heart, MapPin, Minus, Plus, Share2, ShoppingBag, Star, Truck } from 'lucide-react';
+import { Check, Copy, Heart, MapPin, Minus, Plus, Share2, ShoppingBag, Star, Truck, X, ZoomIn } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { DenseProductCard } from '@/components/products/dense-product-card';
 import { useCart } from '@/lib/cart';
@@ -29,6 +29,7 @@ interface ProductDetailClientProps {
  */
 export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   const [selectedImage, setSelectedImage] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -76,6 +77,19 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id]);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [lightboxOpen]);
 
   if (isLoading) {
     return (
@@ -152,7 +166,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   )}`;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 md:py-8 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
       {/* Breadcrumb */}
       <p className="mb-4 text-sm text-text-tertiary md:mb-6">
         <Link href="/shop" className="transition-colors hover:text-gold">Shop</Link>
@@ -161,15 +175,24 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
       </p>
 
       <div className="grid gap-6 md:gap-10 lg:grid-cols-2">
-        {/* Image gallery */}
-        <div>
-          <div className="relative aspect-square overflow-hidden rounded-xl bg-bg-surface">
+        {/* Image gallery — capped width on mobile/tablet so the square image
+            doesn't fill the viewport and push the buy info far down the page. */}
+        <div className="mx-auto w-full max-w-[420px] lg:max-w-none">
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(true)}
+            className="group relative block aspect-square w-full cursor-zoom-in overflow-hidden rounded-xl bg-bg-surface"
+            aria-label="Zoom image"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={product.images[selectedImage]}
               alt={product.name}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             />
+            <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+              <ZoomIn className="h-4 w-4" />
+            </span>
             {hasDiscount && (
               <DiscountBadge
                 originalPrice={product.originalPrice!}
@@ -184,7 +207,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                 className="absolute bottom-3 left-3"
               />
             )}
-          </div>
+          </button>
           <div className="scrollbar-hide mt-3 flex gap-2 overflow-x-auto md:mt-4 md:gap-3">
             {product.images.map((img, i) => (
               <button
@@ -460,6 +483,49 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
       <div className="mt-12">
         <RecentlyViewedStrip />
       </div>
+
+      {/* Image lightbox */}
+      {lightboxOpen && (
+        <div
+          className="animate-fade-in fixed inset-0 z-[80] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setLightboxOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(false)}
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={product.images[selectedImage]}
+            alt={product.name}
+            className="max-h-[90vh] max-w-full rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+          {product.images.length > 1 && (
+            <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+              {product.images.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedImage(i)}
+                  className={cn(
+                    'h-14 w-14 overflow-hidden rounded-lg border-2 transition-colors',
+                    selectedImage === i ? 'border-gold' : 'border-white/30 hover:border-white/60',
+                  )}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

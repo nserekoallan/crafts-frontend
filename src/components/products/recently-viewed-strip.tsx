@@ -1,7 +1,8 @@
 'use client';
 
+import { useRef } from 'react';
 import Link from 'next/link';
-import { Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { useRecentlyViewed } from '@/lib/recently-viewed';
 import { useCurrency } from '@/lib/currency';
 
@@ -12,24 +13,53 @@ import { useCurrency } from '@/lib/currency';
 export function RecentlyViewedStrip() {
   const { recentItems } = useRecentlyViewed();
   const { formatPrice } = useCurrency();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   if (recentItems.length === 0) return null;
 
+  function scrollBy(dir: -1 | 1) {
+    scrollRef.current?.scrollBy({ left: dir * 320, behavior: 'smooth' });
+  }
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
-      <div className="flex items-center gap-2">
-        <Clock className="h-3.5 w-3.5 text-text-tertiary" />
-        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-text-secondary md:text-sm">
-          Recently Viewed
-        </h2>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Clock className="h-3.5 w-3.5 text-text-tertiary" />
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-text-secondary md:text-sm">
+            Recently Viewed
+          </h2>
+        </div>
+        {/* Desktop scroll arrows — make the sideways navigation discoverable */}
+        {recentItems.length > 4 && (
+          <div className="hidden gap-1 md:flex">
+            <button
+              onClick={() => scrollBy(-1)}
+              aria-label="Scroll left"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-border-dark text-text-secondary transition-colors hover:border-gold hover:text-gold"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => scrollBy(1)}
+              aria-label="Scroll right"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-border-dark text-text-secondary transition-colors hover:border-gold hover:text-gold"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="scrollbar-hide mt-4 flex gap-3 overflow-x-auto pb-2">
+      <div
+        ref={scrollRef}
+        className="scrollbar-hide mt-4 flex snap-x gap-3 overflow-x-auto pb-2"
+      >
         {recentItems.map((item) => (
           <Link
             key={item.id}
             href={`/shop/${item.slug}`}
-            className="group w-24 shrink-0 md:w-32"
+            className="group w-24 shrink-0 snap-start md:w-32"
           >
             <div className="aspect-square overflow-hidden rounded-lg border border-border-dark bg-bg-surface transition-colors group-hover:border-gold/40">
               {/* eslint-disable-next-line @next/next/no-img-element */}

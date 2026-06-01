@@ -192,7 +192,7 @@ export function ArtisansClient() {
   }, [allData]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="mb-8 text-center">
         <h1 className="font-heading text-3xl font-bold text-text-primary md:text-4xl">
@@ -201,6 +201,22 @@ export function ArtisansClient() {
         <p className="mt-2 text-text-secondary">
           Discover the skilled craftspeople behind every piece
         </p>
+      </div>
+
+      {/* Become-an-artisan CTA */}
+      <div className="mb-8 flex flex-col items-center justify-between gap-4 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 to-transparent p-6 sm:flex-row">
+        <div>
+          <h2 className="font-heading text-lg font-bold text-text-primary">Are you an artisan?</h2>
+          <p className="mt-1 text-sm text-text-secondary">
+            Join our community and sell your handcrafted work across the continent.
+          </p>
+        </div>
+        <Link
+          href="/become-artisan"
+          className="shrink-0 rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-bg-primary transition-opacity hover:opacity-90"
+        >
+          Become an Artisan
+        </Link>
       </div>
 
       {/* Filters */}
