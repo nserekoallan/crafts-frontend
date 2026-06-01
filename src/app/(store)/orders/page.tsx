@@ -91,7 +91,7 @@ export default function OrdersPage() {
             key={f.value}
             onClick={() => setStatusFilter(f.value)}
             className={cn(
-              'rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+              'rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40',
               statusFilter === f.value
                 ? 'border-gold bg-gold/10 text-gold'
                 : 'border-border-dark text-text-secondary hover:border-gold/50 hover:text-text-primary',

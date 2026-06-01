@@ -86,12 +86,12 @@ export function ContractGate({
         I have read and agree to the Crafts Continent Artisan Agreement and Terms.
       </label>
 
-      {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+      {error && <p className="mt-3 text-sm text-error">{error}</p>}
 
       <button
         onClick={accept}
         disabled={!agreed || accepting}
-        className="mt-5 flex items-center gap-2 rounded-lg bg-hunter-green px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="mt-5 flex items-center gap-2 rounded-lg bg-hunter-green px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hunter-green/50 disabled:opacity-50"
       >
         {accepting && <Loader2 className="h-4 w-4 animate-spin" />}
         Accept & continue

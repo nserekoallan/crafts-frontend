@@ -105,7 +105,7 @@ function AccountLink() {
             href="/account"
             role="menuitem"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm text-text-primary transition-colors hover:bg-white/[0.05]"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm text-text-primary transition-colors hover:bg-white/[0.05] focus-visible:bg-white/[0.05] focus-visible:outline-none"
           >
             <User className="h-4 w-4" />
             My Account
@@ -114,7 +114,7 @@ function AccountLink() {
             href="/orders"
             role="menuitem"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm text-text-primary transition-colors hover:bg-white/[0.05]"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm text-text-primary transition-colors hover:bg-white/[0.05] focus-visible:bg-white/[0.05] focus-visible:outline-none"
           >
             <ShoppingBag className="h-4 w-4" />
             My Orders
@@ -122,7 +122,7 @@ function AccountLink() {
           <button
             role="menuitem"
             onClick={handleLogout}
-            className="flex w-full items-center gap-2 border-t border-border-dark px-4 py-2.5 text-sm text-red-400 transition-colors hover:bg-red-500/10"
+            className="flex w-full items-center gap-2 border-t border-border-dark px-4 py-2.5 text-sm text-error transition-colors hover:bg-error/10 focus-visible:bg-error/10 focus-visible:outline-none"
           >
             <LogOut className="h-4 w-4" />
             Log out
