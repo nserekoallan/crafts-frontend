@@ -496,8 +496,40 @@ function TrustTab() {
     setTrustPoints((prev) => prev.map((p, i) => (i === idx ? { ...p, [field]: value } : p)));
   }
 
+  function addTP() {
+    setTrustPoints((prev) => [...prev, { id: Date.now(), icon: '', title: '', description: '' }]);
+  }
+
+  function removeTP(idx: number) {
+    setTrustPoints((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function moveTP(idx: number, dir: -1 | 1) {
+    const swap = idx + dir;
+    if (swap < 0 || swap >= trustPoints.length) return;
+    const next = [...trustPoints];
+    [next[idx], next[swap]] = [next[swap], next[idx]];
+    setTrustPoints(next);
+  }
+
   function updateFT(idx: number, field: keyof FooterTrustItem, value: string) {
     setFooterItems((prev) => prev.map((p, i) => (i === idx ? { ...p, [field]: value } : p)));
+  }
+
+  function addFT() {
+    setFooterItems((prev) => [...prev, { id: Date.now(), icon: '', label: '' }]);
+  }
+
+  function removeFT(idx: number) {
+    setFooterItems((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function moveFT(idx: number, dir: -1 | 1) {
+    const swap = idx + dir;
+    if (swap < 0 || swap >= footerItems.length) return;
+    const next = [...footerItems];
+    [next[idx], next[swap]] = [next[swap], next[idx]];
+    setFooterItems(next);
   }
 
   async function saveTP() {
@@ -522,26 +554,50 @@ function TrustTab() {
     <div className="space-y-8">
       {/* Homepage trust points */}
       <div>
-        <h3 className="mb-3 text-sm font-bold text-text-primary">Homepage Trust Points</h3>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-text-primary">Homepage Trust Points</h3>
+          <button
+            onClick={addTP}
+            className="flex items-center gap-1.5 rounded-lg border border-border-dark px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:border-gold hover:text-gold"
+          >
+            <Plus className="h-3.5 w-3.5" /> Add Trust Point
+          </button>
+        </div>
         <div className="space-y-3">
           {trustPoints.map((tp, idx) => (
             <SectionCard key={tp.id}>
-              <div className="grid grid-cols-[auto_1fr_1fr_2fr] gap-3 items-start">
-                <div>
-                  <Label htmlFor={`tp-icon-${idx}`}>Icon</Label>
-                  <input id={`tp-icon-${idx}`} type="text" value={tp.icon} onChange={(e) => updateTP(idx, 'icon', e.target.value)} className={cn(inputCls, 'w-28')} placeholder="gem" />
+              <div className="flex items-start gap-3">
+                <div className="flex flex-col gap-1 pt-5">
+                  <button onClick={() => moveTP(idx, -1)} disabled={idx === 0} className="text-text-tertiary hover:text-gold disabled:opacity-30">
+                    <ChevronUp className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => moveTP(idx, 1)} disabled={idx === trustPoints.length - 1} className="text-text-tertiary hover:text-gold disabled:opacity-30">
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
                 </div>
-                <div>
-                  <Label htmlFor={`tp-title-${idx}`}>Title</Label>
-                  <input id={`tp-title-${idx}`} type="text" value={tp.title} onChange={(e) => updateTP(idx, 'title', e.target.value)} className={inputCls} />
+                <div className="grid flex-1 grid-cols-[auto_1fr_1fr_2fr] gap-3 items-start">
+                  <div>
+                    <Label htmlFor={`tp-icon-${idx}`}>Icon</Label>
+                    <input id={`tp-icon-${idx}`} type="text" value={tp.icon} onChange={(e) => updateTP(idx, 'icon', e.target.value)} className={cn(inputCls, 'w-28')} placeholder="gem" />
+                  </div>
+                  <div>
+                    <Label htmlFor={`tp-title-${idx}`}>Title</Label>
+                    <input id={`tp-title-${idx}`} type="text" value={tp.title} onChange={(e) => updateTP(idx, 'title', e.target.value)} className={inputCls} />
+                  </div>
+                  <div className="col-span-2">
+                    <Label htmlFor={`tp-desc-${idx}`}>Description</Label>
+                    <input id={`tp-desc-${idx}`} type="text" value={tp.description} onChange={(e) => updateTP(idx, 'description', e.target.value)} className={inputCls} />
+                  </div>
                 </div>
-                <div className="col-span-2">
-                  <Label htmlFor={`tp-desc-${idx}`}>Description</Label>
-                  <input id={`tp-desc-${idx}`} type="text" value={tp.description} onChange={(e) => updateTP(idx, 'description', e.target.value)} className={inputCls} />
-                </div>
+                <button onClick={() => removeTP(idx)} className="mt-5 text-text-tertiary transition-colors hover:text-red-400" aria-label="Remove trust point">
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             </SectionCard>
           ))}
+          {trustPoints.length === 0 && (
+            <p className="text-sm text-text-tertiary">No trust points. Add one to get started.</p>
+          )}
         </div>
         <div className="mt-3 flex justify-end">
           <SaveButton onClick={saveTP} isPending={isPendingTP} saved={savedTP} label="Save Trust Points" />
@@ -550,11 +606,27 @@ function TrustTab() {
 
       {/* Footer trust items */}
       <div>
-        <h3 className="mb-3 text-sm font-bold text-text-primary">Footer Trust Bar</h3>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-text-primary">Footer Trust Bar</h3>
+          <button
+            onClick={addFT}
+            className="flex items-center gap-1.5 rounded-lg border border-border-dark px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:border-gold hover:text-gold"
+          >
+            <Plus className="h-3.5 w-3.5" /> Add Footer Item
+          </button>
+        </div>
         <div className="space-y-3">
           {footerItems.map((item, idx) => (
             <SectionCard key={item.id}>
               <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-0.5">
+                  <button onClick={() => moveFT(idx, -1)} disabled={idx === 0} className="text-text-tertiary hover:text-gold disabled:opacity-30">
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  </button>
+                  <button onClick={() => moveFT(idx, 1)} disabled={idx === footerItems.length - 1} className="text-text-tertiary hover:text-gold disabled:opacity-30">
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                </div>
                 <div className="w-28">
                   <Label htmlFor={`ft-icon-${idx}`}>Icon</Label>
                   <input id={`ft-icon-${idx}`} type="text" value={item.icon} onChange={(e) => updateFT(idx, 'icon', e.target.value)} className={inputCls} placeholder="gem" />
@@ -563,9 +635,15 @@ function TrustTab() {
                   <Label htmlFor={`ft-label-${idx}`}>Label</Label>
                   <input id={`ft-label-${idx}`} type="text" value={item.label} onChange={(e) => updateFT(idx, 'label', e.target.value)} className={inputCls} />
                 </div>
+                <button onClick={() => removeFT(idx)} className="mt-5 text-text-tertiary transition-colors hover:text-red-400" aria-label="Remove footer item">
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             </SectionCard>
           ))}
+          {footerItems.length === 0 && (
+            <p className="text-sm text-text-tertiary">No footer items. Add one to get started.</p>
+          )}
         </div>
         <div className="mt-3 flex justify-end">
           <SaveButton onClick={saveFT} isPending={isPendingFT} saved={savedFT} label="Save Footer Items" />
