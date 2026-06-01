@@ -182,7 +182,7 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex h-12 w-full items-center gap-2 text-base font-semibold text-red-400 transition-colors hover:text-red-300"
+                className="flex h-12 w-full items-center gap-2 rounded-md text-base font-semibold text-error transition-colors hover:text-error/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
               >
                 <LogOut className="h-5 w-5" />
                 Log out

@@ -495,7 +495,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
           <button
             type="button"
             onClick={() => setLightboxOpen(false)}
-            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
             aria-label="Close"
           >
             <X className="h-5 w-5" />

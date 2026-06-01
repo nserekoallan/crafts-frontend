@@ -962,7 +962,7 @@ export default function AccountPage() {
         </div>
         <button
           onClick={handleLogout}
-          className="flex shrink-0 items-center gap-2 rounded-lg border border-red-500/30 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/10"
+          className="flex shrink-0 items-center gap-2 rounded-lg border border-error/30 px-4 py-2 text-sm font-medium text-error transition-colors hover:border-error/50 hover:bg-error/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
         >
           <LogOut className="h-4 w-4" />
           Log out

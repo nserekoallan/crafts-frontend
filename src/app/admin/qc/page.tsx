@@ -141,7 +141,7 @@ export default function QcPage() {
 
                   <button
                     onClick={() => setViewing(product)}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border-dark py-2 text-sm font-medium text-text-secondary transition-colors hover:border-gold hover:text-gold"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border-dark py-2 text-sm font-medium text-text-secondary transition-colors hover:border-gold hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40"
                   >
                     <Eye className="h-4 w-4" /> View full details
                   </button>
@@ -226,7 +226,7 @@ export default function QcPage() {
           >
             <button
               onClick={() => setViewing(null)}
-              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-bg-surface"
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
@@ -269,7 +269,7 @@ export default function QcPage() {
             </div>
 
             {viewing.revertedFromActive && (
-              <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
+              <p className="mt-4 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
                 This product was edited while live and sent back for review.
               </p>
             )}

@@ -38,10 +38,10 @@ const STATUS_FILTERS: { value: string; label: string }[] = [
 
 const STATUS_STYLE: Record<RequestStatus, string> = {
   NEW: 'bg-blue-500/15 text-blue-400',
-  CONTACTED: 'bg-amber-500/15 text-amber-400',
+  CONTACTED: 'bg-warning/15 text-warning',
   INTERVIEWING: 'bg-purple-500/15 text-purple-400',
-  APPROVED: 'bg-green-500/15 text-green-400',
-  REJECTED: 'bg-red-500/15 text-red-400',
+  APPROVED: 'bg-success/15 text-success',
+  REJECTED: 'bg-error/15 text-error',
 };
 
 const NEXT_STATUSES: RequestStatus[] = ['NEW', 'CONTACTED', 'INTERVIEWING', 'REJECTED'];
@@ -85,7 +85,7 @@ export default function AdminArtisanRequestsPage() {
             key={f.value}
             onClick={() => setStatusFilter(f.value)}
             className={cn(
-              'rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+              'rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40',
               statusFilter === f.value
                 ? 'border-gold bg-gold/10 text-gold'
                 : 'border-border-dark text-text-secondary hover:border-gold/50 hover:text-text-primary',
@@ -223,7 +223,7 @@ function RequestCard({
           </div>
 
           {tempPassword ? (
-            <div className="flex items-start gap-2 rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-400">
+            <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success/10 p-3 text-sm text-success">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
                 Artisan account created. Temporary password: <code className="font-mono">{tempPassword}</code>
@@ -242,7 +242,7 @@ function RequestCard({
                 <button
                   onClick={() => convert()}
                   disabled={convertPending || !businessName.trim()}
-                  className="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-lg bg-hunter-green px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-hunter-green-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hunter-green/50 disabled:opacity-50"
                 >
                   {convertPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
                   Create artisan & approve
@@ -259,7 +259,7 @@ function RequestCard({
                   key={s}
                   onClick={() => setStatus(s)}
                   disabled={statusPending}
-                  className="rounded-lg border border-border-dark px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:border-gold hover:text-gold disabled:opacity-50"
+                  className="rounded-lg border border-border-dark px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:border-gold hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 disabled:opacity-50"
                 >
                   Mark {s.charAt(0) + s.slice(1).toLowerCase()}
                 </button>
@@ -267,7 +267,7 @@ function RequestCard({
               {req.status !== 'APPROVED' && (
                 <button
                   onClick={() => { setActionError(''); setConverting(true); }}
-                  className="flex items-center gap-1.5 rounded-lg bg-gold px-3 py-1.5 text-xs font-semibold text-bg-primary hover:opacity-90"
+                  className="flex items-center gap-1.5 rounded-lg bg-gold px-3 py-1.5 text-xs font-semibold text-bg-primary transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40"
                 >
                   <UserPlus className="h-3.5 w-3.5" /> Convert to artisan
                 </button>
@@ -275,7 +275,7 @@ function RequestCard({
             </div>
           )}
 
-          {actionError && <p className="text-sm text-red-400">{actionError}</p>}
+          {actionError && <p className="text-sm text-error">{actionError}</p>}
         </div>
       )}
     </div>

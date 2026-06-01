@@ -135,12 +135,12 @@ export default function BecomeArtisanPage() {
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-error">{error}</p>}
 
         <button
           type="submit"
           disabled={submitting}
-          className="flex items-center justify-center gap-2 rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-bg-primary transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="flex items-center justify-center gap-2 rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-bg-primary transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 disabled:opacity-60"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
           Submit application
