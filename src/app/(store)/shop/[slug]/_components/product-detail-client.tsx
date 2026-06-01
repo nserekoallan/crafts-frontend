@@ -166,7 +166,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   )}`;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 md:py-8 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
       {/* Breadcrumb */}
       <p className="mb-4 text-sm text-text-tertiary md:mb-6">
         <Link href="/shop" className="transition-colors hover:text-gold">Shop</Link>

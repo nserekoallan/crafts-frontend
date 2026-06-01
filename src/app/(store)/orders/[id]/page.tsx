@@ -310,7 +310,7 @@ export default function OrderDetailPage() {
   const currentIndex = getStatusIndex(order.status);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6 md:py-8 lg:px-8">
+    <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
       {/* Header */}
       <div className="flex items-start gap-3">
         <Link
