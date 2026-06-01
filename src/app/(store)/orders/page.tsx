@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -8,6 +8,18 @@ import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useCurrency } from '@/lib/currency';
+import { cn } from '@/lib/utils';
+
+const STATUS_FILTERS = [
+  { value: 'all', label: 'All' },
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'PAID', label: 'Paid' },
+  { value: 'PROCESSING', label: 'Processing' },
+  { value: 'QC_PASSED', label: 'QC Passed' },
+  { value: 'SHIPPED', label: 'Shipped' },
+  { value: 'DELIVERED', label: 'Delivered' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+] as const;
 
 interface Order {
   id: string;
@@ -40,6 +52,7 @@ export default function OrdersPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { formatPrice } = useCurrency();
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -48,8 +61,12 @@ export default function OrdersPage() {
   }, [authLoading, isAuthenticated, router]);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => api.get<OrdersResponse>('/orders?limit=50').then((r) => r),
+    queryKey: ['orders', statusFilter],
+    queryFn: () => {
+      const params = new URLSearchParams({ limit: '50' });
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      return api.get<OrdersResponse>(`/orders?${params.toString()}`);
+    },
     enabled: isAuthenticated,
   });
 
@@ -67,6 +84,24 @@ export default function OrdersPage() {
     <div className="mx-auto max-w-4xl px-4 py-8 lg:px-8">
       <h1 className="text-3xl font-bold text-text-primary">My Orders</h1>
 
+      {/* Status filters */}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {STATUS_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => setStatusFilter(f.value)}
+            className={cn(
+              'rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+              statusFilter === f.value
+                ? 'border-gold bg-gold/10 text-gold'
+                : 'border-border-dark text-text-secondary hover:border-gold/50 hover:text-text-primary',
+            )}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       {isLoading ? (
         <div className="mt-8 space-y-3">
           {[1, 2, 3].map((i) => (
@@ -77,10 +112,16 @@ export default function OrdersPage() {
         <div className="mt-8 text-center text-sm text-red-400">Failed to load orders.</div>
       ) : orders.length === 0 ? (
         <div className="py-16 text-center">
-          <p className="text-lg text-text-secondary">You have no orders yet.</p>
-          <Link href="/shop" className="mt-4 inline-block text-sm font-medium text-gold hover:underline">
-            Start shopping
-          </Link>
+          {statusFilter === 'all' ? (
+            <>
+              <p className="text-lg text-text-secondary">You have no orders yet.</p>
+              <Link href="/shop" className="mt-4 inline-block text-sm font-medium text-gold hover:underline">
+                Start shopping
+              </Link>
+            </>
+          ) : (
+            <p className="text-lg text-text-secondary">No orders with this status.</p>
+          )}
         </div>
       ) : (
         <div className="mt-8 space-y-3">
