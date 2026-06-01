@@ -27,6 +27,8 @@ interface ArtisanDetail {
   status: 'PENDING' | 'VERIFIED' | 'SUSPENDED';
   adminRating: number | null;
   adminRatingNote: string | null;
+  contractAcceptedVersion: string | null;
+  contractAcceptedAt: string | null;
   documents: ArtisanDocument[];
   user: {
     profile: { firstName: string; lastName: string } | null;
@@ -380,6 +382,19 @@ export default function ArtisanDetailPage() {
             {artisan.region && (
               <p className="text-text-tertiary text-sm mt-0.5">{artisan.region}</p>
             )}
+            <p className="mt-1 text-sm">
+              {artisan.contractAcceptedVersion ? (
+                <span className="text-green-400">
+                  Contract accepted (v{artisan.contractAcceptedVersion}
+                  {artisan.contractAcceptedAt
+                    ? ` · ${new Date(artisan.contractAcceptedAt).toLocaleDateString()}`
+                    : ''}
+                  )
+                </span>
+              ) : (
+                <span className="text-amber-400">Contract not yet accepted</span>
+              )}
+            </p>
 
             {/* Rating */}
             <div className="flex items-center gap-3 mt-4">
