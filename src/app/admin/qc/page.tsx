@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Loader2 } from 'lucide-react';
+import { Eye, Loader2, X } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type { ApiProduct } from '@/lib/types/product';
@@ -21,6 +21,18 @@ export default function QcPage() {
   const queryClient = useQueryClient();
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [viewing, setViewing] = useState<ApiProduct | null>(null);
+
+  useEffect(() => {
+    if (!viewing) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setViewing(null); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [viewing]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin', 'qc'],
@@ -102,6 +114,16 @@ export default function QcPage() {
 
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center justify-between">
+                      <span className="text-text-secondary">Price:</span>
+                      <span className="font-medium text-text-primary">
+                        {product.currency} {Number(product.displayPrice ?? product.price).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-text-secondary">Stock:</span>
+                      <span className="font-medium text-text-primary">{product.stock}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
                       <span className="text-text-secondary">Category:</span>
                       <span className="font-medium text-text-primary">{product.category.name}</span>
                     </div>
@@ -116,6 +138,13 @@ export default function QcPage() {
                       <span className="font-medium text-text-primary">{product.artisan.region}</span>
                     </div>
                   </div>
+
+                  <button
+                    onClick={() => setViewing(product)}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border-dark py-2 text-sm font-medium text-text-secondary transition-colors hover:border-gold hover:text-gold"
+                  >
+                    <Eye className="h-4 w-4" /> View full details
+                  </button>
 
                   {/* Reject reason input */}
                   {rejecting === product.id && (
@@ -182,6 +211,95 @@ export default function QcPage() {
           )}
         </>
       )}
+
+      {/* Full product detail modal — review everything before approving */}
+      {viewing && (
+        <div
+          className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-black/70 p-4 md:p-8"
+          onClick={() => setViewing(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="relative w-full max-w-3xl rounded-xl border border-border-dark bg-bg-elevated p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setViewing(null)}
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-bg-surface"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <h2 className="pr-10 text-xl font-bold text-text-primary">{viewing.name}</h2>
+            <p className="mt-0.5 text-sm text-text-secondary">by {viewing.artisan.businessName}</p>
+
+            {/* Image gallery */}
+            <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+              {viewing.images.map((img, i) => (
+                <div key={i} className="relative aspect-square overflow-hidden rounded-lg bg-bg-surface">
+                  <Image
+                    src={img.url}
+                    alt={`${viewing.name} ${i + 1}`}
+                    fill
+                    className="object-cover"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Facts */}
+            <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+              <Fact label="Display price" value={`${viewing.currency} ${Number(viewing.displayPrice ?? viewing.price).toLocaleString()}`} />
+              <Fact label="Artisan price" value={`${viewing.currency} ${Number(viewing.price).toLocaleString()}`} />
+              <Fact label="Stock" value={String(viewing.stock)} />
+              <Fact label="Category" value={viewing.category.name} />
+              <Fact label="Region" value={viewing.artisan.region ?? '—'} />
+              <Fact label="Dimensions" value={viewing.dimensions ?? '—'} />
+            </div>
+
+            {/* Description */}
+            <div className="mt-5">
+              <p className="mb-1 text-xs font-medium uppercase tracking-wider text-text-tertiary">Description</p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">
+                {viewing.description || 'No description provided.'}
+              </p>
+            </div>
+
+            {viewing.revertedFromActive && (
+              <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
+                This product was edited while live and sent back for review.
+              </p>
+            )}
+
+            <div className="mt-6 flex justify-end gap-2">
+              <Button
+                variant="primary"
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+                disabled={isApproving}
+                onClick={() => { approve(viewing.id); setViewing(null); }}
+              >
+                Approve
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setViewing(null)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary">{label}</p>
+      <p className="mt-0.5 font-medium text-text-primary">{value}</p>
     </div>
   );
 }
