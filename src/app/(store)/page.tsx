@@ -1,7 +1,9 @@
 'use client';
 
+import { useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { m } from 'motion/react';
 import { ArrowRight, Gem, HandHelping, ShieldCheck, Sparkles, Truck } from 'lucide-react';
 import { HeroBannerCarousel } from '@/components/home/hero-banner-carousel';
 import { DealTile } from '@/components/home/deal-tile';
@@ -13,6 +15,7 @@ import { SurpriseMe } from '@/components/home/surprise-me';
 import { RecentlyViewedStrip } from '@/components/products/recently-viewed-strip';
 import { Stagger, StaggerItem } from '@/components/motion/stagger';
 import { Reveal } from '@/components/motion/reveal';
+import { useParallax } from '@/hooks/use-parallax';
 import { useProducts } from '@/hooks/use-products';
 import { useCategories } from '@/hooks/use-categories';
 import { useSiteContent } from '@/hooks/use-site-content';
@@ -69,6 +72,8 @@ export default function HomePage() {
   const { categories, isLoading: categoriesLoading } = useCategories();
   const { data: trustPoints } = useSiteContent('homepage.trustPoints', DEFAULT_TRUST_POINTS);
   const { data: lifestyleBanner } = useSiteContent('homepage.lifestyleBanner', DEFAULT_LIFESTYLE_BANNER);
+  const lifestyleRef = useRef<HTMLDivElement>(null);
+  const lifestyleY = useParallax(lifestyleRef, 40);
 
   const dealZones: DealZone[] = categories.length > 0
     ? categories.slice(0, 4).map((cat) => ({
@@ -152,12 +157,13 @@ export default function HomePage() {
       <CollectionsStrip />
 
       {/* 7. Full-Width Lifestyle Banner */}
-      <section className="relative h-52 w-full overflow-hidden sm:h-64 md:h-80">
+      <section ref={lifestyleRef} className="relative h-52 w-full overflow-hidden sm:h-64 md:h-80">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <m.img
           src={lifestyleBanner.imageUrl}
           alt="Wall art lifestyle"
-          className="h-full w-full object-cover"
+          style={{ y: lifestyleY }}
+          className="absolute inset-x-0 -top-[12%] h-[124%] w-full object-cover"
         />
         <div className="absolute inset-0 bg-bg-primary/60" />
         <div className="absolute inset-0 flex items-center justify-center px-4 text-center">

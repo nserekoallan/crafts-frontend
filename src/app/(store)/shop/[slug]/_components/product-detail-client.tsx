@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Check, Copy, Heart, MapPin, Minus, Plus, Share2, ShoppingBag, Star, Truck, X, ZoomIn } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { DenseProductCard } from '@/components/products/dense-product-card';
 import { Stagger, StaggerItem } from '@/components/motion/stagger';
+import { useFlyToCart } from '@/components/motion/fly-to-cart';
 import { useCart } from '@/lib/cart';
 import { useWishlist } from '@/lib/wishlist';
 import { useRecentlyViewed } from '@/lib/recently-viewed';
@@ -31,6 +32,8 @@ interface ProductDetailClientProps {
 export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const { flyToCart } = useFlyToCart();
+  const heroImgRef = useRef<HTMLImageElement>(null);
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -147,6 +150,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     const itemProduct = effectivePrice !== product.price
       ? { ...product, price: effectivePrice }
       : product;
+    flyToCart(heroImgRef.current, product.images[selectedImage]);
     addItem(itemProduct, quantity, selectedVariant?.id);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1500);
@@ -187,6 +191,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              ref={heroImgRef}
               src={product.images[selectedImage]}
               alt={product.name}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
