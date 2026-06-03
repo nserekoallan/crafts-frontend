@@ -66,14 +66,22 @@ const DEFAULT_LIFESTYLE_BANNER = {
 const DEAL_ZONE_SKELETON = [1, 2, 3, 4];
 
 export default function HomePage() {
-  const { products: trendingProducts } = useProducts({ limit: 8 });
-  const { products: newArrivals } = useProducts({ limit: 8, page: 2 });
   const { products: featuredProducts } = useProducts({ limit: 6, featured: true });
+  const { products: pool } = useProducts({ limit: 16 });
   const { categories, isLoading: categoriesLoading } = useCategories();
   const { data: trustPoints } = useSiteContent('homepage.trustPoints', DEFAULT_TRUST_POINTS);
   const { data: lifestyleBanner } = useSiteContent('homepage.lifestyleBanner', DEFAULT_LIFESTYLE_BANNER);
   const lifestyleRef = useRef<HTMLDivElement>(null);
   const lifestyleY = useParallax(lifestyleRef, 40);
+
+  // Distinct product rows: dedupe across sections so a small catalogue never
+  // shows the same item three times, and so empty rows collapse instead of
+  // leaving broken gaps. Featured → leftovers become Trending → genuinely new,
+  // not-yet-shown items become Just Arrived.
+  const featuredIds = new Set(featuredProducts.map((p) => p.id));
+  const trendingProducts = pool.filter((p) => !featuredIds.has(p.id)).slice(0, 10);
+  const shownIds = new Set([...featuredIds, ...trendingProducts.map((p) => p.id)]);
+  const newArrivals = pool.filter((p) => p.isNew && !shownIds.has(p.id));
 
   const dealZones: DealZone[] = categories.length > 0
     ? categories.slice(0, 4).map((cat) => ({
@@ -132,26 +140,28 @@ export default function HomePage() {
       <FlashDeals />
 
       {/* 5. Trending Now */}
-      <section className="mx-auto max-w-7xl px-4 pb-10 md:pb-12 lg:px-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
-            Trending Now
-          </h2>
-          <Link
-            href="/shop"
-            className="flex items-center gap-1 text-xs font-medium text-text-secondary transition-colors hover:text-gold"
-          >
-            View All <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-        <Stagger className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
-          {trendingProducts.map((product) => (
-            <StaggerItem key={product.id}>
-              <DenseProductCard product={product} />
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </section>
+      {trendingProducts.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-10 md:pb-12 lg:px-8">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
+              Trending Now
+            </h2>
+            <Link
+              href="/shop"
+              className="flex items-center gap-1 text-xs font-medium text-text-secondary transition-colors hover:text-gold"
+            >
+              View All <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <Stagger className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
+            {trendingProducts.map((product) => (
+              <StaggerItem key={product.id}>
+                <DenseProductCard product={product} />
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </section>
+      )}
 
       {/* 6. Collections Strip */}
       <CollectionsStrip />
@@ -189,26 +199,28 @@ export default function HomePage() {
       </section>
 
       {/* 8. Just Arrived */}
-      <section className="mx-auto max-w-7xl px-4 py-10 md:py-12 lg:px-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
-            Just Arrived
-          </h2>
-          <Link
-            href="/shop?sort=newest"
-            className="flex items-center gap-1 text-xs font-medium text-text-secondary transition-colors hover:text-gold"
-          >
-            View All <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-        <Stagger className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
-          {newArrivals.map((product) => (
-            <StaggerItem key={product.id}>
-              <DenseProductCard product={product} />
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </section>
+      {newArrivals.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-10 md:py-12 lg:px-8">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
+              Just Arrived
+            </h2>
+            <Link
+              href="/shop?sort=newest"
+              className="flex items-center gap-1 text-xs font-medium text-text-secondary transition-colors hover:text-gold"
+            >
+              View All <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <Stagger className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:mt-6 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
+            {newArrivals.map((product) => (
+              <StaggerItem key={product.id}>
+                <DenseProductCard product={product} />
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </section>
+      )}
 
       {/* 9. Surprise Me */}
       <SurpriseMe />
