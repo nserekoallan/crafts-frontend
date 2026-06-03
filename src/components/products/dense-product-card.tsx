@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils';
 import { DiscountBadge } from '@/components/ui/discount-badge';
 import { StockBadge } from '@/components/ui/stock-badge';
 import type { Product } from '@/lib/mock-data';
-import { SOCIAL_PROOF_COUNTS } from '@/lib/mock-data';
 
 interface DenseProductCardProps {
   product: Product;
@@ -40,7 +39,6 @@ export function DenseProductCard({ product, className }: DenseProductCardProps) 
   const hasDiscount = !!product.originalPrice && product.originalPrice > product.price;
   const isUnavailable = product.stockStatus === 'out_of_stock';
   const wishlisted = isWishlisted(product.id);
-  const loveCount = SOCIAL_PROOF_COUNTS[product.id] ?? 0;
 
   const handleAddToCart = () => {
     if (isUnavailable || isAdded) return;
@@ -154,13 +152,6 @@ export function DenseProductCard({ product, className }: DenseProductCardProps) 
           >
             by {product.artisanName}
           </Link>
-        )}
-
-        {/* Social proof */}
-        {loveCount > 0 && (
-          <p className="mt-0.5 text-[10px] text-text-tertiary">
-            {loveCount} people love this
-          </p>
         )}
 
         {/* Rating */}

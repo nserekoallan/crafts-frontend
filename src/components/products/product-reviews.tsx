@@ -57,7 +57,7 @@ function StarRating({
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={cn(cls, i <= active ? 'fill-satin-gold text-satin-gold' : 'fill-none text-medium-gray', interactive && 'cursor-pointer transition-colors')}
+          className={cn(cls, i <= active ? 'fill-gold text-gold' : 'fill-none text-text-tertiary', interactive && 'cursor-pointer transition-colors')}
           onClick={() => interactive && onChange?.(i)}
           onMouseEnter={() => interactive && setHovered(i)}
           onMouseLeave={() => interactive && setHovered(0)}
@@ -79,16 +79,16 @@ function ReviewCard({ review }: { review: Review }) {
   });
 
   return (
-    <div className="rounded-xl border border-light-gray bg-white p-4">
+    <div className="rounded-xl border border-border-dark bg-bg-elevated p-4">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-medium text-charcoal">{name}</p>
-          <p className="text-xs text-medium-gray">{date}</p>
+          <p className="text-sm font-medium text-text-primary">{name}</p>
+          <p className="text-xs text-text-tertiary">{date}</p>
         </div>
         <StarRating value={review.rating} size="sm" />
       </div>
       {review.comment && (
-        <p className="mt-2 text-sm text-medium-gray leading-relaxed">{review.comment}</p>
+        <p className="mt-2 text-sm text-text-secondary leading-relaxed">{review.comment}</p>
       )}
     </div>
   );
@@ -141,23 +141,23 @@ export function ProductReviews({ productId }: { productId: string }) {
     <section className="mt-12 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <h2 className="text-lg font-bold text-charcoal">Reviews</h2>
+        <h2 className="text-lg font-bold text-text-primary">Reviews</h2>
         {count > 0 && (
           <div className="flex items-center gap-1.5">
             <StarRating value={Math.round(avg)} size="sm" />
-            <span className="text-sm font-medium text-charcoal">{avg.toFixed(1)}</span>
-            <span className="text-sm text-medium-gray">({count})</span>
+            <span className="text-sm font-medium text-text-primary">{avg.toFixed(1)}</span>
+            <span className="text-sm text-text-secondary">({count})</span>
           </div>
         )}
       </div>
 
       {/* Submission form — customer only */}
       {user?.role === 'customer' && !submitted && (
-        <div className="rounded-xl border border-light-gray bg-white p-5 shadow-sm">
-          <p className="text-sm font-semibold text-charcoal mb-3">Leave a Review</p>
+        <div className="rounded-xl border border-border-dark bg-bg-elevated p-5">
+          <p className="text-sm font-semibold text-text-primary mb-3">Leave a Review</p>
           <div className="space-y-3">
             <div>
-              <p className="text-xs text-medium-gray mb-1.5">Rating</p>
+              <p className="text-xs text-text-secondary mb-1.5">Rating</p>
               <StarRating value={rating} interactive onChange={setRating} />
             </div>
             <textarea
@@ -165,13 +165,13 @@ export function ProductReviews({ productId }: { productId: string }) {
               onChange={(e) => setComment(e.target.value)}
               placeholder="Share your experience (optional)"
               rows={3}
-              className="w-full resize-none rounded-lg border border-light-gray px-3 py-2 text-sm text-charcoal placeholder:text-medium-gray focus:border-hunter-green focus:outline-none"
+              className="w-full resize-none rounded-lg border border-border-dark bg-bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
             />
-            {submitError && <p className="text-xs text-red-600">{submitError}</p>}
+            {submitError && <p className="text-xs text-error">{submitError}</p>}
             <button
               onClick={() => submitReview()}
               disabled={rating === 0 || isPending}
-              className="rounded-lg bg-hunter-green px-4 py-2 text-sm font-semibold text-white hover:bg-hunter-green/90 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+              className="rounded-lg border border-gold px-4 py-2 text-sm font-semibold text-gold transition-colors hover:bg-gold hover:text-bg-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending ? 'Submitting…' : 'Submit Review'}
             </button>
@@ -180,7 +180,7 @@ export function ProductReviews({ productId }: { productId: string }) {
       )}
 
       {submitted && (
-        <div className="rounded-xl bg-hunter-green/10 px-4 py-3 text-sm text-hunter-green font-medium">
+        <div className="rounded-xl bg-success/10 px-4 py-3 text-sm font-medium text-success">
           Thank you for your review!
         </div>
       )}
@@ -189,15 +189,15 @@ export function ProductReviews({ productId }: { productId: string }) {
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl border border-light-gray bg-light-gray/40" />
+            <div key={i} className="h-20 animate-pulse rounded-xl border border-border-dark bg-bg-surface" />
           ))}
         </div>
       ) : reviews.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-light-gray/60">
-            <MessageSquare className="h-6 w-6 text-medium-gray" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-bg-surface">
+            <MessageSquare className="h-6 w-6 text-text-secondary" />
           </div>
-          <p className="text-sm text-medium-gray">No reviews yet. Be the first to share your experience.</p>
+          <p className="text-sm text-text-secondary">No reviews yet. Be the first to share your experience.</p>
         </div>
       ) : (
         <div className="space-y-3">
