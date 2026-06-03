@@ -174,7 +174,7 @@ function ShopPageInner() {
           <button
             onClick={() => setMobileFiltersOpen(true)}
             className={cn(
-              'flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors md:hidden',
+              'flex h-11 items-center gap-1.5 rounded-lg border px-4 text-sm font-medium transition-colors md:h-9 md:px-3 md:hidden',
               activeFilterCount > 0
                 ? 'border-gold/40 bg-gold-muted text-gold'
                 : 'border-border-dark bg-bg-surface text-text-secondary',
@@ -193,7 +193,7 @@ function ShopPageInner() {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             aria-label="Sort products by"
-            className="h-9 rounded-lg border border-border-dark bg-bg-surface px-3 text-sm text-text-primary focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+            className="h-11 rounded-lg border border-border-dark bg-bg-surface px-3 text-sm text-text-primary focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20 md:h-9"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>

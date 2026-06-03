@@ -35,7 +35,7 @@
   /* Text on dark */
   --color-text-primary: #F5F5F0;
   --color-text-secondary: #A8A29E;
-  --color-text-tertiary: #78716C;
+  --color-text-tertiary: #8A847C; /* WCAG AA: ~4.5:1 on bg-elevated for small meta text */
 
   /* Semantic */
   --color-success: #4ADE80;
