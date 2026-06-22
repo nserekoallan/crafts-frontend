@@ -37,6 +37,8 @@ jobs:
 
             cd /opt/crafts-frontend
             git pull origin main
+            # Shared host network (MerriMor owns it); ensure present so compose's external ref resolves
+            docker network create merimor_default 2>/dev/null || true
             docker compose up -d --build
 
       - name: Health check
@@ -47,5 +49,5 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             sleep 15
-            curl -sf http://localhost:3000 || exit 1
+            curl -sf http://localhost:3002 || exit 1
             echo "Health check passed"
