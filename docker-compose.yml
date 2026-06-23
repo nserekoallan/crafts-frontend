@@ -5,17 +5,8 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.craftcontinent.com/api/v1}
-    container_name: crafts-frontend
     restart: unless-stopped
-    # :3002 is Craft's reserved lane on the shared host — MerriMor owns :3001/:3010.
     ports:
-      - '127.0.0.1:3002:3000'
+      - '127.0.0.1:3000:3000'
     environment:
       - NODE_ENV=production
-    mem_limit: 256m
-    networks:
-      - merimor_default
-
-networks:
-  merimor_default:
-    external: true
