@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = 'https://craftcontinent.com';
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
   // Static routes
   const staticRoutes = ['', '/shop', '/collections', '/about', '/contact', '/wishlist'].map(

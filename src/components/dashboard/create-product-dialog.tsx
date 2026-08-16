@@ -206,7 +206,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
       setSubmitting(false);
       setUploadingImages(true);
       const token = typeof window !== 'undefined' ? localStorage.getItem('cc_token') : null;
-      const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.craftcontinent.com/api/v1';
+      const base = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080/api/v1';
       for (let i = 0; i < imageFiles.length; i++) {
         const fd = new FormData();
         fd.append('file', imageFiles[i]);
