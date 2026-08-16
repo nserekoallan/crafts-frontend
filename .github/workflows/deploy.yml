@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
 
 jobs:
   ci:
@@ -23,6 +23,10 @@ jobs:
   deploy:
     needs: ci
     runs-on: ubuntu-latest
+    # main -> production (168.144.21.44), staging -> staging (62.84.181.200).
+    # Secrets resolve from the GitHub Environment, so a staging run cannot read
+    # production values.
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
     steps:
       - name: Write build env, pull and deploy
         uses: appleboy/ssh-action@v1
@@ -32,11 +36,17 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # Write .env for docker-compose build args — NEXT_PUBLIC_* baked into bundle
-            printf 'NEXT_PUBLIC_API_URL=%s\n' '${{ secrets.NEXT_PUBLIC_API_URL }}' \
+            # at BUILD time, so changing these needs a rebuild, not a restart.
+            printf 'NEXT_PUBLIC_API_URL=%s\nNEXT_PUBLIC_SITE_URL=%s\nNEXT_PUBLIC_SITE_ENV=%s\n' \
+              '${{ secrets.NEXT_PUBLIC_API_URL }}' \
+              '${{ secrets.NEXT_PUBLIC_SITE_URL }}' \
+              '${{ secrets.NEXT_PUBLIC_SITE_ENV }}' \
               > /opt/crafts-frontend/.env
 
             cd /opt/crafts-frontend
-            git pull origin main
+            git fetch origin ${{ github.ref_name }}
+            git checkout ${{ github.ref_name }}
+            git reset --hard origin/${{ github.ref_name }}
             docker compose up -d --build
 
       - name: Health check
