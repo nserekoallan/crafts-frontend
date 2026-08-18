@@ -1,4 +1,7 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.craftcontinent.com/api/v1';
+// Dev default only. Both staging and production supply NEXT_PUBLIC_API_URL at
+// build time — never default to a deployed environment, or a missing env var
+// silently points one environment at another.
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080/api/v1';
 
 const TOKEN_KEY = 'cc_token';
 const REFRESH_KEY = 'cc_refresh_token';
