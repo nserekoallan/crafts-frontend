@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -25,8 +26,10 @@ export default function RegisterPage() {
     try {
       const user = await register({ firstName, lastName, phone, password });
       if (user) router.push('/account');
-    } catch {
-      setError('Registration failed. Please check your details and try again.');
+    } catch (err) {
+      setError(
+        apiErrorMessage(err, 'Registration failed. Please check your details and try again.'),
+      );
     } finally {
       setLoading(false);
     }
@@ -42,8 +45,10 @@ export default function RegisterPage() {
           height={64}
           className="mx-auto h-16 w-16 rounded-xl object-cover"
         />
-        <h1 className="mt-4 text-center text-2xl font-bold text-text-primary">Create Account</h1>
-        <p className="mt-1 text-center text-sm text-text-secondary">Join Crafts Continent today</p>
+        <h1 className="mt-4 text-center text-2xl font-bold text-text-primary">Create your account</h1>
+        <p className="mt-1 text-center text-sm text-text-secondary">
+          Shop handcrafted pieces from artisans across Africa.
+        </p>
 
         {error && (
           <div className="mt-4 rounded-lg bg-red-900/20 px-4 py-3 text-sm text-red-400" role="alert">{error}</div>
@@ -52,26 +57,29 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-text-primary" htmlFor="firstName">First Name</label>
+              <label className="block text-sm font-medium text-text-primary" htmlFor="firstName">First name</label>
               <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="mt-1.5" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary" htmlFor="lastName">Last Name</label>
+              <label className="block text-sm font-medium text-text-primary" htmlFor="lastName">Last name</label>
               <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="mt-1.5" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-primary" htmlFor="phone">Phone Number</label>
+            <label className="block text-sm font-medium text-text-primary" htmlFor="phone">Phone number</label>
             <Input
               id="phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+256700111222"
+              placeholder="0700 000 000"
               required
               className="mt-1.5"
             />
+            <p className="mt-1.5 text-xs text-text-tertiary">
+              You&apos;ll use this to sign in. Any format works.
+            </p>
           </div>
 
           <div>
@@ -81,10 +89,13 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min 8 chars, include A-Z, 0-9, symbol"
+              placeholder="Create a password"
               required
               className="mt-1.5"
             />
+            <p className="mt-1.5 text-xs text-text-tertiary">
+              At least 8 characters, with a capital letter, a number and a symbol.
+            </p>
           </div>
 
           <Button type="submit" disabled={loading} className="mt-2 w-full bg-hunter-green text-white hover:bg-hunter-green/90 disabled:opacity-50">
