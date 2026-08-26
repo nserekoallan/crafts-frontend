@@ -7,6 +7,7 @@ import { CheckCircle, Package } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { useCart } from '@/lib/cart';
 
 interface Order {
   id: string;
@@ -19,6 +20,7 @@ function CheckoutSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { clearCart } = useCart();
 
   const orderId = searchParams.get('orderId');
   const reference = searchParams.get('reference') ?? searchParams.get('trxref');
@@ -39,13 +41,41 @@ function CheckoutSuccessContent() {
     },
   });
 
+  // Derive the headline from the real order status. This block previously
+  // asserted "Order Placed!" unconditionally, above the fetch — so a cancelled
+  // or failed payment redirect was greeted as a success, sometimes directly
+  // above a line reading "Status: pending".
+  const status = order?.status;
+  const PAID_STATUSES = ['PAID', 'PROCESSING', 'QC_PASSED', 'SHIPPED', 'DELIVERED'];
+  const isPaid = status !== undefined && PAID_STATUSES.includes(status);
+  const isFailed = status === 'CANCELLED' || status === 'REFUNDED';
+  const headline = isPaid
+    ? 'Order confirmed'
+    : isFailed
+      ? status === 'REFUNDED'
+        ? 'Order refunded'
+        : 'Payment not completed'
+      : 'Confirming your payment…';
+
+  // Only empty the cart once the payment actually succeeded. Checkout no longer
+  // clears it up front, so an abandoned payment leaves the cart intact.
+  useEffect(() => {
+    if (isPaid) clearCart();
+  }, [isPaid, clearCart]);
+
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-16 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-hunter-green/10">
-        <CheckCircle className="h-10 w-10 text-hunter-green" />
+      <div
+        className={`flex h-20 w-20 items-center justify-center rounded-full ${
+          isFailed ? 'bg-error/10' : 'bg-hunter-green/10'
+        }`}
+      >
+        <CheckCircle
+          className={`h-10 w-10 ${isFailed ? 'text-error' : 'text-hunter-green'}`}
+        />
       </div>
 
-      <h1 className="mt-6 text-3xl font-bold text-text-primary">Order Placed!</h1>
+      <h1 className="mt-6 text-3xl font-bold text-text-primary">{headline}</h1>
 
       {order ? (
         <>
