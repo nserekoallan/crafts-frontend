@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { PasswordRequirements, isPasswordValid } from '@/components/ui/password-requirements';
 import { apiErrorMessage } from '@/lib/api-error-message';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -93,12 +94,10 @@ export default function RegisterPage() {
               required
               className="mt-1.5"
             />
-            <p className="mt-1.5 text-xs text-text-tertiary">
-              At least 8 characters, with a capital letter, a number and a symbol.
-            </p>
+            <PasswordRequirements value={password} show={password.length > 0} />
           </div>
 
-          <Button type="submit" disabled={loading} className="mt-2 w-full bg-hunter-green text-white hover:bg-hunter-green/90 disabled:opacity-50">
+          <Button type="submit" disabled={loading || !isPasswordValid(password)} className="mt-2 w-full bg-hunter-green text-white hover:bg-hunter-green/90 disabled:opacity-50">
             {loading ? 'Creating account…' : 'Create Account'}
           </Button>
         </form>
