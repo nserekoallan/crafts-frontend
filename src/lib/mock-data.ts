@@ -919,24 +919,27 @@ export const HOMEPAGE_BANNERS: HomepageBanner[] = [
     imageUrl: img(25),
     title: 'Handcrafted African Elegance',
     subtitle: 'Discover authentic artisan jewelry and wall art',
-    ctaLabel: 'Shop Jewelry',
-    ctaHref: '/shop?category=Shell+%26+Bead+Jewelry',
+    ctaLabel: 'Shop the collection',
+    ctaHref: '/shop',
   },
   {
     id: 'b2',
     imageUrl: img(17),
     title: 'Transform Your Walls',
     subtitle: 'Heritage woven plates that tell a story',
-    ctaLabel: 'Shop Wall Art',
-    ctaHref: '/shop?category=Heritage+Wall+Art',
+    ctaLabel: 'Browse wall art',
+    ctaHref: '/shop',
   },
   {
     id: 'b3',
     imageUrl: img(35),
-    title: 'Up to 30% Off Select Pieces',
-    subtitle: 'Limited time savings on curated collections',
-    ctaLabel: 'Shop Sale',
-    ctaHref: '/shop?sale=true',
+    // Fallback copy must not make claims the catalogue cannot back — this slot
+    // previously advertised "Up to 30% Off" on a store with no products, and the
+    // CTA led to an empty grid. Real campaigns come from site_content via /admin.
+    title: 'Made by Hand, Across Africa',
+    subtitle: 'Every piece carries the mark of the artisan who made it',
+    ctaLabel: 'Meet the artisans',
+    ctaHref: '/artisans',
   },
 ];
 
@@ -963,7 +966,9 @@ export interface AnnouncementMessage {
 
 export const ANNOUNCEMENT_MESSAGES: AnnouncementMessage[] = [
   { text: 'Free Shipping on Orders Over UGX 300,000' },
-  { text: 'New: Cowrie Shell Collection Now Available' },
+  // No product/collection claims in the fallback — this advertised a collection
+  // that does not exist. Real announcements come from site_content via /admin.
+  { text: 'Handmade by artisans across Africa' },
   { text: 'Pay with Mobile Money — MTN & Airtel Accepted' },
   {
     text: 'Follow us on Instagram, TikTok & X — @craft_continent',

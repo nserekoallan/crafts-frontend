@@ -83,12 +83,16 @@ export default function HomePage() {
   const shownIds = new Set([...featuredIds, ...trendingProducts.map((p) => p.id)]);
   const newArrivals = pool.filter((p) => p.isNew && !shownIds.has(p.id));
 
+  // Use the live product count the API already returns. This was hardcoded to 0,
+  // so a category with stock advertised itself as empty. Fall back to a different
+  // placeholder per tile — indexing DEAL_ZONES[0] for all four made every category
+  // show the same basket photo.
   const dealZones: DealZone[] = categories.length > 0
-    ? categories.slice(0, 4).map((cat) => ({
+    ? categories.slice(0, 4).map((cat, i) => ({
         id: cat.id,
         title: cat.name,
-        imageUrl: DEAL_ZONES[0]?.imageUrl ?? '',
-        itemCount: 0,
+        imageUrl: cat.image ?? DEAL_ZONES[i % DEAL_ZONES.length]?.imageUrl ?? '',
+        itemCount: cat._count?.products ?? 0,
         href: `/shop?category=${cat.slug}`,
       }))
     : DEAL_ZONES;

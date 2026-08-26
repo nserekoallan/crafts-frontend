@@ -2,13 +2,19 @@
 
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { COLLECTIONS } from '@/lib/mock-data';
+import { useCollections } from '@/hooks/use-collections';
 import { Stagger, StaggerItem } from '@/components/motion/stagger';
 
 /**
  * Horizontal scrollable strip of themed collection cards on the homepage.
  */
 export function CollectionsStrip() {
+  const { collections, isLoading } = useCollections();
+
+  // Nothing curated yet — collapse rather than advertise collections that would
+  // 404 when tapped. (The previous hardcoded list did exactly that.)
+  if (isLoading || collections.length === 0) return null;
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
       <div className="flex items-center justify-between">
@@ -24,18 +30,18 @@ export function CollectionsStrip() {
       </div>
 
       <Stagger className="scrollbar-hide mt-5 flex gap-3 overflow-x-auto pb-2 md:gap-4">
-        {COLLECTIONS.map((collection) => (
+        {collections.map((collection) => (
           <StaggerItem key={collection.id} className="shrink-0">
           <Link
-            href={`/collections?collection=${collection.slug}`}
+            href={`/collections/${collection.slug}`}
             className="group relative block w-40 overflow-hidden rounded-xl border border-border-dark md:w-56"
           >
             {/* Image */}
             <div className="aspect-[4/5] overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={collection.imageUrl}
-                alt={collection.title}
+                src={collection.image ?? ''}
+                alt={collection.name}
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
@@ -45,11 +51,14 @@ export function CollectionsStrip() {
             {/* Info overlay */}
             <div className="absolute inset-x-0 bottom-0 p-3 md:p-4">
               <h3 className="font-heading text-sm font-bold text-text-primary md:text-base">
-                {collection.title}
+                {collection.name}
               </h3>
-              <p className="mt-0.5 text-[11px] text-text-secondary">
-                {collection.itemCount} pieces
-              </p>
+              {collection.productCount > 0 && (
+                <p className="mt-0.5 text-[11px] text-text-secondary">
+                  {collection.productCount}{' '}
+                  {collection.productCount === 1 ? 'piece' : 'pieces'}
+                </p>
+              )}
             </div>
           </Link>
           </StaggerItem>
