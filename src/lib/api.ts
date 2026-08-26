@@ -25,6 +25,14 @@ export class ApiError extends Error {
   }
 }
 
+/** Portal-aware login path — admin and artisan hosts have their own screens. */
+function loginPathForHost(hostname: string): string {
+  const label = hostname.split('.')[0].toLowerCase();
+  if (label === 'admin' || label === 'stagingadmin') return '/admin/login';
+  if (label === 'artisan' || label === 'stagingartisan') return '/dashboard/login';
+  return '/login';
+}
+
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem(TOKEN_KEY);
@@ -101,15 +109,27 @@ async function request<T>(endpoint: string, options: RequestInit = {}, retry = t
 
   const response = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers });
 
-  if (response.status === 401 && retry) {
+  // A 401 from the credential endpoints means "those credentials are wrong",
+  // not "your session expired". Refreshing and redirecting on those would wipe
+  // the page before the form could show why the sign-in failed — which is what
+  // made a simple wrong password look like "Session expired".
+  const isCredentialCheck =
+    endpoint.startsWith('/auth/login') ||
+    endpoint.startsWith('/auth/register') ||
+    endpoint.startsWith('/auth/refresh') ||
+    endpoint.startsWith('/auth/forgot-password') ||
+    endpoint.startsWith('/auth/reset-password');
+
+  if (response.status === 401 && retry && !isCredentialCheck) {
     const newToken = await tryRefresh();
     if (newToken) {
       return request<T>(endpoint, options, false, skipContentType);
     }
-    // Refresh failed — redirect to login
+    // Refresh genuinely failed — send them to the login for the portal they are
+    // on, not always the customer one.
     if (typeof window !== 'undefined') {
       clearAuth();
-      window.location.href = '/login';
+      window.location.href = loginPathForHost(window.location.hostname);
     }
     throw new ApiError(401, { error: { code: 'UNAUTHORIZED', message: 'Session expired' } });
   }
