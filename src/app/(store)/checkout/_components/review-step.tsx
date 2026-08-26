@@ -84,12 +84,13 @@ export function ReviewStep({
   onEditPayment,
 }: ReviewStepProps) {
   const router = useRouter();
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal } = useCart();
   const { formatPrice } = useCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** Set when DusuPay mobile money STK push succeeds — no redirect, waiting for webhook. */
   const [pushPending, setPushPending] = useState<{ orderId: string; phone: string } | null>(null);
+  const [pushTimedOut, setPushTimedOut] = useState(false);
 
   // Coupon state
   const [couponInput, setCouponInput] = useState('');
@@ -117,16 +118,37 @@ export function ReviewStep({
   // Poll for payment confirmation once the STK push is sent
   useEffect(() => {
     if (!pushPending) return;
+
+    // Bounded: a declined or ignored mobile-money prompt used to leave the user
+    // on "Waiting for payment confirmation…" forever. 45 attempts x 4s = 3 min,
+    // comfortably longer than a normal STK push.
+    //
+    // Giving up here is a UI decision only. The payment itself is still settled
+    // server-side: payment-reconciliation.service.ts polls DusuPay every 10
+    // minutes, and Paystack/Flutterwave confirm by webhook. So the order is
+    // never lost — the user simply stops being made to stare at a spinner.
+    const MAX_ATTEMPTS = 45;
+    let attempts = 0;
+
     const interval = setInterval(async () => {
+      attempts += 1;
       try {
         const res = await api.get<{ data: { status: string } }>(`/orders/${pushPending.orderId}`);
         if (res.data.status !== 'PENDING') {
+          clearInterval(interval);
           router.push(`/orders/${pushPending.orderId}`);
+          return;
         }
       } catch {
         // keep polling on transient errors
       }
+
+      if (attempts >= MAX_ATTEMPTS) {
+        clearInterval(interval);
+        setPushTimedOut(true);
+      }
     }, 4000);
+
     return () => clearInterval(interval);
   }, [pushPending, router]);
 
@@ -198,7 +220,12 @@ export function ReviewStep({
 
       const paymentRes = await api.post<PaymentInitResponse>('/payments/initialize', paymentBody);
 
-      clearCart();
+      // The cart is NOT cleared here. /payments/initialize only *starts* a
+      // payment — the redirect below has not happened yet and the mobile-money
+      // prompt has not been answered. Clearing now meant an abandoned or
+      // declined payment destroyed the cart with no way back: it lives only in
+      // localStorage (cart.tsx), so there is nothing to restore it from.
+      // The success page clears it once the order is actually paid.
 
       // Step 4: Redirect or show push-pending state
       if (paymentRes.data.requiresRedirect && paymentRes.data.checkoutUrl) {
@@ -216,11 +243,53 @@ export function ReviewStep({
       }
       setIsSubmitting(false);
     }
-  }, [isSubmitting, items, shippingAddress, shippingRegion, paymentSelection, clearCart, appliedCoupon]);
+  }, [isSubmitting, items, shippingAddress, shippingRegion, paymentSelection, appliedCoupon]);
 
   // ---------------------------------------------------------------------------
   // Push-pending screen
   // ---------------------------------------------------------------------------
+
+  // Waited long enough without a confirmation. Payment may still land — the
+  // server reconciles independently — so point the user at their order rather
+  // than implying it failed.
+  if (pushPending && pushTimedOut) {
+    return (
+      <div className="space-y-5 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gold/10">
+          <Phone className="h-8 w-8 text-gold" />
+        </div>
+        <div>
+          <h2 className="font-heading text-lg font-bold text-text-primary">
+            Still waiting for confirmation
+          </h2>
+          <p className="mt-2 text-sm text-text-secondary">
+            We haven&apos;t heard back from your mobile money provider yet. If you
+            approved the request, the payment can still come through — check your
+            order for the latest status.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <button
+            type="button"
+            onClick={() => router.push(`/orders/${pushPending.orderId}`)}
+            className="rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-bg-primary"
+          >
+            View my order
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setPushTimedOut(false);
+              setPushPending({ ...pushPending });
+            }}
+            className="rounded-xl border border-border-dark px-5 py-3 text-sm font-medium text-text-primary"
+          >
+            Keep checking
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (pushPending) {
     return (
