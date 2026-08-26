@@ -75,21 +75,47 @@ export default function OrderSuccessPage() {
 
   if (!order) return null;
 
+  // Same defect as checkout/success: this announced "Order Placed!" without ever
+  // checking status, and nothing links here — it is reached by direct URL or a
+  // payment-provider redirect, which is precisely when the payment may have
+  // failed. Derive the outcome from the order instead of assuming success.
+  const PAID_STATUSES = ['PAID', 'PROCESSING', 'QC_PASSED', 'SHIPPED', 'DELIVERED'];
+  const isPaid = PAID_STATUSES.includes(order.status);
+  const isFailed = order.status === 'CANCELLED' || order.status === 'REFUNDED';
+  const headline = isPaid
+    ? 'Order confirmed'
+    : isFailed
+      ? order.status === 'REFUNDED'
+        ? 'Order refunded'
+        : 'Payment not completed'
+      : 'Confirming your payment…';
+  const subcopy = isPaid
+    ? "Thank you for your order. We'll notify you when it ships."
+    : isFailed
+      ? 'This order was not paid. You can try again from your cart.'
+      : 'We are still waiting for confirmation from your payment provider.';
+
   return (
     <div className="mx-auto max-w-lg px-4 py-10 text-center md:py-16">
       {/* Success animation */}
-      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-success/10">
-        <div className="flex h-14 w-14 animate-check-pop items-center justify-center rounded-full bg-success">
+      <div
+        className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${
+          isFailed ? 'bg-error/10' : 'bg-success/10'
+        }`}
+      >
+        <div
+          className={`flex h-14 w-14 animate-check-pop items-center justify-center rounded-full ${
+            isFailed ? 'bg-error' : 'bg-success'
+          }`}
+        >
           <Check className="h-7 w-7 text-bg-primary" strokeWidth={3} />
         </div>
       </div>
 
       <h1 className="mt-6 font-heading text-2xl font-bold text-text-primary md:text-3xl">
-        Order Placed!
+        {headline}
       </h1>
-      <p className="mt-2 text-sm text-text-secondary">
-        Thank you for your order. We&apos;ll notify you when it ships.
-      </p>
+      <p className="mt-2 text-sm text-text-secondary">{subcopy}</p>
 
       {/* Order number */}
       <div className="mt-6 rounded-xl border border-border-dark bg-bg-elevated p-4">
