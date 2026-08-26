@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
@@ -28,8 +29,8 @@ export default function ArtisanLoginPage() {
         return;
       }
       router.replace('/dashboard');
-    } catch {
-      setError('Invalid phone number or password. Please try again.');
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Invalid phone or email, or password. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -127,16 +128,17 @@ export default function ArtisanLoginPage() {
                 className="mb-1.5 block text-xs font-medium uppercase tracking-wider"
                 style={{ color: 'rgba(255,255,255,0.38)', fontFamily: "'Hanken Grotesk', sans-serif" }}
               >
-                Phone number
+                Phone or email
               </label>
               <input
                 id="phone"
-                type="tel"
-                autoComplete="tel"
+                type="text"
+                inputMode="text"
+                autoComplete="username"
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="+256 700 000 000"
+                placeholder="0700 000 000 or you@example.com"
                 className="w-full rounded-xl px-4 py-3.5 text-sm outline-none transition-all"
                 style={{
                   background: 'rgba(255,255,255,0.06)',
