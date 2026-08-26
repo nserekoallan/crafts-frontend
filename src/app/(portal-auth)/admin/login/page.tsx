@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -24,13 +25,19 @@ export default function AdminLoginPage() {
 
     try {
       const user = await login({ identifier, password });
-      if (user.role !== 'admin' && user.role !== 'super_admin') {
-        setError('This portal is restricted to administrators.');
+      // QC inspectors work inside /admin too — excluding them left that role
+      // with no portal at all.
+      if (user.role !== 'admin' && user.role !== 'super_admin' && user.role !== 'qc_inspector') {
+        setError(
+          user.role === 'artisan'
+            ? 'That account is an artisan account. Sign in at artisan.craftcontinent.com instead.'
+            : 'That account is a shopper account. Sign in at craftcontinent.com instead.',
+        );
         return;
       }
       router.replace('/admin');
-    } catch {
-      setError('Invalid credentials. Please try again.');
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Invalid credentials. Please try again.'));
     } finally {
       setLoading(false);
     }

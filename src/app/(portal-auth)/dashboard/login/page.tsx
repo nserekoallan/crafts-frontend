@@ -25,7 +25,14 @@ export default function ArtisanLoginPage() {
     try {
       const user = await login({ identifier, password });
       if (user.role !== 'artisan') {
-        setError('This portal is for artisans only.');
+        // Signed in successfully, wrong door. Say which door is theirs rather
+        // than leaving them to guess — a QC inspector or admin landing here
+        // otherwise sees a dead end with valid credentials.
+        setError(
+          user.role === 'customer'
+            ? 'That account is a shopper account. Sign in at craftcontinent.com instead.'
+            : 'That account is not an artisan account. Use the admin portal at admin.craftcontinent.com.',
+        );
         return;
       }
       router.replace('/dashboard');
