@@ -139,13 +139,13 @@ export default function ArtisanLoginPage() {
               </label>
               <input
                 id="phone"
-                type="text"
-                inputMode="text"
-                autoComplete="username"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="0700 000 000 or you@example.com"
+                placeholder="0700 000 000"
                 className="w-full rounded-xl px-4 py-3.5 text-sm outline-none transition-all"
                 style={{
                   background: 'rgba(255,255,255,0.06)',
@@ -231,6 +231,12 @@ export default function ArtisanLoginPage() {
               {loading ? 'Signing in…' : 'Sign in to your studio'}
             </button>
           </form>
+
+          <p className="mt-5 text-center text-xs" style={{ color: 'rgba(255,255,255,0.38)' }}>
+            <a href="/forgot-password" className="underline hover:text-white">
+              Forgot your password?
+            </a>
+          </p>
         </div>
       </div>
 
