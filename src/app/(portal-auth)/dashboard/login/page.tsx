@@ -139,13 +139,13 @@ export default function ArtisanLoginPage() {
               </label>
               <input
                 id="phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
+                type="text"
+                inputMode="text"
+                autoComplete="username"
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="0700 000 000"
+                placeholder="0700 000 000 or you@example.com"
                 className="w-full rounded-xl px-4 py-3.5 text-sm outline-none transition-all"
                 style={{
                   background: 'rgba(255,255,255,0.06)',
