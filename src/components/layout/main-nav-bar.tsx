@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth';
 
 const NAV_LINKS = [
   { href: '/shop', label: 'Shop' },
+  { href: '/videos', label: 'Watch' },
   { href: '/artisans', label: 'Artisans' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },

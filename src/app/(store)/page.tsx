@@ -11,6 +11,7 @@ import { DenseProductCard } from '@/components/products/dense-product-card';
 import { DailyDiscovery } from '@/components/home/daily-discovery';
 import { FlashDeals } from '@/components/home/flash-deals';
 import { CollectionsStrip } from '@/components/home/collections-strip';
+import { VideoStrip } from '@/components/home/video-strip';
 import { SurpriseMe } from '@/components/home/surprise-me';
 import { RecentlyViewedStrip } from '@/components/products/recently-viewed-strip';
 import { Stagger, StaggerItem } from '@/components/motion/stagger';
@@ -170,7 +171,10 @@ export default function HomePage() {
       {/* 6. Collections Strip */}
       <CollectionsStrip />
 
-      {/* 7. Full-Width Lifestyle Banner */}
+      {/* 7. Watch & Shop */}
+      <VideoStrip />
+
+      {/* 8. Full-Width Lifestyle Banner */}
       <section ref={lifestyleRef} className="relative h-52 w-full overflow-hidden sm:h-64 md:h-80">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <m.img
@@ -202,7 +206,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 8. Just Arrived */}
+      {/* 9. Just Arrived */}
       {newArrivals.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 py-10 md:py-12 lg:px-8">
           <div className="flex items-center justify-between">
@@ -226,10 +230,10 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* 9. Surprise Me */}
+      {/* 10. Surprise Me */}
       <SurpriseMe />
 
-      {/* 10. Why Crafts Continent — trust/brand section */}
+      {/* 11. Why Crafts Continent — trust/brand section */}
       <section className="mx-auto max-w-7xl px-4 py-10 md:py-12 lg:px-8">
         <h2 className="text-center text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
           Why Crafts Continent
@@ -255,7 +259,7 @@ export default function HomePage() {
         </Stagger>
       </section>
 
-      {/* 11. Recently Viewed */}
+      {/* 12. Recently Viewed */}
       <RecentlyViewedStrip />
     </div>
   );

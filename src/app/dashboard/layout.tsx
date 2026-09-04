@@ -3,7 +3,15 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BarChart3, Box, LayoutDashboard, Settings, ShoppingCart, Wallet } from 'lucide-react';
+import {
+  BarChart3,
+  Box,
+  LayoutDashboard,
+  Settings,
+  ShoppingCart,
+  Video,
+  Wallet,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import { PortalHeader } from '@/components/layout/portal-header';
@@ -12,6 +20,7 @@ import { ContractGate } from '@/components/dashboard/contract-gate';
 const SIDEBAR_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/products', label: 'Products', icon: Box },
+  { href: '/dashboard/videos', label: 'Videos', icon: Video },
   { href: '/dashboard/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/dashboard/earnings', label: 'Earnings', icon: Wallet },
   { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },

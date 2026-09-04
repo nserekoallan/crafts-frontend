@@ -9,6 +9,7 @@ import { api } from '@/lib/api';
 import {
   LayoutDashboard,
   Users,
+  Video,
   UserCheck,
   UserPlus,
   Box,
@@ -45,6 +46,7 @@ const ADMIN_LINKS = [
   { href: '/admin/products', label: 'Products', icon: Box },
   { href: '/admin/categories', label: 'Categories', icon: Tag },
   { href: '/admin/collections', label: 'Collections', icon: Layers },
+  { href: '/admin/videos', label: 'Videos', icon: Video },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/admin/qc', label: 'QC Queue', icon: ClipboardCheck },
   { href: '/admin/featured', label: 'Featured', icon: Sparkles },
