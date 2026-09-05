@@ -48,7 +48,7 @@ export default function LoginPage() {
           className="mx-auto h-16 w-16 rounded-xl object-cover"
         />
         <h1 className="mt-4 text-center text-2xl font-bold text-text-primary">Welcome back</h1>
-        <p className="mt-1 text-center text-sm text-text-secondary">Sign in to keep shopping.</p>
+        <p className="mt-1 text-center text-sm text-text-secondary">Sign in with your phone number to keep shopping.</p>
 
         {error && (
           <div className="mt-4 rounded-lg bg-red-900/20 px-4 py-3 text-sm text-red-400" role="alert">{error}</div>
@@ -56,12 +56,12 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <Input
-            label="Phone or email"
+            label="Phone number"
             type="text"
             name="identifier"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="0700 000 000 or you@example.com"
+            placeholder="0700 000 000"
             required
           />
           <div>
