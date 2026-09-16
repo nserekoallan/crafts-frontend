@@ -32,7 +32,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   // Do not cap zoom — pinch-to-zoom is an accessibility affordance.
-  themeColor: '#111110',
+  themeColor: '#c9a84c',
 };
 
 /**
@@ -44,7 +44,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <ViewTransitions>
     <html lang="en">
       <head>
-        <meta name="theme-color" content="#c9a84c" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
