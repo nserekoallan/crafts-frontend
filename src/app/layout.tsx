@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { ViewTransitions } from 'next-view-transitions';
 import { QueryProvider } from '@/providers/query-provider';
 import { AuthProvider } from '@/lib/auth';
@@ -28,6 +28,13 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  // Do not cap zoom — pinch-to-zoom is an accessibility affordance.
+  themeColor: '#c9a84c',
+};
+
 /**
  * Root layout — provides all React context providers.
  * Store chrome (header, footer, nav) lives in (store)/layout.tsx.
@@ -37,7 +44,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <ViewTransitions>
     <html lang="en">
       <head>
-        <meta name="theme-color" content="#c9a84c" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

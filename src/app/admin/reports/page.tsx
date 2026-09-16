@@ -265,7 +265,7 @@ export default function ReportsPage() {
         {!isLoading && summary && (
           <div>
             <SectionTitle>Top Artisans</SectionTitle>
-            <div className="bg-bg-elevated rounded-xl border border-border-dark overflow-hidden">
+            <div className="bg-bg-elevated rounded-xl border border-border-dark overflow-x-auto">
               {summary.topArtisans.length === 0 ? (
                 <p className="p-6 text-sm text-text-secondary">No data for this period.</p>
               ) : (

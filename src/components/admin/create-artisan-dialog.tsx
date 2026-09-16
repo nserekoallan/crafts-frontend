@@ -92,7 +92,7 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
       <form onSubmit={handleSubmit} className="mt-4 space-y-5">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Account</p>
-          <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-firstName">First Name</label>
               <Input id="ca-firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="mt-1" />

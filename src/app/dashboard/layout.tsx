@@ -54,6 +54,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen flex-col bg-[#111110]">
       <PortalHeader label="Artisan Studio" accentClass="text-hunter-green-light" loginPath="/dashboard/login" />
 
+      {/* Mobile nav strip */}
+      <div className="lg:hidden sticky top-14 z-30 border-b border-white/[0.06] bg-[#0D0D0D] overflow-x-auto">
+        <nav className="flex gap-1 p-2 min-w-max">
+          {SIDEBAR_LINKS.map((link) => {
+            const Icon = link.icon;
+            const active = pathname === link.href;
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  'flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors',
+                  active
+                    ? 'bg-hunter-green/20 text-hunter-green-light'
+                    : 'text-white/50 hover:bg-white/[0.05] hover:text-white/80',
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
       <div className="flex flex-1">
         {/* Dark sidebar — desktop */}
         <aside className="hidden w-52 shrink-0 lg:flex lg:flex-col border-r border-white/[0.06] bg-[#0D0D0D]">
@@ -80,32 +106,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             })}
           </nav>
         </aside>
-
-        {/* Mobile nav strip */}
-        <div className="lg:hidden sticky top-14 z-30 w-full border-b border-white/[0.06] bg-[#0D0D0D] overflow-x-auto">
-          <nav className="flex gap-1 p-2 min-w-max">
-            {SIDEBAR_LINKS.map((link) => {
-              const Icon = link.icon;
-              const active = pathname === link.href;
-
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    'flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors',
-                    active
-                      ? 'bg-hunter-green/20 text-hunter-green-light'
-                      : 'text-white/50 hover:bg-white/[0.05] hover:text-white/80',
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
 
         {/* Main content */}
         <main className="flex-1 min-w-0 p-6 lg:p-8">

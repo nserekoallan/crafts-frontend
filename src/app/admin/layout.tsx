@@ -102,6 +102,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-screen flex-col bg-[#111110]">
       <PortalHeader label="Admin Console" accentClass="text-satin-gold" loginPath="/admin/login" showNotifications />
 
+      {/* Mobile nav strip */}
+      <div className="lg:hidden sticky top-14 z-30 border-b border-white/[0.06] bg-[#0D0D0D] overflow-x-auto">
+        <nav className="flex gap-1 p-2 min-w-max">
+          {navLinks.map((link) => {
+            const Icon = link.icon;
+            const active = isActive(link.href);
+            const showBadge = link.href === '/admin/qc' && pendingQC > 0;
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  'flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors',
+                  active
+                    ? 'bg-satin-gold/10 text-satin-gold'
+                    : 'text-white/50 hover:bg-white/[0.05] hover:text-white/80',
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {link.label}
+                {showBadge && (
+                  <span className="ml-0.5 rounded-full bg-satin-gold px-1.5 py-0 text-[9px] font-bold text-bg-primary">
+                    {pendingQC}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
       <div className="flex flex-1">
         {/* Dark sidebar — desktop */}
         <aside className="hidden w-56 shrink-0 lg:flex lg:flex-col border-r border-white/[0.06] bg-[#0D0D0D]">
@@ -134,38 +166,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             })}
           </nav>
         </aside>
-
-        {/* Mobile nav strip */}
-        <div className="lg:hidden sticky top-14 z-30 w-full border-b border-white/[0.06] bg-[#0D0D0D] overflow-x-auto">
-          <nav className="flex gap-1 p-2 min-w-max">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const active = isActive(link.href);
-              const showBadge = link.href === '/admin/qc' && pendingQC > 0;
-
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    'flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors',
-                    active
-                      ? 'bg-satin-gold/10 text-satin-gold'
-                      : 'text-white/50 hover:bg-white/[0.05] hover:text-white/80',
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {link.label}
-                  {showBadge && (
-                    <span className="ml-0.5 rounded-full bg-satin-gold px-1.5 py-0 text-[9px] font-bold text-bg-primary">
-                      {pendingQC}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
 
         {/* Main content */}
         <main className="flex-1 min-w-0 p-6 lg:p-8">

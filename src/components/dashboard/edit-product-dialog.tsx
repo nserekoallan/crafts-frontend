@@ -542,7 +542,7 @@ export function EditProductDialog({ product, open, onClose }: Props) {
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <div>
                       <label className="text-[11px] text-text-tertiary">Name *</label>
                       <Input
