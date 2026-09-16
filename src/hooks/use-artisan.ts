@@ -65,15 +65,15 @@ export function useArtisanOrders(page = 1) {
   });
 }
 
-export function useArtisanProducts(page = 1) {
+export function useArtisanProducts(page = 1, limit = 20) {
   const { isAuthenticated, user } = useAuth();
   const artisanId = user?.artisan?.id;
 
   return useQuery({
-    queryKey: ['artisan', 'products', artisanId, page],
+    queryKey: ['artisan', 'products', artisanId, page, limit],
     queryFn: () =>
       api
-        .get<ApiProductsResponse>(`/products?artisanId=${artisanId}&page=${page}&limit=20`)
+        .get<ApiProductsResponse>(`/products?artisanId=${artisanId}&page=${page}&limit=${limit}`)
         .then((r) => r),
     enabled: isAuthenticated && !!artisanId,
   });

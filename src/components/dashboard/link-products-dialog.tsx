@@ -13,6 +13,9 @@ import type { ApiVideo } from '@/lib/types/video';
 /** Matches ArrayMaxSize(20) on the API's LinkProductsDto. */
 const MAX_LINKED_PRODUCTS = 20;
 
+/** The API caps page size at 100 (pagination.dto.ts). */
+const PRODUCT_FETCH_LIMIT = 100;
+
 interface LinkProductsDialogProps {
   open: boolean;
   onClose: () => void;
@@ -27,7 +30,9 @@ interface LinkProductsDialogProps {
  */
 export function LinkProductsDialog({ open, onClose, video }: LinkProductsDialogProps) {
   const queryClient = useQueryClient();
-  const { data, isLoading } = useArtisanProducts();
+  // 100 is the API's max page size. Only 20 can be linked, so one page covers
+  // any realistic catalogue; the notice below covers the rest.
+  const { data, isLoading } = useArtisanProducts(1, PRODUCT_FETCH_LIMIT);
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState('');
 
@@ -56,6 +61,8 @@ export function LinkProductsDialog({ open, onClose, video }: LinkProductsDialogP
   });
 
   const products = data?.data ?? [];
+  const total = data?.meta?.total ?? products.length;
+  const hasMore = total > products.length;
   const atLimit = selected.length >= MAX_LINKED_PRODUCTS;
 
   function toggle(productId: string) {
@@ -91,6 +98,7 @@ export function LinkProductsDialog({ open, onClose, video }: LinkProductsDialogP
               <li key={product.id}>
                 <button
                   type="button"
+                  aria-pressed={isSelected}
                   onClick={() => toggle(product.id)}
                   // Only block the ones that would exceed the cap — never the
                   // already-selected ones, or the set could not be reduced.
@@ -120,6 +128,12 @@ export function LinkProductsDialog({ open, onClose, video }: LinkProductsDialogP
             );
           })}
         </ul>
+      )}
+
+      {hasMore && (
+        <p className="mt-2 text-xs text-text-tertiary">
+          Showing the first {products.length} of {total} products.
+        </p>
       )}
 
       {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
