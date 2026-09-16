@@ -31,19 +31,25 @@ export function LinkProductsDialog({ open, onClose, video }: LinkProductsDialogP
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState('');
 
-  // Reset to what the server currently has each time the dialog opens, so a
-  // cancelled edit does not leak into the next one.
+  // Seed from the server's current set when the dialog opens, so a cancelled
+  // edit does not leak into the next one.
+  //
+  // Depends on `open` alone, deliberately. `video.products` is a fresh array on
+  // every refetch, and saving invalidates the videos query — keeping it in the
+  // dependency list would re-run this mid-edit and discard the user's changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!open) return;
     setSelected((video.products ?? []).map((p) => p.productId));
     setError('');
-  }, [open, video.products]);
+  }, [open]);
 
   const save = useMutation({
     mutationFn: () =>
       api.put<{ data: ApiVideo }>(`/videos/${video.id}/products`, { productIds: selected }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['artisan', 'videos'] });
+      // Must match useMyVideos' key (use-videos.ts:53) or the card never refreshes.
+      queryClient.invalidateQueries({ queryKey: ['videos', 'mine'] });
       onClose();
     },
     onError: (err) => setError(apiErrorMessage(err, 'Could not save the linked products.')),
