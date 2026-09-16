@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Film, Plus, Send, Trash2 } from 'lucide-react';
+import { Film, Link2, Plus, Send, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useMyVideos, useSubmitVideo, useDeleteVideo } from '@/hooks/use-videos';
 import { CreateVideoDialog } from '@/components/dashboard/create-video-dialog';
+import { LinkProductsDialog } from '@/components/dashboard/link-products-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDuration, type ApiVideo, type VideoStatus } from '@/lib/types/video';
@@ -32,6 +33,7 @@ export default function DashboardVideosPage() {
   const submit = useSubmitVideo();
   const remove = useDeleteVideo();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [linkingVideo, setLinkingVideo] = useState<ApiVideo | null>(null);
 
   return (
     <div>
@@ -68,6 +70,7 @@ export default function DashboardVideosPage() {
               video={video}
               onSubmit={() => submit.mutate(video.id)}
               onDelete={() => remove.mutate(video.id)}
+              onLinkProducts={() => setLinkingVideo(video)}
               busy={submit.isPending || remove.isPending}
             />
           ))}
@@ -75,6 +78,14 @@ export default function DashboardVideosPage() {
       )}
 
       <CreateVideoDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+
+      {linkingVideo && (
+        <LinkProductsDialog
+          open
+          video={linkingVideo}
+          onClose={() => setLinkingVideo(null)}
+        />
+      )}
     </div>
   );
 }
@@ -83,11 +94,13 @@ function VideoCard({
   video,
   onSubmit,
   onDelete,
+  onLinkProducts,
   busy,
 }: {
   video: ApiVideo;
   onSubmit: () => void;
   onDelete: () => void;
+  onLinkProducts: () => void;
   busy: boolean;
 }) {
   // Only a draft or a rejected video can go back into review, matching the
@@ -133,6 +146,10 @@ function VideoCard({
               <Send className="mr-1 h-3.5 w-3.5" /> Submit
             </Button>
           )}
+          <Button size="sm" variant="ghost" onClick={onLinkProducts} disabled={busy}>
+            <Link2 className="mr-1 h-3.5 w-3.5" />
+            {video.products?.length ? video.products.length : 'Link'}
+          </Button>
           <Button size="sm" variant="ghost" onClick={onDelete} disabled={busy}>
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
