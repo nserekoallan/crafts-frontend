@@ -167,8 +167,13 @@ export function ReviewStep({
       } else {
         setCouponError(res.data.error ?? 'Invalid coupon code.');
       }
-    } catch {
-      setCouponError('Failed to validate coupon.');
+    } catch (err) {
+      // Surface what the server actually said. Swallowing every failure into one
+      // generic string is what made a 401 on this endpoint look like a broken
+      // coupon rather than a missing @Public() decorator.
+      setCouponError(
+        err instanceof ApiError ? err.message : 'Failed to validate coupon.',
+      );
     } finally {
       setCouponLoading(false);
     }
