@@ -180,5 +180,18 @@ export async function uploadVideo(input: UploadVideoInput): Promise<ApiVideo> {
     durationSeconds: meta.durationSeconds,
   });
 
-  return completed.data;
+  // Best-effort: capturePosterFrame fails on some Android codecs, and a video
+  // without a thumbnail is still a usable video. Never fail the upload for it.
+  try {
+    const poster = await capturePosterFrame(file);
+    const form = new FormData();
+    form.append('file', poster, 'poster.jpg');
+    const withPoster = await api.postForm<{ data: ApiVideo }>(
+      `/videos/${video.id}/poster`,
+      form,
+    );
+    return withPoster.data;
+  } catch {
+    return completed.data;
+  }
 }
