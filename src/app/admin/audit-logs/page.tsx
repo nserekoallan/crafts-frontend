@@ -145,7 +145,7 @@ export default function AuditLogsPage() {
           <p className="text-text-secondary">No audit logs found.</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-border-dark bg-bg-elevated overflow-hidden">
+        <div className="rounded-xl border border-border-dark bg-bg-elevated overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border-dark bg-bg-surface/40">

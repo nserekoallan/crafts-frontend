@@ -154,34 +154,36 @@ function ProductsTab({ artisanId }: { artisanId: string }) {
   }
 
   return (
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="border-b border-border-dark">
-          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-secondary">Name</th>
-          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-secondary">Category</th>
-          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-secondary">Status</th>
-          <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-secondary">Price</th>
-          <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-secondary">Stock</th>
-          <th className="px-4 py-3" />
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-border-dark">
-        {products.map((p) => (
-          <tr key={p.id} className="hover:bg-white/[0.02]">
-            <td className="px-4 py-3 font-medium text-text-primary">{p.name}</td>
-            <td className="px-4 py-3 text-text-secondary">{p.category?.name ?? '—'}</td>
-            <td className="px-4 py-3"><Badge variant={statusVariant(p.status)}>{p.status}</Badge></td>
-            <td className="px-4 py-3 text-right text-text-secondary">{formatCurrency(p.price)}</td>
-            <td className="px-4 py-3 text-right text-text-secondary">{p.stock}</td>
-            <td className="px-4 py-3 text-right">
-              <Link href={`/admin/products/${p.id}`} className="text-gold hover:underline text-xs">
-                View
-              </Link>
-            </td>
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-border-dark">
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-secondary">Name</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-secondary">Category</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-secondary">Status</th>
+            <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-secondary">Price</th>
+            <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-secondary">Stock</th>
+            <th className="px-4 py-3" />
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody className="divide-y divide-border-dark">
+          {products.map((p) => (
+            <tr key={p.id} className="hover:bg-white/[0.02]">
+              <td className="px-4 py-3 font-medium text-text-primary">{p.name}</td>
+              <td className="px-4 py-3 text-text-secondary">{p.category?.name ?? '—'}</td>
+              <td className="px-4 py-3"><Badge variant={statusVariant(p.status)}>{p.status}</Badge></td>
+              <td className="px-4 py-3 text-right text-text-secondary">{formatCurrency(p.price)}</td>
+              <td className="px-4 py-3 text-right text-text-secondary">{p.stock}</td>
+              <td className="px-4 py-3 text-right">
+                <Link href={`/admin/products/${p.id}`} className="text-gold hover:underline text-xs">
+                  View
+                </Link>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -204,7 +206,7 @@ function PayoutsTab({ artisanId }: { artisanId: string }) {
   }
 
   return (
-    <div>
+    <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border-dark">

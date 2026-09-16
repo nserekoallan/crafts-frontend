@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { ViewTransitions } from 'next-view-transitions';
 import { QueryProvider } from '@/providers/query-provider';
 import { AuthProvider } from '@/lib/auth';
@@ -26,6 +26,13 @@ export const metadata: Metadata = {
       'Discover and purchase authentic handcrafted African art, textiles, jewelry, and home decor directly from skilled artisans across the continent.',
     images: ['/logo.jpg'],
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  // Do not cap zoom — pinch-to-zoom is an accessibility affordance.
+  themeColor: '#111110',
 };
 
 /**

@@ -326,7 +326,7 @@ function BannersTab() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <Label htmlFor={`banner-title-${idx}`}>Title</Label>
                   <input id={`banner-title-${idx}`} type="text" value={banner.title} onChange={(e) => updateBanner(idx, 'title', e.target.value)} className={inputCls} />
@@ -711,7 +711,7 @@ function LifestyleBannerTab() {
             <Label htmlFor="lb-headline">Headline</Label>
             <input id="lb-headline" type="text" value={form.headline} onChange={(e) => update('headline', e.target.value)} className={inputCls} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label htmlFor="lb-cta-label">CTA Label</Label>
               <input id="lb-cta-label" type="text" value={form.ctaLabel} onChange={(e) => update('ctaLabel', e.target.value)} className={inputCls} />
