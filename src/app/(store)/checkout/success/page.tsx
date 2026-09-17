@@ -97,7 +97,10 @@ function CheckoutSuccessContent() {
       )}
 
       <p className="mt-4 max-w-sm text-sm text-text-secondary">
-        You will receive an email confirmation shortly. Track your order in your account.
+        {/* Customers register with a phone number and no email, so SMS is what
+            actually sends. Promising an email that cannot arrive sent people
+            looking for a message that was never coming. */}
+        We&apos;ll text you order updates. Track your order in your account.
       </p>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
