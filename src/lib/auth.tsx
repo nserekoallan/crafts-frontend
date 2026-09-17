@@ -5,8 +5,12 @@ import { api } from '@/lib/api';
 
 export interface User {
   id: string;
-  email: string;
-  phone?: string;
+  // Both are nullable in the DB (User.email / User.phone are `String? @unique`).
+  // Customers register by phone and have no email; staff have email and no
+  // phone. This was typed the other way round — email required, phone optional —
+  // which is exactly backwards for the commonest account type.
+  email: string | null;
+  phone: string | null;
   firstName: string;
   lastName: string;
   role: 'customer' | 'artisan' | 'admin' | 'super_admin' | 'qc_inspector';
@@ -51,8 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await api.get<{
       data: {
         id: string;
-        email: string;
-        phone?: string;
+        email?: string | null;
+        phone?: string | null;
         role: string;
         firstName?: string;
         lastName?: string;
@@ -63,8 +67,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const d = res.data;
     return {
       id: d.id,
-      email: d.email,
-      phone: d.phone,
+      // The API omits these when absent; the User type uses null throughout.
+      email: d.email ?? null,
+      phone: d.phone ?? null,
       role: d.role.toLowerCase() as User['role'],
       firstName: d.firstName ?? d.profile?.firstName ?? '',
       lastName: d.lastName ?? d.profile?.lastName ?? '',
