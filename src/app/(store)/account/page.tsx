@@ -1043,9 +1043,15 @@ function EmailSection({ profile }: { profile?: UserProfile }) {
 
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-text-secondary" htmlFor="acct-email">
-        Email
-      </label>
+      {/* Only bind the label to the input when that input actually renders —
+          in the empty state there is no #acct-email for it to point at. */}
+      {profile?.email || editing ? (
+        <label className="mb-1.5 block text-sm font-medium text-text-secondary" htmlFor="acct-email">
+          Email
+        </label>
+      ) : (
+        <p className="mb-1.5 block text-sm font-medium text-text-secondary">Email</p>
+      )}
 
       {profile?.email && !editing && (
         <div className="flex items-center gap-2">
