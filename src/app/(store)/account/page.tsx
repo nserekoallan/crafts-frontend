@@ -2,10 +2,22 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Camera, Loader2, LogOut, MapPin, Pencil, Plus, Star, Trash2 } from 'lucide-react';
+import {
+  Camera,
+  CheckCircle,
+  Clock,
+  Loader2,
+  LogOut,
+  MapPin,
+  Pencil,
+  Plus,
+  Star,
+  Trash2,
+} from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { cn } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -16,6 +28,10 @@ interface UserProfile {
   firstName: string;
   lastName: string;
   email: string | null;
+  /** True once the address was confirmed from a link. Only then is it a sign-in credential. */
+  emailVerified?: boolean;
+  /** Claimed but not yet confirmed — lives on the token, not on the account. */
+  pendingEmail?: string | null;
   phone: string | null;
   bio: string | null;
   avatar: string | null;
@@ -234,19 +250,7 @@ function ProfileTab() {
         </div>
       </div>
 
-      {/* Read-only fields */}
-      {profile?.email && (
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-text-secondary">
-            Email <span className="text-text-tertiary">(cannot be changed)</span>
-          </label>
-          <input
-            value={profile.email}
-            readOnly
-            className="w-full cursor-not-allowed rounded-lg border border-border-dark bg-bg-surface/40 px-3.5 py-2.5 text-sm text-text-tertiary"
-          />
-        </div>
-      )}
+      <EmailSection profile={profile} />
 
       {profile?.phone && (
         <div>
@@ -999,6 +1003,140 @@ export default function AccountPage() {
           <SecurityTab />
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Email on the account.
+ *
+ * An unconfirmed address is deliberately NOT on the account record — it lives
+ * on the verification token until proven — so "pending" is surfaced separately
+ * rather than shown as if it were set.
+ */
+function EmailSection({ profile }: { profile?: UserProfile }) {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [email, setEmail] = useState('');
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+
+  const submit = useMutation({
+    mutationFn: (next: string) => api.post('/auth/change-email', { email: next }),
+    onSuccess: () => {
+      setNotice('Check that address for a confirmation link.');
+      setEditing(false);
+      setEmail('');
+      queryClient.invalidateQueries({ queryKey: ['user', 'profile'] });
+    },
+    onError: (err) => setError(apiErrorMessage(err, 'Could not start the change.')),
+  });
+
+  const resend = useMutation({
+    mutationFn: () => api.post('/auth/resend-verification', {}),
+    onSuccess: () => setNotice('Confirmation link sent again.'),
+    onError: (err) => setError(apiErrorMessage(err, 'Could not resend.')),
+  });
+
+  const verified = Boolean(profile?.emailVerified);
+  const pending = profile?.pendingEmail ?? null;
+
+  return (
+    <div>
+      {/* Only bind the label to the input when that input actually renders —
+          in the empty state there is no #acct-email for it to point at. */}
+      {profile?.email || editing ? (
+        <label className="mb-1.5 block text-sm font-medium text-text-secondary" htmlFor="acct-email">
+          Email
+        </label>
+      ) : (
+        <p className="mb-1.5 block text-sm font-medium text-text-secondary">Email</p>
+      )}
+
+      {profile?.email && !editing && (
+        <div className="flex items-center gap-2">
+          <input
+            id="acct-email"
+            value={profile.email}
+            readOnly
+            className="w-full rounded-lg border border-border-dark bg-bg-surface/40 px-3.5 py-2.5 text-sm text-text-tertiary"
+          />
+          {verified && <CheckCircle className="h-4 w-4 shrink-0 text-hunter-green-light" />}
+        </div>
+      )}
+
+      {!profile?.email && !editing && (
+        <p className="text-sm text-text-tertiary">
+          {pending
+            ? `Waiting for you to confirm ${pending}.`
+            : 'No email yet. Add one to get order updates by email.'}
+        </p>
+      )}
+
+      {editing && (
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input
+            id="acct-email"
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setError('');
+            }}
+            placeholder="you@example.com"
+            className="w-full rounded-lg border border-border-dark bg-bg-surface px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+          />
+          <button
+            type="button"
+            onClick={() => submit.mutate(email.trim())}
+            disabled={!email.trim() || submit.isPending}
+            className="shrink-0 rounded-lg bg-gold px-4 py-2.5 text-sm font-medium text-bg-primary disabled:opacity-50"
+          >
+            {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send link'}
+          </button>
+        </div>
+      )}
+
+      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+        {!editing && (
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(true);
+              setNotice('');
+              setError('');
+            }}
+            className="font-medium text-gold hover:underline"
+          >
+            {profile?.email ? 'Change email' : 'Add email'}
+          </button>
+        )}
+        {editing && (
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(false);
+              setError('');
+            }}
+            className="text-text-tertiary hover:text-text-secondary"
+          >
+            Cancel
+          </button>
+        )}
+        {pending && !editing && (
+          <button
+            type="button"
+            onClick={() => resend.mutate()}
+            disabled={resend.isPending}
+            className="inline-flex items-center gap-1 text-text-tertiary hover:text-text-secondary disabled:opacity-50"
+          >
+            <Clock className="h-3 w-3" /> Resend link
+          </button>
+        )}
+      </div>
+
+      {notice && <p className="mt-1.5 text-xs text-hunter-green-light">{notice}</p>}
+      {error && <p className="mt-1.5 text-xs text-red-400">{error}</p>}
     </div>
   );
 }

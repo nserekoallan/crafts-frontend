@@ -16,6 +16,7 @@ export default function RegisterPage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +26,13 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      const user = await register({ firstName, lastName, phone, password });
+      const user = await register({
+        firstName,
+        lastName,
+        phone,
+        password,
+        email: email.trim() || undefined,
+      });
       if (user) router.push('/account');
     } catch (err) {
       setError(
@@ -80,6 +87,23 @@ export default function RegisterPage() {
             />
             <p className="mt-1.5 text-xs text-text-tertiary">
               You&apos;ll use this to sign in. Any format works.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-primary" htmlFor="email">
+              Email <span className="text-text-tertiary">(optional)</span>
+            </label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="mt-1.5"
+            />
+            <p className="mt-1.5 text-xs text-text-tertiary">
+              For order updates. Confirm it later to sign in with it too.
             </p>
           </div>
 
