@@ -27,6 +27,9 @@ interface RegisterPayload {
   lastName: string;
   phone: string;
   password: string;
+  /** Optional. Not attached to the account until confirmed, so it is not a
+   *  sign-in credential yet at this point. */
+  email?: string;
 }
 
 interface AuthContextValue {
