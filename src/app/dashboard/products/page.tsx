@@ -202,6 +202,19 @@ export default function ProductsPage() {
                         <span>Suspended: {product.suspensionReason}</span>
                       </p>
                     )}
+                    {(product.status === 'DRAFT' || product.status === 'REJECTED') &&
+                      !(isSubmittable(product) && artisanVerified) && (
+                        <p className="mt-1 inline-flex items-start gap-1 text-[11px] text-amber-400">
+                          <AlertCircle className="mt-px h-3 w-3 shrink-0" />
+                          <span>
+                            {!artisanVerified
+                              ? 'Your account has not been verified. Please contact the admin to get verified.'
+                              : (product.images?.length ?? 0) < 1
+                                ? 'Add at least one image to submit for review.'
+                                : 'Price must be greater than 0 to submit for review.'}
+                          </span>
+                        </p>
+                      )}
                   </td>
                   <td className="px-5 py-3">
                     <Badge variant={getStatusVariant(product.status)}>

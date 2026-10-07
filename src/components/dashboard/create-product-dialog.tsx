@@ -168,6 +168,12 @@ export function CreateProductDialog({ open, onClose }: Props) {
     e.preventDefault();
     setError('');
     setImageUploadError('');
+
+    if (!(parseFloat(price) >= 100)) {
+      setError('Price must be at least UGX 100.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const created = await api.post<{ data: { id: string } }>('/products', {
@@ -258,7 +264,7 @@ export function CreateProductDialog({ open, onClose }: Props) {
 
   return (
     <Dialog open={open} onClose={handleClose} title="Add Product" className="max-w-xl">
-      <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4">
         <div>
           <label className="block text-sm font-medium text-text-secondary" htmlFor="cp-name">
             Product Name <span className="text-red-400">*</span>
