@@ -42,7 +42,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md rounded-xl border border-border-dark bg-bg-surface p-8 shadow-sm">
         <Image
           src="/logo.jpg"
-          alt="Crafts Continent"
+          alt="Craft Continent"
           width={64}
           height={64}
           className="mx-auto h-16 w-16 rounded-xl object-cover"

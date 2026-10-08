@@ -79,7 +79,7 @@ export default function AdminLoginPage() {
           <div className="flex items-center gap-3">
             <Image
               src="/logo.jpg"
-              alt="Crafts Continent"
+              alt="Craft Continent"
               width={36}
               height={36}
               className="rounded-lg object-cover opacity-90"
@@ -88,7 +88,7 @@ export default function AdminLoginPage() {
               className="text-xs font-semibold uppercase tracking-[0.2em]"
               style={{ color: 'rgba(255,255,255,0.5)', fontFamily: "'Hanken Grotesk', sans-serif" }}
             >
-              Crafts Continent
+              Craft Continent
             </span>
           </div>
 
@@ -139,7 +139,7 @@ export default function AdminLoginPage() {
               color: 'rgba(255,255,255,0.2)',
             }}
           >
-            Crafts Continent &copy; {new Date().getFullYear()}
+            Craft Continent &copy; {new Date().getFullYear()}
           </div>
         </div>
       </div>
@@ -153,7 +153,7 @@ export default function AdminLoginPage() {
         <div className="mb-10 flex items-center gap-3 lg:hidden">
           <Image
             src="/logo.jpg"
-            alt="Crafts Continent"
+            alt="Craft Continent"
             width={32}
             height={32}
             className="rounded-lg object-cover"

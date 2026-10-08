@@ -74,7 +74,7 @@ export default function ArtisanLoginPage() {
         <div className="mb-8 flex flex-col items-center gap-3">
           <Image
             src="/logo.jpg"
-            alt="Crafts Continent"
+            alt="Craft Continent"
             width={48}
             height={48}
             className="rounded-xl object-cover"
@@ -248,7 +248,7 @@ export default function ArtisanLoginPage() {
           fontFamily: "'Hanken Grotesk', sans-serif",
         }}
       >
-        &copy; {new Date().getFullYear()} Crafts Continent
+        &copy; {new Date().getFullYear()} Craft Continent
       </p>
     </div>
   );

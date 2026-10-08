@@ -16,18 +16,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     });
 
     if (!res.ok) {
-      return { title: 'Collection | Crafts Continent' };
+      return { title: 'Collection | Craft Continent' };
     }
 
     const json = await res.json();
     const collection = json.data;
 
     return {
-      title: `${collection.name} | Crafts Continent`,
+      title: `${collection.name} | Craft Continent`,
       description: collection.description ?? undefined,
     };
   } catch {
-    return { title: 'Collection | Crafts Continent' };
+    return { title: 'Collection | Craft Continent' };
   }
 }
 

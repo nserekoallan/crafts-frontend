@@ -10,7 +10,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Crafts Continent | Authentic African Artisan Marketplace',
+  title: 'Craft Continent | Authentic African Artisan Marketplace',
   description:
     'Discover and purchase authentic handcrafted African art, textiles, jewelry, and home decor directly from skilled artisans across the continent.',
   icons: { icon: '/logo.jpg' },
@@ -18,10 +18,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Crafts Continent',
+    title: 'Craft Continent',
   },
   openGraph: {
-    title: 'Crafts Continent | Authentic African Artisan Marketplace',
+    title: 'Craft Continent | Authentic African Artisan Marketplace',
     description:
       'Discover and purchase authentic handcrafted African art, textiles, jewelry, and home decor directly from skilled artisans across the continent.',
     images: ['/logo.jpg'],

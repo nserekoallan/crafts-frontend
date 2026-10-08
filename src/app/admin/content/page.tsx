@@ -737,7 +737,7 @@ function LifestyleBannerTab() {
 function AboutPageTab() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<AboutContent>({
-    heroTitle: 'About Crafts Continent',
+    heroTitle: 'About Craft Continent',
     heroDescription: '',
     mission: '',
     ctaText: '',

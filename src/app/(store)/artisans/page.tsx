@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { ArtisansClient } from './_components/artisans-client';
 
 export const metadata: Metadata = {
-  title: 'Meet Our Artisans | Crafts Continent',
+  title: 'Meet Our Artisans | Craft Continent',
   description:
     'Discover skilled African craftspeople and their handmade creations.',
 };

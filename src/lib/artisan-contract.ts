@@ -4,7 +4,7 @@
  */
 export const CURRENT_CONTRACT_VERSION = '1.0';
 
-export const ARTISAN_CONTRACT_TITLE = 'Crafts Continent Artisan Agreement';
+export const ARTISAN_CONTRACT_TITLE = 'Craft Continent Artisan Agreement';
 
 export const ARTISAN_CONTRACT_SECTIONS: { heading: string; body: string }[] = [
   {
@@ -13,7 +13,7 @@ export const ARTISAN_CONTRACT_SECTIONS: { heading: string; body: string }[] = [
   },
   {
     heading: '2. Pricing & Fees',
-    body: 'You set your own base prices. Crafts Continent applies a platform markup to the displayed price and deducts agreed platform fees from each sale. Changes to the price of a live product are subject to review before they take effect.',
+    body: 'You set your own base prices. Craft Continent applies a platform markup to the displayed price and deducts agreed platform fees from each sale. Changes to the price of a live product are subject to review before they take effect.',
   },
   {
     heading: '3. Onboarding & Verification',
@@ -29,6 +29,6 @@ export const ARTISAN_CONTRACT_SECTIONS: { heading: string; body: string }[] = [
   },
   {
     heading: '6. Term & Termination',
-    body: 'Either party may end this relationship at any time. Crafts Continent may suspend or remove listings or accounts that breach these terms. Outstanding obligations survive termination.',
+    body: 'Either party may end this relationship at any time. Craft Continent may suspend or remove listings or accounts that breach these terms. Outstanding obligations survive termination.',
   },
 ];

@@ -1,5 +1,5 @@
 /**
- * Centralized mock data for the Crafts Continent marketplace.
+ * Centralized mock data for the Craft Continent marketplace.
  * Uses local product images from /products/ directory.
  */
 

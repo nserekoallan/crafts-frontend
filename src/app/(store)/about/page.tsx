@@ -34,9 +34,9 @@ const VALUES = [
 ] as const;
 
 const DEFAULT_ABOUT = {
-  heroTitle: 'About Crafts Continent',
+  heroTitle: 'About Craft Continent',
   heroDescription:
-    'Crafts Continent is an online marketplace dedicated to bringing authentic African artisan products to the world. We bridge the gap between talented makers and conscious consumers who value quality, heritage, and fair trade.',
+    'Craft Continent is an online marketplace dedicated to bringing authentic African artisan products to the world. We bridge the gap between talented makers and conscious consumers who value quality, heritage, and fair trade.',
   mission:
     'To preserve and promote African craftsmanship by providing artisans with a global platform, fair compensation, and the tools they need to thrive — while offering customers unique, handcrafted products with a story.',
   ctaText: 'Discover unique, handcrafted pieces from across the continent.',
@@ -54,7 +54,7 @@ export default function AboutPage() {
       <div className="text-center">
         <Image
           src="/logo.jpg"
-          alt="Crafts Continent"
+          alt="Craft Continent"
           width={96}
           height={96}
           className="mx-auto mb-6 h-20 w-20 rounded-2xl object-cover md:h-24 md:w-24"

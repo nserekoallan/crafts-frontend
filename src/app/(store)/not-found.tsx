@@ -9,7 +9,7 @@ export default function NotFound() {
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16 text-center">
       <Image
         src="/logo.jpg"
-        alt="Crafts Continent"
+        alt="Craft Continent"
         width={128}
         height={128}
         className="h-24 w-24 rounded-2xl object-cover md:h-32 md:w-32"

@@ -233,10 +233,10 @@ export default function HomePage() {
       {/* 10. Surprise Me */}
       <SurpriseMe />
 
-      {/* 11. Why Crafts Continent — trust/brand section */}
+      {/* 11. Why Craft Continent — trust/brand section */}
       <section className="mx-auto max-w-7xl px-4 py-10 md:py-12 lg:px-8">
         <h2 className="text-center text-xs font-bold uppercase tracking-[0.2em] text-gold md:text-sm">
-          Why Crafts Continent
+          Why Craft Continent
         </h2>
         <Stagger className="mt-6 grid grid-cols-2 gap-4 md:mt-8 md:grid-cols-4 md:gap-6">
           {trustPoints.map((point) => {
