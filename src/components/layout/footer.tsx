@@ -84,13 +84,13 @@ export function Footer() {
           <div className="flex flex-col items-center md:items-start">
             <Image
               src="/logo.jpg"
-              alt="Crafts Continent"
+              alt="Craft Continent"
               width={56}
               height={56}
               className="h-14 w-14 rounded-lg object-cover"
             />
             <p className="mt-3 font-heading text-lg font-bold uppercase tracking-[0.15em] text-gold">
-              Crafts Continent
+              Craft Continent
             </p>
             <p className="mt-1 text-sm text-text-secondary">
               Authentic African Artisan Marketplace
@@ -134,7 +134,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 border-t border-border-dark pt-6 text-center text-xs text-text-tertiary">
-          &copy; {new Date().getFullYear()} Crafts Continent. All rights reserved.
+          &copy; {new Date().getFullYear()} Craft Continent. All rights reserved.
         </div>
       </div>
     </footer>

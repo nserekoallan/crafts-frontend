@@ -58,7 +58,7 @@ export default function ContactPage() {
       <div className="text-center">
         <Image
           src="/logo.jpg"
-          alt="Crafts Continent"
+          alt="Craft Continent"
           width={64}
           height={64}
           className="mx-auto mb-5 h-16 w-16 rounded-xl object-cover"

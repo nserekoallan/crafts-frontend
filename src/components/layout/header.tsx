@@ -355,13 +355,13 @@ function HeaderInner() {
           <Link href="/" className="flex min-w-0 shrink items-center gap-2">
             <Image
               src="/logo.jpg"
-              alt="Crafts Continent"
+              alt="Craft Continent"
               width={48}
               height={48}
               className="h-10 w-10 shrink-0 rounded-lg object-cover md:h-12 md:w-12"
             />
             <span className="truncate font-heading text-sm font-bold uppercase tracking-[0.08em] text-gold sm:text-base sm:tracking-[0.12em] md:text-xl md:tracking-[0.15em]">
-              Crafts Continent
+              Craft Continent
             </span>
           </Link>
 

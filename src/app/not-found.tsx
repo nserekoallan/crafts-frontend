@@ -10,7 +10,7 @@ export default function NotFound() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-bg-primary px-4 text-center">
       <Image
         src="/logo.jpg"
-        alt="Crafts Continent"
+        alt="Craft Continent"
         width={96}
         height={96}
         className="h-20 w-20 rounded-2xl object-cover"

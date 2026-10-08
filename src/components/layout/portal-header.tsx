@@ -199,13 +199,13 @@ export function PortalHeader({
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/logo.jpg"
-            alt="Crafts Continent"
+            alt="Craft Continent"
             width={32}
             height={32}
             className="h-8 w-8 rounded-md object-cover"
           />
           <span className="hidden font-heading text-sm font-bold uppercase tracking-widest text-white sm:inline">
-            Crafts Continent
+            Craft Continent
           </span>
         </Link>
 

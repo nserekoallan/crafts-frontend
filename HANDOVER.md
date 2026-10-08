@@ -5,7 +5,7 @@ ground-truth of where CraftContinent actually lives and runs, so this session ca
 
 ## Where everything is (verified live 2026-06-22)
 - **Live host:** `62.84.181.200` — serves the production site. `https://app.craftcontinent.com`
-  and `https://craftcontinent.com` → **200** ("Crafts Continent | Authentic African Artisan
+  and `https://craftcontinent.com` → **200** ("Craft Continent | Authentic African Artisan
   Marketplace"). This is a **standalone server** (not shared with MerriMor).
 - **This repo** (`crafts-frontend`, Next.js 16) is the frontend. Baked config: Dockerfile
   `ENV NEXT_PUBLIC_API_URL=https://api.craftcontinent.com/api/v1`. No `.env`, no compose.

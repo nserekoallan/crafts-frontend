@@ -17,21 +17,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     });
 
     if (!res.ok) {
-      return { title: 'Product | Crafts Continent' };
+      return { title: 'Product | Craft Continent' };
     }
 
     const json = await res.json();
     const product = json.data;
 
     return {
-      title: `${product.name} | Crafts Continent`,
+      title: `${product.name} | Craft Continent`,
       description: product.description?.slice(0, 160) ?? undefined,
       openGraph: product.images?.[0]?.url
         ? { images: [product.images[0].url] }
         : undefined,
     };
   } catch {
-    return { title: 'Product | Crafts Continent' };
+    return { title: 'Product | Craft Continent' };
   }
 }
 

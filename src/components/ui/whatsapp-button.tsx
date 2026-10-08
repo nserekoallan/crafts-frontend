@@ -15,7 +15,7 @@ const WHATSAPP_NUMBER = '256700000000';
  */
 export function WhatsAppButton({ productName, className }: WhatsAppButtonProps) {
   const message = encodeURIComponent(
-    `Hi! I'm interested in ordering "${productName}" from Crafts Continent. Could you help me with the details?`,
+    `Hi! I'm interested in ordering "${productName}" from Craft Continent. Could you help me with the details?`,
   );
 
   return (

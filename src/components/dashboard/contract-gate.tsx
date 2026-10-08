@@ -83,7 +83,7 @@ export function ContractGate({
           onChange={(e) => setAgreed(e.target.checked)}
           className="mt-0.5 h-4 w-4 accent-hunter-green"
         />
-        I have read and agree to the Crafts Continent Artisan Agreement and Terms.
+        I have read and agree to the Craft Continent Artisan Agreement and Terms.
       </label>
 
       {error && <p className="mt-3 text-sm text-error">{error}</p>}
