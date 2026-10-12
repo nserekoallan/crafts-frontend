@@ -3,10 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Check, Package, ShoppingBag } from 'lucide-react';
+import { Check, ImageOff, Loader2, Package, ShoppingBag, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
+import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
+import {
+  type CustomerOrderItem,
+  PAID_ORDER_STATUSES,
+  consumeCheckoutOrder,
+  orderItemImage,
+  orderItemLineTotal,
+} from '@/lib/order-items';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,14 +33,11 @@ interface Order {
     country: string;
     state?: string;
   } | null;
-  items: Array<{
-    id: string;
-    quantity: number;
-    price: number;
-    product: { name: string; imageUrl: string };
-  }>;
+  items: CustomerOrderItem[];
   createdAt: string;
 }
+
+const PENDING_POLL_MS = 4000;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -46,6 +51,7 @@ export default function OrderSuccessPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { formatPrice } = useCurrency();
+  const { clearCart } = useCart();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,6 +71,31 @@ export default function OrderSuccessPage() {
     }
   }, [authLoading, isAuthenticated, id, router]);
 
+  const orderStatus = order?.status;
+  useEffect(() => {
+    if (orderStatus !== 'PENDING' || !id) return;
+    let disposed = false;
+    const interval = setInterval(() => {
+      api
+        .get<{ data: Order }>(`/orders/${id}`)
+        .then((res) => {
+          if (!disposed) setOrder(res.data);
+        })
+        .catch(() => undefined);
+    }, PENDING_POLL_MS);
+    return () => {
+      disposed = true;
+      clearInterval(interval);
+    };
+  }, [orderStatus, id]);
+
+  // The cart is kept until payment succeeds so a failed payment can be retried,
+  // and is only cleared for the order this tab just checked out.
+  const isPaidStatus = orderStatus !== undefined && PAID_ORDER_STATUSES.includes(orderStatus);
+  useEffect(() => {
+    if (isPaidStatus && id && consumeCheckoutOrder(id)) clearCart();
+  }, [isPaidStatus, id, clearCart]);
+
   if (authLoading || loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -79,8 +110,7 @@ export default function OrderSuccessPage() {
   // checking status, and nothing links here — it is reached by direct URL or a
   // payment-provider redirect, which is precisely when the payment may have
   // failed. Derive the outcome from the order instead of assuming success.
-  const PAID_STATUSES = ['PAID', 'PROCESSING', 'QC_PASSED', 'SHIPPED', 'DELIVERED'];
-  const isPaid = PAID_STATUSES.includes(order.status);
+  const isPaid = isPaidStatus;
   const isFailed = order.status === 'CANCELLED' || order.status === 'REFUNDED';
   const headline = isPaid
     ? 'Order confirmed'
@@ -91,25 +121,31 @@ export default function OrderSuccessPage() {
       : 'Confirming your payment…';
   const subcopy = isPaid
     ? "Thank you for your order. We'll notify you when it ships."
-    : isFailed
-      ? 'This order was not paid. You can try again from your cart.'
-      : 'We are still waiting for confirmation from your payment provider.';
+    : order.status === 'REFUNDED'
+      ? 'This order has been refunded.'
+      : isFailed
+        ? 'This order was not paid. You can try again from your cart.'
+        : 'We are still waiting for confirmation from your payment provider.';
 
   return (
     <div className="mx-auto max-w-lg px-4 py-10 text-center md:py-16">
-      {/* Success animation */}
+      {/* Outcome icon: check only once paid, X on failure, spinner while waiting */}
       <div
         className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${
-          isFailed ? 'bg-error/10' : 'bg-success/10'
+          isPaid ? 'bg-success/10' : isFailed ? 'bg-error/10' : 'bg-gold/10'
         }`}
       >
-        <div
-          className={`flex h-14 w-14 animate-check-pop items-center justify-center rounded-full ${
-            isFailed ? 'bg-error' : 'bg-success'
-          }`}
-        >
-          <Check className="h-7 w-7 text-bg-primary" strokeWidth={3} />
-        </div>
+        {isPaid ? (
+          <div className="flex h-14 w-14 animate-check-pop items-center justify-center rounded-full bg-success">
+            <Check className="h-7 w-7 text-bg-primary" strokeWidth={3} />
+          </div>
+        ) : isFailed ? (
+          <div className="flex h-14 w-14 animate-check-pop items-center justify-center rounded-full bg-error">
+            <X className="h-7 w-7 text-bg-primary" strokeWidth={3} />
+          </div>
+        ) : (
+          <Loader2 className="h-10 w-10 animate-spin text-gold" aria-label="Waiting for payment" />
+        )}
       </div>
 
       <h1 className="mt-6 font-heading text-2xl font-bold text-text-primary md:text-3xl">
@@ -135,12 +171,18 @@ export default function OrderSuccessPage() {
         <div className="mt-3 divide-y divide-border-dark">
           {order.items.map((item) => (
             <div key={item.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={item.product.imageUrl}
-                alt={item.product.name}
-                className="h-10 w-10 shrink-0 rounded-lg object-cover"
-              />
+              {orderItemImage(item) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={orderItemImage(item)!}
+                  alt={item.product.name}
+                  className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bg-surface text-text-tertiary">
+                  <ImageOff className="h-4 w-4" />
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-text-primary line-clamp-1">
                   {item.product.name}
@@ -148,7 +190,7 @@ export default function OrderSuccessPage() {
                 <p className="text-xs text-text-tertiary">Qty: {item.quantity}</p>
               </div>
               <p className="shrink-0 text-sm font-medium text-text-primary">
-                {formatPrice(item.price * item.quantity)}
+                {formatPrice(orderItemLineTotal(item))}
               </p>
             </div>
           ))}
