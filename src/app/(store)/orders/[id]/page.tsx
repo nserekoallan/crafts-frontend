@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Check, Clock, Package, Star, Truck, XCircle } from 'lucide-react';
+import { ArrowLeft, Check, Clock, ImageOff, Package, Star, Truck, XCircle } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
 import { useCurrency } from '@/lib/currency';
 import { cn } from '@/lib/utils';
+import { type CustomerOrderItem, orderItemImage, orderItemLineTotal } from '@/lib/order-items';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -44,14 +45,25 @@ interface Order {
     phone?: string;
   } | null;
   notes: string | null;
-  items: Array<{
-    id: string;
-    quantity: number;
-    price: number;
-    product: { id: string; name: string; imageUrl: string; slug: string };
-  }>;
+  items: CustomerOrderItem[];
+  payments?: Array<{ status: string; createdAt: string }>;
   createdAt: string;
   updatedAt: string;
+}
+
+const PENDING_POLL_MS = 5000;
+
+function ItemThumb({ item, className }: { item: CustomerOrderItem; className: string }) {
+  const src = orderItemImage(item);
+  if (!src) {
+    return (
+      <div className={cn('flex items-center justify-center bg-bg-surface text-text-tertiary', className)}>
+        <ImageOff className="h-4 w-4" />
+      </div>
+    );
+  }
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={src} alt={item.product.name} className={cn('object-cover', className)} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -165,12 +177,7 @@ function ReviewCard({
   if (submitted || alreadyReviewed || hasExistingReview) {
     return (
       <div className="flex items-center gap-3 rounded-lg border border-border-dark p-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={item.product.imageUrl}
-          alt={item.product.name}
-          className="h-10 w-10 shrink-0 rounded-lg object-cover"
-        />
+        <ItemThumb item={item} className="h-10 w-10 shrink-0 rounded-lg" />
         <div className="min-w-0 flex-1">
           <p className="line-clamp-1 text-sm font-medium text-text-primary">
             {item.product.name}
@@ -186,12 +193,7 @@ function ReviewCard({
   return (
     <div className="rounded-lg border border-border-dark p-4">
       <div className="flex items-center gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={item.product.imageUrl}
-          alt={item.product.name}
-          className="h-10 w-10 shrink-0 rounded-lg object-cover"
-        />
+        <ItemThumb item={item} className="h-10 w-10 shrink-0 rounded-lg" />
         <p className="line-clamp-1 min-w-0 flex-1 text-sm font-medium text-text-primary">
           {item.product.name}
         </p>
@@ -261,10 +263,33 @@ export default function OrderDetailPage() {
       setCancelSuccess(true);
       setCancelError(null);
     },
-    onError: () => {
-      setCancelError('Failed to cancel order. Please try again.');
+    onError: (err) => {
+      setCancelError(
+        err instanceof ApiError ? err.message : 'Failed to cancel order. Please try again.',
+      );
     },
   });
+
+  // While unpaid, the outcome arrives server-side (webhook or reconciliation),
+  // so keep the page current instead of showing "Order Placed" indefinitely.
+  const orderStatus = order?.status;
+  useEffect(() => {
+    if (orderStatus !== 'PENDING' || !id) return;
+    let disposed = false;
+    const interval = setInterval(() => {
+      api
+        .get<{ data: Order }>(`/orders/${id}`)
+        .then((res) => {
+          // A poll that resolves after the customer cancelled must not revert the UI.
+          if (!disposed) setOrder(res.data);
+        })
+        .catch(() => undefined);
+    }, PENDING_POLL_MS);
+    return () => {
+      disposed = true;
+      clearInterval(interval);
+    };
+  }, [orderStatus, id]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -308,6 +333,10 @@ export default function OrderDetailPage() {
 
   const isTerminal = order.status === 'CANCELLED' || order.status === 'REFUNDED';
   const currentIndex = getStatusIndex(order.status);
+  const latestPayment = order.payments
+    ?.slice()
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  const paymentFailed = order.status === 'CANCELLED' && latestPayment?.status === 'FAILED';
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
@@ -332,7 +361,8 @@ export default function OrderDetailPage() {
             })}
           </p>
         </div>
-        {['PENDING', 'PAID', 'PROCESSING', 'QC_PASSED'].includes(order.status) && !cancelSuccess && (
+        {/* Customers can only cancel unpaid orders; paid ones go through an admin refund. */}
+        {order.status === 'PENDING' && !cancelSuccess && (
           <button
             onClick={() => { setShowCancelConfirm(true); setCancelError(null); }}
             className="shrink-0 rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/10"
@@ -377,6 +407,17 @@ export default function OrderDetailPage() {
         </div>
       )}
 
+      {/* Awaiting payment */}
+      {order.status === 'PENDING' && !cancelSuccess && (
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-gold/30 bg-gold/10 p-3 text-sm text-text-primary">
+          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+          <span>
+            Awaiting payment. If you chose mobile money, approve the prompt on your phone — this
+            page updates automatically.
+          </span>
+        </div>
+      )}
+
       {/* Terminal status banner */}
       {isTerminal && (
         <div
@@ -386,7 +427,17 @@ export default function OrderDetailPage() {
               : 'border-warning/30 bg-warning/10 text-warning'
           }`}
         >
-          This order has been {order.status.toLowerCase()}.
+          {paymentFailed ? (
+            <>
+              Payment was not completed, so this order was cancelled.{' '}
+              <Link href="/cart" className="underline underline-offset-2">
+                Go to your cart
+              </Link>{' '}
+              to try again.
+            </>
+          ) : (
+            <>This order has been {order.status.toLowerCase()}.</>
+          )}
         </div>
       )}
 
@@ -473,12 +524,7 @@ export default function OrderDetailPage() {
           {order.items.map((item) => (
             <div key={item.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
               <Link href={`/shop/${item.product.slug}`} className="shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={item.product.imageUrl}
-                  alt={item.product.name}
-                  className="h-14 w-14 rounded-lg object-cover"
-                />
+                <ItemThumb item={item} className="h-14 w-14 rounded-lg" />
               </Link>
               <div className="min-w-0 flex-1">
                 <Link href={`/shop/${item.product.slug}`}>
@@ -487,11 +533,11 @@ export default function OrderDetailPage() {
                   </p>
                 </Link>
                 <p className="text-xs text-text-tertiary">
-                  {item.quantity} x {formatPrice(item.price)}
+                  {item.quantity} x {formatPrice(orderItemLineTotal(item) / item.quantity)}
                 </p>
               </div>
               <p className="shrink-0 text-sm font-semibold text-text-primary">
-                {formatPrice(item.price * item.quantity)}
+                {formatPrice(orderItemLineTotal(item))}
               </p>
             </div>
           ))}

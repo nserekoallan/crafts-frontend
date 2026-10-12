@@ -6,6 +6,7 @@ import { ArrowLeft, CheckCircle, Edit2, Loader2, Phone, ShieldCheck, Tag, Truck,
 import { useQuery } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
 import { useCart } from '@/lib/cart';
+import { rememberCheckoutOrder } from '@/lib/order-items';
 import { useCurrency } from '@/lib/currency';
 import type { ShippingAddress } from './shipping-step';
 import type { PaymentSelection } from './payment-step';
@@ -91,6 +92,8 @@ export function ReviewStep({
   /** Set when DusuPay mobile money STK push succeeds — no redirect, waiting for webhook. */
   const [pushPending, setPushPending] = useState<{ orderId: string; phone: string } | null>(null);
   const [pushTimedOut, setPushTimedOut] = useState(false);
+  /** Set when the order is cancelled because the payment failed or expired. */
+  const [pushFailed, setPushFailed] = useState(false);
 
   // Coupon state
   const [couponInput, setCouponInput] = useState('');
@@ -129,27 +132,49 @@ export function ReviewStep({
     // never lost — the user simply stops being made to stare at a spinner.
     const MAX_ATTEMPTS = 45;
     let attempts = 0;
+    // A response that lands after this attempt is disposed (retry, unmount)
+    // must not change the screen.
+    let disposed = false;
+    let inFlight = false;
 
     const interval = setInterval(async () => {
+      if (inFlight) return;
+      inFlight = true;
       attempts += 1;
       try {
         const res = await api.get<{ data: { status: string } }>(`/orders/${pushPending.orderId}`);
-        if (res.data.status !== 'PENDING') {
+        if (disposed) return;
+        const status = res.data.status;
+        if (status === 'CANCELLED') {
+          // Failed or expired payment: stay here and offer a retry. The cart is
+          // still intact because it is only cleared once an order is paid.
           clearInterval(interval);
-          router.push(`/orders/${pushPending.orderId}`);
+          setPushFailed(true);
+          return;
+        }
+        if (status !== 'PENDING') {
+          // The success page clears the cart. Clearing it here would trip the
+          // checkout page's empty-cart redirect to /shop before navigation lands.
+          clearInterval(interval);
+          router.push(`/orders/${pushPending.orderId}/success`);
           return;
         }
       } catch {
         // keep polling on transient errors
+      } finally {
+        inFlight = false;
       }
 
-      if (attempts >= MAX_ATTEMPTS) {
+      if (!disposed && attempts >= MAX_ATTEMPTS) {
         clearInterval(interval);
         setPushTimedOut(true);
       }
     }, 4000);
 
-    return () => clearInterval(interval);
+    return () => {
+      disposed = true;
+      clearInterval(interval);
+    };
   }, [pushPending, router]);
 
   async function handleApplyCoupon() {
@@ -208,6 +233,8 @@ export function ReviewStep({
       });
 
       const orderId = orderRes.data.id;
+      // Lets the success page clear the cart for this order only, once paid.
+      rememberCheckoutOrder(orderId);
 
       // Step 3: Initialize payment
       const paymentBody: Record<string, unknown> = {
@@ -253,6 +280,46 @@ export function ReviewStep({
   // ---------------------------------------------------------------------------
   // Push-pending screen
   // ---------------------------------------------------------------------------
+
+  if (pushPending && pushFailed) {
+    return (
+      <div className="space-y-5 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-error/10">
+          <X className="h-8 w-8 text-error" />
+        </div>
+        <div>
+          <h2 className="font-heading text-lg font-bold text-text-primary">
+            Payment not completed
+          </h2>
+          <p className="mt-2 text-sm text-text-secondary">
+            The payment request was declined, expired, or could not be completed by your mobile
+            money provider, so this order was cancelled. Your items are still in your cart.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              setPushPending(null);
+              setPushFailed(false);
+              setPushTimedOut(false);
+              setIsSubmitting(false);
+            }}
+            className="rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-bg-primary"
+          >
+            Try again
+          </button>
+          <button
+            type="button"
+            onClick={onEditPayment}
+            className="rounded-xl border border-border-dark px-5 py-3 text-sm font-medium text-text-primary"
+          >
+            Use a different number or method
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Waited long enough without a confirmation. Payment may still land — the
   // server reconciles independently — so point the user at their order rather

@@ -3,11 +3,12 @@
 import { Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckCircle, Package } from 'lucide-react';
+import { CheckCircle, Loader2, Package, XCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
+import { consumeCheckoutOrder } from '@/lib/order-items';
 
 interface Order {
   id: string;
@@ -60,19 +61,23 @@ function CheckoutSuccessContent() {
   // Only empty the cart once the payment actually succeeded. Checkout no longer
   // clears it up front, so an abandoned payment leaves the cart intact.
   useEffect(() => {
-    if (isPaid) clearCart();
-  }, [isPaid, clearCart]);
+    if (isPaid && orderId && consumeCheckoutOrder(orderId)) clearCart();
+  }, [isPaid, orderId, clearCart]);
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-16 text-center">
       <div
         className={`flex h-20 w-20 items-center justify-center rounded-full ${
-          isFailed ? 'bg-error/10' : 'bg-hunter-green/10'
+          isPaid ? 'bg-hunter-green/10' : isFailed ? 'bg-error/10' : 'bg-gold/10'
         }`}
       >
-        <CheckCircle
-          className={`h-10 w-10 ${isFailed ? 'text-error' : 'text-hunter-green'}`}
-        />
+        {isPaid ? (
+          <CheckCircle className="h-10 w-10 text-hunter-green" />
+        ) : isFailed ? (
+          <XCircle className="h-10 w-10 text-error" />
+        ) : (
+          <Loader2 className="h-10 w-10 animate-spin text-gold" aria-label="Waiting for payment" />
+        )}
       </div>
 
       <h1 className="mt-6 text-3xl font-bold text-text-primary">{headline}</h1>
@@ -80,7 +85,14 @@ function CheckoutSuccessContent() {
       {order ? (
         <>
           <p className="mt-2 text-text-secondary">
-            Order <span className="font-semibold text-text-primary">{order.orderNumber}</span> is confirmed.
+            Order <span className="font-semibold text-text-primary">{order.orderNumber}</span>{' '}
+            {isPaid
+              ? 'is confirmed.'
+              : status === 'REFUNDED'
+                ? 'has been refunded.'
+                : isFailed
+                ? 'was not paid. Your items are still in your cart if you want to try again.'
+                : 'is waiting for payment confirmation.'}
           </p>
           <p className="mt-1 text-sm text-text-secondary capitalize">
             Status: {order.status.toLowerCase().replace('_', ' ')}
