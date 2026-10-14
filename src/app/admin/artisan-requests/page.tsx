@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Mail, Phone, MapPin, ChevronDown, ChevronUp, UserPlus, CheckCircle2 } from 'lucide-react';
-import { api, ApiError } from '@/lib/api';
+import { api } from '@/lib/api';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { cn } from '@/lib/utils';
 
 type RequestStatus = 'NEW' | 'CONTACTED' | 'INTERVIEWING' | 'APPROVED' | 'REJECTED';
@@ -45,12 +46,6 @@ const STATUS_STYLE: Record<RequestStatus, string> = {
 };
 
 const NEXT_STATUSES: RequestStatus[] = ['NEW', 'CONTACTED', 'INTERVIEWING', 'REJECTED'];
-
-/** Temporary password for a converted artisan; also emailed to them by the API. */
-function generatePassword(): string {
-  const rand = Math.random().toString(36).slice(2, 10);
-  return `Cc-${rand}!A9`;
-}
 
 export default function AdminArtisanRequestsPage() {
   const queryClient = useQueryClient();
@@ -140,24 +135,26 @@ function RequestCard({
   const [notes, setNotes] = useState(req.adminNotes ?? '');
   const [converting, setConverting] = useState(false);
   const [businessName, setBusinessName] = useState(req.craft);
-  const [tempPassword, setTempPassword] = useState<string | null>(null);
+  const [credentials, setCredentials] = useState<{ phone: string; password: string } | null>(null);
   const [actionError, setActionError] = useState('');
 
   const { mutate: setStatus, isPending: statusPending } = useMutation({
     mutationFn: (status: RequestStatus) =>
       api.patch(`/artisan-requests/${req.id}/status`, { status, adminNotes: notes }),
     onSuccess: onChanged,
-    onError: (e) => setActionError(e instanceof ApiError ? e.message : 'Failed to update.'),
+    onError: (e) => setActionError(apiErrorMessage(e, 'Failed to update.')),
   });
 
   const { mutate: convert, isPending: convertPending } = useMutation({
     mutationFn: async () => {
       const [firstName, ...rest] = req.fullName.trim().split(' ');
       const lastName = rest.join(' ') || firstName;
-      const password = generatePassword();
-      const created = await api.post<{ data: { id: string } }>('/artisans/admin', {
-        email: req.email,
-        password,
+      // The API generates the password and returns it once for the admin to share.
+      const created = await api.post<{
+        data: { id: string; temporaryPassword: string; user: { phone: string | null } };
+      }>('/artisans/admin', {
+        email: req.email || undefined,
+        phone: req.phone,
         firstName,
         lastName,
         businessName: businessName.trim() || req.craft,
@@ -168,14 +165,14 @@ function RequestCard({
         adminNotes: notes,
         convertedArtisanId: created.data.id,
       });
-      return password;
+      return { phone: created.data.user.phone ?? req.phone, password: created.data.temporaryPassword };
     },
-    onSuccess: (password) => {
-      setTempPassword(password);
+    onSuccess: (creds) => {
+      setCredentials(creds);
       setConverting(false);
       onChanged();
     },
-    onError: (e) => setActionError(e instanceof ApiError ? e.message : 'Conversion failed.'),
+    onError: (e) => setActionError(apiErrorMessage(e, 'Conversion failed. Check your connection and try again.')),
   });
 
   return (
@@ -222,12 +219,15 @@ function RequestCard({
             />
           </div>
 
-          {tempPassword ? (
+          {credentials ? (
             <div className="flex items-start gap-2 rounded-lg border border-success/30 bg-success/10 p-3 text-sm text-success">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
-                Artisan account created. Temporary password: <code className="font-mono">{tempPassword}</code>
-                <p className="mt-0.5 text-xs text-text-secondary">Credentials were also emailed to the applicant.</p>
+                Artisan account created. Share these login details — the password is shown only once.
+                <p className="mt-1 text-text-primary">
+                  Phone: <code className="select-all font-mono">{credentials.phone}</code>
+                  {' · '}Password: <code className="select-all font-mono">{credentials.password}</code>
+                </p>
               </div>
             </div>
           ) : converting ? (

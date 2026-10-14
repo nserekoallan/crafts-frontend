@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, X } from 'lucide-react';
-import { api, ApiError } from '@/lib/api';
+import { api } from '@/lib/api';
+import { apiErrorMessage } from '@/lib/api-error-message';
 
 interface Props {
   balance: number;
@@ -21,14 +22,7 @@ export function RequestPayoutDialog({ balance, onClose }: Props) {
       queryClient.invalidateQueries({ queryKey: ['artisan', 'earnings'] });
       onClose();
     },
-    onError: (err) => {
-      if (err instanceof ApiError) {
-        const msg = (err.body as { message?: string })?.message;
-        setError(msg ?? 'Failed to request payout.');
-      } else {
-        setError('Failed to request payout.');
-      }
-    },
+    onError: (err) => setError(apiErrorMessage(err, 'Failed to request payout.')),
   });
 
   const handleSubmit = (e: React.FormEvent) => {

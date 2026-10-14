@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { Check, Copy } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { api, ApiError } from '@/lib/api';
+import { api } from '@/lib/api';
+import { apiErrorMessage } from '@/lib/api-error-message';
 
 interface Props {
   open: boolean;
@@ -12,18 +14,33 @@ interface Props {
   onSuccess: () => void;
 }
 
+interface CreatedArtisan {
+  name: string;
+  phone: string;
+  password: string;
+}
+
+interface AdminCreateArtisanResponse {
+  data: { temporaryPassword: string; user: { phone: string | null } };
+}
+
+// Same rule as the API: the number may be typed in any common format
+// ("0700111222", "+256 700 111 222"); the API normalises it.
+const PHONE_PATTERN = /^\+?[\d\s-]{7,20}$/;
+
 export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
-  const [password, setPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [bio, setBio] = useState('');
   const [region, setRegion] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [created, setCreated] = useState<CreatedArtisan | null>(null);
+  const [copied, setCopied] = useState(false);
 
   function reset() {
     setFirstName('');
@@ -31,17 +48,18 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
     setEmail('');
     setPhone('');
     setPhoneError('');
-    setPassword('');
     setBusinessName('');
     setBio('');
     setRegion('');
     setError('');
     setSubmitting(false);
+    setCreated(null);
+    setCopied(false);
   }
 
   function validatePhone(value: string): string {
-    if (!value) return 'Phone number is required.';
-    if (!/^\+[1-9]\d{6,14}$/.test(value)) return 'International format: +256700000001 (min 8 digits after +)';
+    if (!value.trim()) return 'Phone number is required.';
+    if (!PHONE_PATTERN.test(value.trim())) return 'Enter a valid phone number, e.g. 0700111222';
     return '';
   }
 
@@ -62,29 +80,74 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
 
     setSubmitting(true);
     try {
-      await api.post('/artisans/admin', {
-        firstName,
-        lastName,
-        email,
-        phone,
-        password,
-        businessName,
-        bio: bio || undefined,
-        region: region || undefined,
+      const res = await api.post<AdminCreateArtisanResponse>('/artisans/admin', {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim() || undefined,
+        phone: phone.trim(),
+        businessName: businessName.trim(),
+        bio: bio.trim() || undefined,
+        region: region.trim() || undefined,
       });
-      reset();
+      setCreated({
+        name: `${firstName.trim()} ${lastName.trim()}`,
+        phone: res.data.user.phone ?? phone.trim(),
+        password: res.data.temporaryPassword,
+      });
       onSuccess();
-      onClose();
     } catch (err) {
-      if (err instanceof ApiError) {
-        const msg = (err.body as { message?: string | string[] })?.message;
-        setError(Array.isArray(msg) ? msg[0] : (msg ?? 'Failed to create artisan.'));
-      } else {
-        setError('Something went wrong. Please try again.');
-      }
+      setError(apiErrorMessage(err, 'Could not create the artisan. Check your connection and try again.'));
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function copyCredentials() {
+    if (!created) return;
+    try {
+      await navigator.clipboard.writeText(
+        `Craft Continent artisan login\nPhone: ${created.phone}\nPassword: ${created.password}`,
+      );
+      setCopied(true);
+    } catch {
+      // Clipboard blocked: the password stays on screen and is selectable.
+      setError('Could not copy automatically. Select the password and copy it manually.');
+    }
+  }
+
+  if (created) {
+    return (
+      <Dialog open={open} onClose={handleClose} title="Artisan Created" className="max-w-xl">
+        <div className="mt-4 space-y-4">
+          <p className="text-sm text-text-secondary">
+            Share these login details with <strong className="text-text-primary">{created.name}</strong>. The
+            password is shown only once.
+          </p>
+          <dl className="space-y-3 rounded-lg border border-border-dark bg-bg-base p-4">
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Phone</dt>
+              <dd className="mt-1 font-mono text-sm text-text-primary">{created.phone}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Password</dt>
+              <dd className="mt-1 select-all font-mono text-lg tracking-wide text-text-primary">{created.password}</dd>
+            </div>
+          </dl>
+          {error && (
+            <div className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400" role="alert">{error}</div>
+          )}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="secondary" onClick={copyCredentials}>
+              {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+              {copied ? 'Copied' : 'Copy login details'}
+            </Button>
+            <Button type="button" variant="primary" onClick={handleClose}>
+              Done
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+    );
   }
 
   return (
@@ -94,17 +157,13 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
           <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Account</p>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-firstName">First Name</label>
+              <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-firstName">First Name <span className="text-red-400">*</span></label>
               <Input id="ca-firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="mt-1" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-lastName">Last Name</label>
+              <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-lastName">Last Name <span className="text-red-400">*</span></label>
               <Input id="ca-lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="mt-1" />
             </div>
-          </div>
-          <div className="mt-3">
-            <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-email">Email</label>
-            <Input id="ca-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" />
           </div>
           <div className="mt-3">
             <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-phone">
@@ -119,17 +178,24 @@ export function CreateArtisanDialog({ open, onClose, onSuccess }: Props) {
                 if (phoneError) setPhoneError(validatePhone(e.target.value));
               }}
               required
-              placeholder="+256700111222"
+              placeholder="0700111222"
               className="mt-1"
             />
-            {phoneError && (
+            {phoneError ? (
               <p className="mt-1 text-xs text-red-500">{phoneError}</p>
+            ) : (
+              <p className="mt-1 text-xs text-text-tertiary">The artisan logs in with this number.</p>
             )}
           </div>
           <div className="mt-3">
-            <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-password">Password</label>
-            <Input id="ca-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="mt-1" placeholder="Min 8 chars, upper, lower, number, symbol" />
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="ca-email">
+              Email <span className="text-text-tertiary">(optional)</span>
+            </label>
+            <Input id="ca-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1" />
           </div>
+          <p className="mt-3 text-xs text-text-tertiary">
+            A password is generated automatically and shown after the artisan is created.
+          </p>
         </div>
 
         <div className="border-t border-border-dark pt-4">
